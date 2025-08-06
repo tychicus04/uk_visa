@@ -1,400 +1,295 @@
 {
   "@@locale": "en",
 
-  "appName": "UK Visa Test",
-  "appDescription": "Life in the UK Practice Test",
+  "appTitle": "Life in the UK",
+  "@appTitle": {
+    "description": "The application title"
+  },
 
-  "ok": "OK",
-  "cancel": "Cancel",
-  "yes": "Yes",
-  "no": "No",
-  "continueButton": "Continue",
-  "back": "Back",
-  "next": "Next",
-  "finish": "Finish",
-  "save": "Save",
-  "loading": "Loading...",
-  "retry": "Retry",
-  "close": "Close",
-  "edit": "Edit",
-  "delete": "Delete",
-  "share": "Share",
-  "search": "Search",
-  "filter": "Filter",
-  "sort": "Sort",
-  "refresh": "Refresh",
-  "viewAll": "View All",
-  "seeMore": "See More",
-  "showLess": "Show Less",
+  "britishCitizenshipTest": "British Citizenship Test",
+  "@britishCitizenshipTest": {
+    "description": "Subtitle for the app"
+  },
 
-  "home": "Home",
-  "tests": "Tests",
-  "history": "History",
-  "profile": "Profile",
-  "settings": "Settings",
-  "premium": "Premium",
+  "common_continue": "Continue",
+  "common_cancel": "Cancel",
+  "common_save": "Save",
+  "common_delete": "Delete",
+  "common_edit": "Edit",
+  "common_done": "Done",
+  "common_next": "Next",
+  "common_previous": "Previous",
+  "common_retry": "Retry",
+  "common_close": "Close",
+  "common_ok": "OK",
+  "common_yes": "Yes",
+  "common_no": "No",
+  "common_loading": "Loading...",
+  "common_error": "Error",
 
-  "login": "Login",
-  "register": "Register",
-  "logout": "Logout",
-  "forgotPassword": "Forgot Password?",
-  "resetPassword": "Reset Password",
-  "changePassword": "Change Password",
-  "email": "Email",
-  "password": "Password",
-  "confirmPassword": "Confirm Password",
-  "fullName": "Full Name",
-  "firstName": "First Name",
-  "lastName": "Last Name",
-  "loginTitle": "Welcome Back",
-  "loginSubtitle": "Sign in to continue your UK Visa preparation",
-  "registerTitle": "Create Account",
-  "registerSubtitle": "Start your journey to UK citizenship",
-  "alreadyHaveAccount": "Already have an account?",
-  "dontHaveAccount": "Don't have an account?",
-  "signInWithGoogle": "Sign in with Google",
-  "signInWithApple": "Sign in with Apple",
-  "orContinueWith": "Or continue with",
-  "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
-  "termsOfService": "Terms of Service",
-  "privacyPolicy": "Privacy Policy",
+  "auth_login": "Login",
+  "auth_register": "Register",
+  "auth_logout": "Logout",
+  "auth_email": "Email",
+  "auth_profile": "Profile",
+  "auth_password": "Password",
+  "auth_confirmPassword": "Confirm Password",
+  "auth_fullName": "Full Name",
+  "auth_forgotPassword": "Forgot Password?",
+  "auth_dontHaveAccount": "Don't have an account?",
+  "auth_alreadyHaveAccount": "Already have an account?",
+  "auth_signUp": "Sign Up",
+  "auth_signIn": "Sign In",
+  "auth_welcome": "Welcome Back",
+  "auth_createAccount": "Create Account",
+  "auth_loginSuccess": "Login successful",
+  "auth_registerSuccess": "Registration successful",
+  "auth_invalidCredentials": "Invalid email or password",
+  "auth_emailAlreadyExists": "Email already exists",
 
-  "fieldRequired": "This field is required",
-  "emailRequired": "Email is required",
-  "passwordRequired": "Password is required",
-  "invalidEmail": "Please enter a valid email address",
-  "passwordTooShort": "Password must be at least 6 characters",
-  "passwordsDoNotMatch": "Passwords do not match",
-  "nameRequired": "Name is required",
-  "nameTooShort": "Name must be at least 2 characters",
-
-  "loginSuccess": "Welcome back!",
-  "registrationSuccess": "Account created successfully!",
-  "logoutSuccess": "Logged out successfully",
-  "passwordChanged": "Password changed successfully",
-  "profileUpdated": "Profile updated successfully",
-  "invalidCredentials": "Invalid email or password",
-  "emailAlreadyExists": "Email already exists",
-  "accountNotFound": "Account not found",
-  "sessionExpired": "Session expired. Please login again",
-
-  "practiceTests": "Practice Tests",
-  "chapterTests": "Chapter Tests",
-  "comprehensiveTests": "Comprehensive Tests",
-  "examTests": "Practice Exams",
-  "freeTests": "Free Tests",
-  "premiumTests": "Premium Tests",
-  "allTests": "All Tests",
-  "myTests": "My Tests",
-  "completedTests": "Completed Tests",
-  "startTest": "Start Test",
-  "retakeTest": "Retake Test",
-  "continueTest": "Continue Test",
-  "testResults": "Test Results",
-  "testHistory": "Test History",
-  "testDetails": "Test Details",
-  "questions": "Questions",
-  "questionsCount": "{count, plural, =1{1 Question} other{{count} Questions}}",
-  "@questionsCount": {
+  "home_welcome": "Welcome",
+  "home_practiceProgress": "Practice Progress",
+  "home_dailyQuestionAnswered": "{count} Daily Questions Answered",
+  "@home_dailyQuestionAnswered": {
+    "description": "Number of daily questions answered",
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "timeRemaining": "Time Remaining",
-  "timeTaken": "Time Taken",
-  "score": "Score",
-  "percentage": "Percentage",
-  "result": "Result",
-  "passed": "Passed",
-  "failed": "Failed",
-  "excellent": "Excellent",
-  "good": "Good",
-  "average": "Average",
-  "needsImprovement": "Needs Improvement",
-  "congratulations": "Congratulations!",
-  "wellDone": "Well Done!",
-  "keepTrying": "Keep Trying!",
-  "tryAgain": "Try Again",
-  "reviewAnswers": "Review Answers",
-  "correctAnswer": "Correct Answer",
-  "yourAnswer": "Your Answer",
-  "explanation": "Explanation",
-  "noTestsAvailable": "No tests available",
-  "searchTests": "Search tests...",
-  "filterTests": "Filter Tests",
-  "sortTests": "Sort Tests",
-  "testDifficulty": "Difficulty",
-  "easy": "Easy",
-  "medium": "Medium",
-  "hard": "Hard",
-  "duration": "Duration",
-  "attempts": "Attempts",
-  "bestScore": "Best Score",
-  "averageScore": "Average Score",
-  "passRate": "Pass Rate",
-  "submitTest": "Submit Test",
-  "submitConfirmation": "Are you sure you want to submit this test?",
-  "cannotUndoSubmit": "You cannot undo this action.",
-  "testSubmitted": "Test submitted successfully!",
-  "testIncomplete": "Please answer all questions before submitting",
-  "questionNumber": "Question {number}",
-  "@questionNumber": {
+  "home_testsCompleted": "{completed} of {total} Tests Completed",
+  "@home_testsCompleted": {
+    "description": "Progress of tests completed",
     "placeholders": {
-      "number": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       }
     }
   },
-  "selectAnswer": "Select an answer",
-  "selectAnswers": "Select all correct answers",
-  "multipleChoice": "Multiple Choice",
-  "singleChoice": "Single Choice",
-  "previousQuestion": "Previous",
-  "nextQuestion": "Next",
-  "markForReview": "Mark for Review",
-  "reviewMarked": "Review Marked",
-  "clearSelection": "Clear Selection",
-
-  "chapter": "Chapter",
-  "chapters": "Chapters",
-  "chapterNumber": "Chapter {number}",
-  "@chapterNumber": {
+  "home_readingProgress": "Reading Progress",
+  "home_sectionsRead": "{read} of {total} Sections Read",
+  "@home_sectionsRead": {
+    "description": "Reading progress",
     "placeholders": {
-      "number": {
+      "read": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       }
     }
   },
-  "chapter1": "The Values and Principles of the UK",
-  "chapter2": "What is the UK?",
-  "chapter3": "A Long and Illustrious History",
-  "chapter4": "A Modern, Thriving Society",
-  "chapter5": "The UK Government, the Law and Your Role",
-  "chapterProgress": "Chapter Progress",
-  "testsCompleted": "Tests Completed",
-  "testsRemaining": "Tests Remaining",
-
-  "upgradeToPremium": "Upgrade to Premium",
-  "premiumFeatures": "Premium Features",
-  "unlimitedTests": "Unlimited test attempts",
-  "allPremiumTests": "Access to all premium tests",
-  "detailedExplanations": "Detailed explanations for all questions",
-  "progressTracking": "Advanced progress tracking",
-  "prioritySupport": "Priority customer support",
-  "adFree": "Ad-free experience",
-  "premiumOnly": "Premium Only",
-  "upgradeNow": "Upgrade Now",
-  "choosePlan": "Choose Your Plan",
-  "monthlyPlan": "Monthly Plan",
-  "yearlyPlan": "Yearly Plan",
-  "lifetimePlan": "Lifetime Access",
-  "mostPopular": "Most Popular",
-  "bestValue": "Best Value",
-  "savePercent": "Save {percent}%",
-  "@savePercent": {
+  "home_createStudySchedule": "Create a Study Schedule",
+  "home_scheduleDescription": "Make a schedule to meet your goals. Turn on notifications for study reminders.",
+  "home_turnOnNotifications": "Turn on Notifications",
+  "home_scheduleExam": "Schedule your Exam",
+  "home_practiceTime": "Practice Time: {time}",
+  "@home_practiceTime": {
+    "description": "Practice time setting",
     "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "pricePerMonth": "${price}/month",
-  "@pricePerMonth": {
-    "placeholders": {
-      "price": {
+      "time": {
         "type": "String"
       }
     }
   },
-  "pricePerYear": "${price}/year",
-  "@pricePerYear": {
+  "home_dailyQuestion": "Daily Question",
+  "home_startPracticing": "Start Practicing",
+  "home_readStudyBook": "Read the Study Book",
+
+  "test_testQuestions": "{count} Test Questions",
+  "@test_testQuestions": {
+    "description": "Number of test questions",
     "placeholders": {
-      "price": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "test_practiceTests": "{count} Practice Tests",
+  "@test_practiceTests": {
+    "description": "Number of practice tests",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "test_detailedExplanations": "Detailed Explanations",
+  "test_fullOfficialStudyGuide": "Full Official Study Guide",
+  "test_darkMode": "Dark Mode",
+  "test_studyAnytimeWithDarkMode": "Study Anytime with Dark Mode",
+  "test_chapterTests": "Chapter Tests",
+  "test_comprehensiveTests": "Comprehensive Tests",
+  "test_practiceExams": "Practice Exams",
+  "test_freeTests": "Free Tests",
+  "test_premiumTests": "Premium Tests",
+  "test_startTest": "Start Test",
+  "test_retakeTest": "Retake Test",
+  "test_viewResults": "View Results",
+  "test_timeRemaining": "Time Remaining: {time}",
+  "@test_timeRemaining": {
+    "description": "Time remaining in test",
+    "placeholders": {
+      "time": {
         "type": "String"
       }
     }
   },
-  "oneTimePayment": "One-time payment of ${price}",
-  "@oneTimePayment": {
+  "test_questionOf": "Question {current} of {total}",
+  "@test_questionOf": {
+    "description": "Question progress indicator",
     "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "subscriptionActive": "Premium subscription is active",
-  "subscriptionExpires": "Expires on {date}",
-  "@subscriptionExpires": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "freeTestsRemaining": "{count} free tests remaining",
-  "@freeTestsRemaining": {
-    "placeholders": {
-      "count": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       }
     }
   },
-  "freeTestsUsed": "You have used all your free tests",
-  "premiumRequired": "Premium subscription required",
-  "restorePurchases": "Restore Purchases",
-
-  "myProfile": "My Profile",
-  "personalInfo": "Personal Information",
-  "accountSettings": "Account Settings",
-  "appSettings": "App Settings",
-  "language": "Language",
-  "theme": "Theme",
-  "notifications": "Notifications",
-  "privacy": "Privacy",
-  "support": "Support",
-  "about": "About",
-  "version": "Version",
-  "contactUs": "Contact Us",
-  "rateApp": "Rate App",
-  "shareApp": "Share App",
-  "followUs": "Follow Us",
-  "statistics": "Statistics",
-  "totalAttempts": "Total Attempts",
-  "totalTests": "Total Tests",
-  "studyStreak": "Study Streak",
-  "favoriteChapter": "Favorite Chapter",
-  "achievements": "Achievements",
-  "badges": "Badges",
-  "editProfile": "Edit Profile",
-  "updateProfile": "Update Profile",
-  "deleteAccount": "Delete Account",
-  "confirmDelete": "Are you sure you want to delete your account?",
-  "cannotUndoDelete": "This action cannot be undone.",
-
-  "lightTheme": "Light",
-  "darkTheme": "Dark",
-  "systemTheme": "System",
-  "english": "English",
-  "vietnamese": "Tiếng Việt",
-  "pushNotifications": "Push Notifications",
-  "emailNotifications": "Email Notifications",
-  "studyReminders": "Study Reminders",
-  "testReminders": "Test Reminders",
-  "achievementNotifications": "Achievement Notifications",
-  "soundEffects": "Sound Effects",
-  "vibration": "Vibration",
-  "biometricLogin": "Biometric Login",
-  "autoLogin": "Auto Login",
-  "dataSync": "Data Sync",
-  "offlineMode": "Offline Mode",
-
-  "error": "Error",
-  "errorOccurred": "An error occurred",
-  "networkError": "Network connection error",
-  "serverError": "Server error. Please try again later",
-  "unknownError": "Unknown error occurred",
-  "noInternetConnection": "No internet connection",
-  "connectionTimeout": "Connection timeout",
-  "invalidResponse": "Invalid server response",
-  "unauthorized": "Unauthorized access",
-  "forbidden": "Access forbidden",
-  "notFound": "Resource not found",
-  "validationError": "Validation error",
-  "paymentError": "Payment error",
-  "subscriptionError": "Subscription error",
-  "tryAgainLater": "Please try again later",
-  "checkConnection": "Please check your internet connection",
-  "contactSupport": "Please contact support if the problem persists",
-
-  "success": "Success",
-  "operationSuccessful": "Operation completed successfully",
-  "dataUpdated": "Data updated successfully",
-  "changesSaved": "Changes saved successfully",
-  "paymentSuccessful": "Payment successful",
-  "subscriptionUpdated": "Subscription updated successfully",
-
-  "searchHint": "Search...",
-  "searchResults": "Search Results",
-  "noResults": "No results found",
-  "searchHistory": "Search History",
-  "clearHistory": "Clear History",
-  "recentSearches": "Recent Searches",
-
-  "today": "Today",
-  "yesterday": "Yesterday",
-  "tomorrow": "Tomorrow",
-  "thisWeek": "This Week",
-  "lastWeek": "Last Week",
-  "thisMonth": "This Month",
-  "lastMonth": "Last Month",
-  "daysAgo": "{count} days ago",
-  "@daysAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "hoursAgo": "{count} hours ago",
-  "@hoursAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "minutesAgo": "{count} minutes ago",
-  "@minutesAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "justNow": "Just now",
-
-  "welcomeTitle": "Welcome to UK Visa Test",
-  "welcomeDescription": "Your complete guide to passing the Life in the UK Test",
-  "feature1Title": "Comprehensive Practice",
-  "feature1Description": "Practice with authentic questions covering all 5 chapters",
-  "feature2Title": "Track Your Progress",
-  "feature2Description": "Monitor your improvement with detailed statistics",
-  "feature3Title": "Expert Explanations",
-  "feature3Description": "Learn from detailed explanations for every question",
-  "getStarted": "Get Started",
-  "skip": "Skip",
-
-  "testPassedTitle": "Congratulations!",
-  "testPassedMessage": "You passed the test with {score}%",
-  "@testPassedMessage": {
+  "test_submitTest": "Submit Test",
+  "test_testCompleted": "Test Completed!",
+  "test_yourScore": "Your Score: {score}%",
+  "@test_yourScore": {
+    "description": "Test score display",
     "placeholders": {
       "score": {
-        "type": "String"
+        "type": "double"
       }
     }
   },
-  "testFailedTitle": "Keep Practicing!",
-  "testFailedMessage": "You scored {score}%. You need 75% to pass.",
-  "@testFailedMessage": {
+  "test_passed": "Passed",
+  "test_failed": "Failed",
+  "test_passingScore": "You need 75% to pass",
+  "test_correctAnswers": "Correct: {correct}/{total}",
+  "@test_correctAnswers": {
+    "description": "Correct answers count",
     "placeholders": {
-      "score": {
-        "type": "String"
-      }
-    }
-  },
-  "perfectScoreTitle": "Perfect Score!",
-  "perfectScoreMessage": "Outstanding! You got all questions correct!",
-  "firstPassTitle": "First Pass!",
-  "firstPassMessage": "Congratulations on passing this test for the first time!",
-  "improvementTitle": "Great Improvement!",
-  "improvementMessage": "You improved your score by {points} points!",
-  "@improvementMessage": {
-    "placeholders": {
-      "points": {
+      "correct": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       }
     }
-  }
+  },
+  "test_timeTaken": "Time taken: {time}",
+  "@test_timeTaken": {
+    "description": "Time taken to complete test",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "test_explanation": "Explanation",
+  "test_wasExplanationHelpful": "Was this explanation helpful?",
+  "test_thatsCorrect": "That's Correct!",
+  "test_thatsIncorrect": "That's Incorrect",
+
+  "chapter_takingLifeInUKTest": "Taking the Life in the UK test",
+  "chapter_studyBookDescription": "This study book will help prepare you for taking the Life in the UK test. The test consists of 24 questions about important aspects of life in the UK. Questions are based on ALL parts of the book. The 24 questions will be different for each person taking the test at that test session. You need to get at least 18 questions (75%) correct in order to pass.",
+  "chapter_testCentreInfo": "You can only take the test at a registered and approved Life in the UK test centre. There are about 60 test centres around the UK. You can only take the test using a computer.",
+  "chapter_lifeInUKQuestions": "The Life in the UK test questions are based on all parts of this book",
+
+  "progress_studyProgress": "Study Progress",
+  "progress_trackExamReadiness": "Track your exam readiness",
+  "progress_scoreStatistics": "Score Statistics",
+  "progress_lastTest": "Last test",
+  "progress_lastNTests": "Last {count} tests",
+  "@progress_lastNTests": {
+    "description": "Score for last N tests",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "progress_allTests": "All tests ({count})",
+  "@progress_allTests": {
+    "description": "All tests score",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "progress_improveScore": "Improve your score",
+  "progress_goodProgress": "You are making good progress. Keep it up!",
+  "progress_continueReading": "Continue reading the official handbook.",
+  "progress_currentPracticeTime": "Your current practice time is at {time}. You can change this in Settings.",
+  "@progress_currentPracticeTime": {
+    "description": "Current practice time setting",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "settings_settings": "Settings",
+  "settings_language": "Language",
+  "settings_theme": "Theme",
+  "settings_notifications": "Notifications",
+  "settings_about": "About",
+  "settings_privacy": "Privacy Policy",
+  "settings_terms": "Terms of Service",
+  "settings_logout": "Logout",
+  "settings_version": "Version {version}",
+  "@settings_version": {
+    "description": "App version display",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_lightTheme": "Light",
+  "settings_darkTheme": "Dark",
+  "settings_systemTheme": "System",
+
+  "navigation_home": "Home",
+  "navigation_tests": "Tests",
+  "navigation_book": "Book",
+  "navigation_progress": "Progress",
+  "navigation_settings": "Settings",
+
+  "subscription_premium": "Premium",
+  "subscription_upgrade": "Upgrade to Premium",
+  "subscription_unlimitedAccess": "Unlimited Access",
+  "subscription_allTests": "All Tests",
+  "subscription_detailedExplanations": "Detailed Explanations",
+  "subscription_progressTracking": "Progress Tracking",
+  "subscription_monthly": "Monthly",
+  "subscription_yearly": "Yearly",
+  "subscription_lifetime": "Lifetime",
+  "subscription_freeTrialDays": "{days} days free trial",
+  "@subscription_freeTrialDays": {
+    "description": "Free trial period",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+
+  "error_networkError": "Network error. Please check your connection.",
+  "error_serverError": "Server error. Please try again later.",
+  "error_unknownError": "An unknown error occurred.",
+  "error_validationError": "Please check your input.",
+  "error_unauthorized": "You are not authorized to access this resource.",
+  "error_notFound": "The requested resource was not found.",
+  "error_timeout": "Request timeout. Please try again.",
+
+  "validation_emailRequired": "Email is required",
+  "validation_emailInvalid": "Please enter a valid email address",
+  "validation_passwordRequired": "Password is required",
+  "validation_passwordTooShort": "Password must be at least 6 characters",
+  "validation_passwordsDoNotMatch": "Passwords do not match",
+  "validation_nameRequired": "Name is required",
+  "validation_nameInvalid": "Please enter a valid name"
 }
