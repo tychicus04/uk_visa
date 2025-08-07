@@ -43,7 +43,7 @@ class ApiConstants {
   static const String questionTypeCheckbox = 'checkbox';
 
   // Base URLs
-  static const String baseUrl = 'http://localhost/UKVisa/backend';
+  static const String baseUrl = 'http://10.0.2.2/UKVisa/backend';
   static const String apiVersion = 'v1';
 
   // Auth Endpoints

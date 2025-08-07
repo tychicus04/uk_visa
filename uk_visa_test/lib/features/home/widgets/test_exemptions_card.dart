@@ -28,7 +28,7 @@ class TestExemptionsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info_outline,
                 color: AppColors.info,
                 size: 20,

@@ -31,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
             elevation: 0,
             backgroundColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
+              background: DecoratedBox(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -58,7 +58,7 @@ class HomeScreen extends ConsumerWidget {
                                 color: Colors.white,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -89,7 +89,7 @@ class HomeScreen extends ConsumerWidget {
                                   Text(
                                     l10n.britishCitizenshipTest,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha:0.9),
                                     ),
                                   ),
                                 ],
@@ -121,17 +121,7 @@ class HomeScreen extends ConsumerWidget {
                         description: l10n.home_testsCompleted(34, 45),
                         color: AppColors.progressBlue,
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ProgressCard(
-                        title: l10n.home_readingProgress,
-                        percentage: 89,
-                        subtitle: l10n.home_sectionsRead(24, 27),
-                        description: 'Progress: 89%',
-                        color: AppColors.progressGreen,
-                      ),
-                    ),
+                    )
                   ],
                 ),
 

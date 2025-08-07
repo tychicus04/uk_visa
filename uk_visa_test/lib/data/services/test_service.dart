@@ -1,4 +1,3 @@
-// lib/data/services/test_service.dart
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +15,7 @@ class TestService {
 
   TestService(this._dio);
 
+  /// Get available tests for user
   Future<ApiResponse<Map<String, dynamic>>> getAvailableTests() async {
     try {
       final response = await _dio.get(ApiConstants.testsAvailable);
@@ -28,6 +28,20 @@ class TestService {
     }
   }
 
+  /// Get free tests (no auth required)
+  Future<ApiResponse<List<dynamic>>> getFreeTests() async {
+    try {
+      final response = await _dio.get(ApiConstants.testsFree);
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json as List<dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get specific test with questions
   Future<ApiResponse<Map<String, dynamic>>> getTest(int testId) async {
     try {
       final response = await _dio.get('${ApiConstants.testDetail}/$testId');
@@ -40,71 +54,52 @@ class TestService {
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> startAttempt(int testId) async {
-    try {
-      final response = await _dio.post(
-        ApiConstants.attemptsStart,
-        data: {'test_id': testId},
-      );
-      return ApiResponse.fromJson(
-        response.data,
-            (json) => json as Map<String, dynamic>,
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  Future<ApiResponse<Map<String, dynamic>>> submitAttempt({
-    required int attemptId,
-    required List<Map<String, dynamic>> answers,
-    int? timeTaken,
+  /// Search tests
+  Future<ApiResponse<List<dynamic>>> searchTests({
+    String? query,
+    String? type,
+    int? chapterId,
   }) async {
     try {
-      final response = await _dio.post(
-        ApiConstants.attemptsSubmit,
-        data: {
-          'attempt_id': attemptId,
-          'answers': answers,
-          'time_taken': timeTaken,
-        },
-      );
-      return ApiResponse.fromJson(
-        response.data,
-            (json) => json as Map<String, dynamic>,
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
+      final queryParams = <String, dynamic>{};
+      if (query != null) queryParams['q'] = query;
+      if (type != null) queryParams['type'] = type;
+      if (chapterId != null) queryParams['chapter_id'] = chapterId;
 
-  Future<ApiResponse<Map<String, dynamic>>> getAttemptHistory({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    try {
       final response = await _dio.get(
-        ApiConstants.attemptsHistory,
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
+        ApiConstants.testsSearch,
+        queryParameters: queryParams,
       );
+
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as Map<String, dynamic>,
+            (json) => json as List<dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> getAttemptDetail(int attemptId) async {
+  /// Get tests by type
+  Future<ApiResponse<List<dynamic>>> getTestsByType(String type) async {
     try {
-      final response = await _dio.get('${ApiConstants.attemptDetail}/$attemptId');
+      final response = await _dio.get('/tests/type/$type');
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as Map<String, dynamic>,
+            (json) => json as List<dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get tests by chapter
+  Future<ApiResponse<List<dynamic>>> getTestsByChapter(int chapterId) async {
+    try {
+      final response = await _dio.get('/tests/chapter/$chapterId');
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json as List<dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);

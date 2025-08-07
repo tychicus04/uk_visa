@@ -1,63 +1,92 @@
-// lib/features/auth/providers/auth_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../../core/storage/secure_storage.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(ref);
 });
 
 class AuthState {
   final User? user;
   final bool isLoading;
   final String? error;
+  final bool isAuthenticated;
 
   const AuthState({
     this.user,
     this.isLoading = false,
     this.error,
+    this.isAuthenticated = false,
   });
 
   AuthState copyWith({
     User? user,
     bool? isLoading,
     String? error,
-  }) {
-    return AuthState(
+    bool? isAuthenticated,
+  }) => AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
     );
-  }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState()) {
+  final Ref ref;
+
+  AuthNotifier(this.ref) : super(const AuthState()) {
     _checkAuthStatus();
   }
 
   Future<void> _checkAuthStatus() async {
-    final token = await SecureStorageService.instance.getAuthToken();
-    if (token != null) {
-      // TODO: Validate token and fetch user data
-      // For now, just set a dummy user
-      final userId = await SecureStorageService.instance.getUserId();
-      final userEmail = await SecureStorageService.instance.getUserEmail();
-
-      if (userId != null && userEmail != null) {
-        state = state.copyWith(
-          user: User(
-            id: int.parse(userId),
-            email: userEmail,
-            isPremium: false,
-            languageCode: 'en',
-            freeTestsUsed: 0,
-            freeTestsLimit: 5,
-            createdAt: DateTime.now().toIso8601String(),
-            updatedAt: DateTime.now().toIso8601String(),
-          ),
-        );
+    try {
+      final token = await SecureStorageService.instance.getAuthToken();
+      if (token != null && token.isNotEmpty) {
+        // Try to get user profile to validate token
+        await getProfile();
       }
+    } catch (e) {
+      // Token might be invalid, clear it
+      await SecureStorageService.instance.clearAll();
+      state = const AuthState();
+    }
+  }
+
+  Future<void> register({
+    required String email,
+    required String password,
+    required String fullName,
+    String languageCode = 'en',
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      final result = await authRepository.register(
+        email: email,
+        password: password,
+        fullName: fullName,
+        languageCode: languageCode,
+      );
+
+      // Store tokens and user info
+      await SecureStorageService.instance.setAuthToken(result['token']);
+      await SecureStorageService.instance.setUserId(result['user']['id'].toString());
+      await SecureStorageService.instance.setUserEmail(result['user']['email']);
+
+      state = state.copyWith(
+        isLoading: false,
+        user: User.fromJson(result['user']),
+        isAuthenticated: true,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceAll('Exception: ', ''),
+      );
+      rethrow;
     }
   }
 
@@ -68,84 +97,107 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // TODO: Implement actual API call
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+      final authRepository = ref.read(authRepositoryProvider);
+      final result = await authRepository.login(
+        email: email,
+        password: password,
+      );
 
-      // Simulate successful login
-      const token = 'dummy_token';
-      const userId = '1';
-
-      await SecureStorageService.instance.setAuthToken(token);
-      await SecureStorageService.instance.setUserId(userId);
-      await SecureStorageService.instance.setUserEmail(email);
+      // Store tokens and user info
+      await SecureStorageService.instance.setAuthToken(result['token']);
+      await SecureStorageService.instance.setUserId(result['user']['id'].toString());
+      await SecureStorageService.instance.setUserEmail(result['user']['email']);
 
       state = state.copyWith(
         isLoading: false,
-        user: User(
-          id: 1,
-          email: email,
-          isPremium: false,
-          languageCode: 'en',
-          freeTestsUsed: 0,
-          freeTestsLimit: 5,
-          createdAt: DateTime.now().toIso8601String(),
-          updatedAt: DateTime.now().toIso8601String(),
-        ),
+        user: User.fromJson(result['user']),
+        isAuthenticated: true,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: e.toString().replaceAll('Exception: ', ''),
       );
       rethrow;
     }
   }
 
-  Future<void> register({
-    required String email,
-    required String password,
+  Future<void> getProfile() async {
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      final user = await authRepository.getProfile();
+
+      state = state.copyWith(
+        isLoading: false,
+        user: User.fromJson(user['profile']),
+        isAuthenticated: true,
+      );
+    } catch (e) {
+      // If getting profile fails, user might not be authenticated
+      await logout();
+      rethrow;
+    }
+  }
+
+  Future<void> updateProfile({
     required String fullName,
+    String? languageCode,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // TODO: Implement actual API call
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-
-      // Simulate successful registration
-      const token = 'dummy_token';
-      const userId = '1';
-
-      await SecureStorageService.instance.setAuthToken(token);
-      await SecureStorageService.instance.setUserId(userId);
-      await SecureStorageService.instance.setUserEmail(email);
+      final authRepository = ref.read(authRepositoryProvider);
+      final updatedUser = await authRepository.updateProfile(
+        fullName: fullName,
+        languageCode: languageCode,
+      );
 
       state = state.copyWith(
         isLoading: false,
-        user: User(
-          id: 1,
-          email: email,
-          fullName: fullName,
-          isPremium: false,
-          languageCode: 'en',
-          freeTestsUsed: 0,
-          freeTestsLimit: 5,
-          createdAt: DateTime.now().toIso8601String(),
-          updatedAt: DateTime.now().toIso8601String(),
-        ),
+        user: updatedUser,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: e.toString().replaceAll('Exception: ', ''),
+      );
+      rethrow;
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      await authRepository.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceAll('Exception: ', ''),
       );
       rethrow;
     }
   }
 
   Future<void> logout() async {
-    await SecureStorageService.instance.clearAll();
-    state = const AuthState();
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      await authRepository.logout();
+    } catch (e) {
+      // Ignore logout errors
+      print('Logout error: $e');
+    } finally {
+      await SecureStorageService.instance.clearAll();
+      state = const AuthState();
+    }
   }
 }
-

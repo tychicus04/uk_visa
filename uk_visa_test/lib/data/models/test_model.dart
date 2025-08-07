@@ -2,6 +2,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import 'question_model.dart';
+
 part 'test_model.g.dart';
 
 // lib/data/models/test_model.dart - Fixed version
@@ -21,6 +23,7 @@ class Test extends Equatable {
   final bool? canAccess;
   final int? attemptCount;
   final double? bestScore;
+  final List<Question>? questions;
 
   const Test({
     required this.id,
@@ -37,6 +40,7 @@ class Test extends Equatable {
     this.canAccess,
     this.attemptCount,
     this.bestScore,
+    this.questions,
   });
 
   factory Test.fromJson(Map<String, dynamic> json) => _$TestFromJson(json);
@@ -58,6 +62,7 @@ class Test extends Equatable {
     canAccess,
     attemptCount,
     bestScore,
+    questions,
   ];
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/error/error_handler.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -213,23 +214,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin(BuildContext context, WidgetRef ref) async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     try {
       await ref.read(authProvider.notifier).login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+      final mounted = context.mounted;
 
       if (mounted) {
         context.go('/');
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = ErrorHandler.getErrorMessage(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(errorMessage),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

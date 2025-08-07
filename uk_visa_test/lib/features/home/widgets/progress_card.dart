@@ -1,24 +1,22 @@
-// lib/features/home/widgets/progress_card.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 
 class ProgressCard extends StatelessWidget {
-  final String title;
-  final int percentage;
-  final String subtitle;
-  final String description;
-  final Color color;
-
   const ProgressCard({
-    super.key,
     required this.title,
     required this.percentage,
     required this.subtitle,
     required this.description,
     required this.color,
+    super.key,
   });
+
+  final String title;
+  final int percentage;
+  final String subtitle;
+  final String description;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -39,31 +37,33 @@ class ProgressCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
-
-          // Circular Progress
           Row(
             children: [
               SizedBox(
                 width: 60,
                 height: 60,
                 child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: percentage / 100,
-                      strokeWidth: 6,
-                      backgroundColor: isDark
-                          ? AppColors.borderDark
-                          : AppColors.borderLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    SizedBox(
+                      width: 50,
+                      height: 50,
+                      child:  CircularProgressIndicator(
+                        value: percentage / 100,
+                        strokeWidth: 6,
+                        backgroundColor: isDark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
                     ),
                     Center(
                       child: Text(

@@ -100,6 +100,28 @@ class AuthService {
     }
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiConstants.authChangePassword,
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        },
+      );
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _dio.post(ApiConstants.authLogout);
