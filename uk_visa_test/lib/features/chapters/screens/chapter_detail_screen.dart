@@ -72,7 +72,43 @@ class ChapterDetailScreen extends ConsumerWidget {
                     },
                   ),
                 )),
+
+                const SizedBox(height: 24),
               ],
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        context.go('/chapters/${chapter.id}/read');
+                      },
+                      icon: const Icon(Icons.menu_book),
+                      label: const Text('Read Chapter'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                  if (chapter.tests != null && chapter.tests!.isNotEmpty) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          // Navigate to chapter tests
+                          context.go('/tests?chapter=${chapter.id}');
+                        },
+                        icon: const Icon(Icons.quiz),
+                        label: const Text('Practice Tests'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         ),

@@ -1,18 +1,19 @@
 // lib/features/chapters/widgets/chapter_card.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 
 class ChapterCard extends StatelessWidget {
-  final dynamic chapter;
-  final VoidCallback onTap;
 
   const ChapterCard({
-    super.key,
     required this.chapter,
     required this.onTap,
+    super.key,
   });
+  final dynamic chapter;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +113,45 @@ class ChapterCard extends StatelessWidget {
                     theme: theme,
                   ),
                 ],
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.go('/chapters/${chapter.id}/read');
+                    },
+                    icon: const Icon(Icons.menu_book, size: 16),
+                    label: const Text(
+                      'Read',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      minimumSize: const Size(0, 32),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onTap,
+                    icon: const Icon(Icons.quiz, size: 16),
+                    label: const Text(
+                      'Tests',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      minimumSize: const Size(0, 32),
+                    ),
+                  ),
+                ),
               ],
             ),
           ],

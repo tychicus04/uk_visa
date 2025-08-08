@@ -45,7 +45,9 @@ class CustomButton extends StatelessWidget {
               : icon != null
               ? Icon(icon)
               : const SizedBox.shrink(),
-          label: Text(text),
+          label: Text(
+            text
+          ),
           style: OutlinedButton.styleFrom(
             foregroundColor: textColor ?? AppColors.primary,
             side: BorderSide(

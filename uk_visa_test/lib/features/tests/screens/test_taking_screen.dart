@@ -10,6 +10,7 @@ import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
 import '../widgets/question_widget.dart';
+import '../widgets/test_timer_widget.dart';
 
 class TestTakingScreen extends ConsumerStatefulWidget {
   final int testId;
@@ -92,7 +93,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
@@ -100,14 +101,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                               size: 16,
                               color: AppColors.primary,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '0:03', // TODO: Implement timer
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            SizedBox(width: 4),
+                            TestTimerWidget(totalDuration: Duration(minutes: 45)), // 45 minutes
                           ],
                         ),
                       ),

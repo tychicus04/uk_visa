@@ -76,7 +76,7 @@ class ChapterListScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.info_outline,
                       color: AppColors.info,
                       size: 20,
@@ -134,7 +134,7 @@ class ChapterListScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.location_on,
                           color: AppColors.primary,
                           size: 20,

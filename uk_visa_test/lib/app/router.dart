@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/profile_screen.dart';
+import '../features/chapters/screens/chapter_reading_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/tests/screens/test_list_screen.dart';
 import '../features/tests/screens/test_detail_screen.dart';
@@ -256,6 +257,27 @@ final routerProvider = Provider<GoRouter>((ref) {
                   print('🏗️ Building ChapterDetailScreen for chapter: $id');
                   return ChapterDetailScreen(chapterId: id);
                 },
+                routes: [
+                  GoRoute(
+                    path: 'read',
+                    name: 'chapter-reading',
+                    builder: (context, state) {
+                      final idParam = state.pathParameters['id'];
+
+                      if (idParam == null || idParam.isEmpty) {
+                        return _buildErrorScreen('Missing chapter ID');
+                      }
+
+                      final id = int.tryParse(idParam);
+                      if (id == null) {
+                        return _buildErrorScreen('Invalid chapter ID: $idParam');
+                      }
+
+                      print('🏗️ Building ChapterReadingScreen for chapter: $id');
+                      return ChapterReadingScreen(chapterId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -355,10 +377,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 // ✅ Helper function to build error screens
-Widget _buildErrorScreen(String message) {
-  return Builder(
-    builder: (context) {
-      return Scaffold(
+Widget _buildErrorScreen(String message) => Builder(
+    builder: (context) => Scaffold(
         appBar: AppBar(
           title: const Text('Invalid Route'),
           backgroundColor: Colors.orange,
@@ -405,7 +425,5 @@ Widget _buildErrorScreen(String message) {
             ),
           ),
         ),
-      );
-    },
+      ),
   );
-}
