@@ -107,7 +107,7 @@ class TestResultScreen extends ConsumerWidget {
                     child: _buildScoreCard(
                       icon: Icons.access_time,
                       label: 'Time Taken',
-                      value: _formatTime(result.timeTaken ?? 0),
+                      value: _formatTime(result.timeTakenInt ?? 0),
                       total: '45 min',
                       color: AppColors.primary,
                       theme: theme,

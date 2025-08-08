@@ -115,7 +115,7 @@ class TestDetailScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Previous Attempts
-          if (test.attemptCount != null && test.attemptCount > 0) ...[
+          if (test.attemptCount != null) ...[
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -164,12 +164,12 @@ class TestDetailScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: test.canAccess == true
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.warning.withOpacity(0.1),
+              color: test.isFree == true
+                  ? AppColors.success.withValues(alpha:0.1)
+                  : AppColors.warning.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: test.canAccess == true
+                color: test.isFree == true
                     ? AppColors.success
                     : AppColors.warning,
               ),
@@ -177,23 +177,23 @@ class TestDetailScreen extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  test.canAccess == true
+                  test.isFree == true
                       ? Icons.check_circle
                       : Icons.lock,
-                  color: test.canAccess == true
+                  color: test.isFree == true
                       ? AppColors.success
                       : AppColors.warning,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    test.canAccess == true
+                    test.isFree == true
                         ? 'You can access this test'
                         : test.isPremium
                         ? 'Premium subscription required'
                         : 'Free test limit reached',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: test.canAccess == true
+                      color: test.isFree == true
                           ? AppColors.success
                           : AppColors.warning,
                       fontWeight: FontWeight.w500,
@@ -207,7 +207,7 @@ class TestDetailScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // Action Buttons
-          if (test.canAccess == true) ...[
+          if (test.isFree == true) ...[
             ElevatedButton.icon(
               onPressed: () => _startTest(context, ref),
               icon: const Icon(Icons.play_arrow),
@@ -216,7 +216,7 @@ class TestDetailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
-            if (test.attemptCount != null && test.attemptCount > 0) ...[
+            if (test.attemptCount != null) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: () {

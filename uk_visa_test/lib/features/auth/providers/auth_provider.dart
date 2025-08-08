@@ -1,7 +1,9 @@
+// lib/features/auth/providers/auth_provider.dart - FIXED VERSION
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../core/storage/secure_storage.dart';
+import '../../../core/utils/helpers.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref);
@@ -26,11 +28,11 @@ class AuthState {
     String? error,
     bool? isAuthenticated,
   }) => AuthState(
-      user: user ?? this.user,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-    );
+    user: user ?? this.user,
+    isLoading: isLoading ?? this.isLoading,
+    error: error,
+    isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+  );
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -43,11 +45,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _checkAuthStatus() async {
     try {
       final token = await SecureStorageService.instance.getAuthToken();
+      print('🔍 Checking auth status - Token exists: ${token != null}');
+
       if (token != null && token.isNotEmpty) {
         // Try to get user profile to validate token
         await getProfile();
       }
     } catch (e) {
+      print('❌ Auth check failed: $e');
       // Token might be invalid, clear it
       await SecureStorageService.instance.clearAll();
       state = const AuthState();
@@ -61,6 +66,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String languageCode = 'en',
   }) async {
     state = state.copyWith(isLoading: true, error: null);
+    print('📝 Starting registration for: $email');
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
@@ -71,17 +77,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         languageCode: languageCode,
       );
 
-      // Store tokens and user info
-      await SecureStorageService.instance.setAuthToken(result['token']);
-      await SecureStorageService.instance.setUserId(result['user']['id'].toString());
-      await SecureStorageService.instance.setUserEmail(result['user']['email']);
+      print('✅ Registration API successful');
+
+      // ✅ Store tokens and user info safely
+      await _storeAuthData(result);
+
+      // ✅ Create user object with error handling
+      final user = _createUserFromResult(result);
 
       state = state.copyWith(
         isLoading: false,
-        user: User.fromJson(result['user']),
+        user: user,
         isAuthenticated: true,
       );
+
+      print('✅ Registration state updated - User: ${user.email}');
     } catch (e) {
+      print('❌ Registration failed: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString().replaceAll('Exception: ', ''),
@@ -95,6 +107,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
+    print('🔐 Starting login for: $email');
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
@@ -103,17 +116,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
 
-      // Store tokens and user info
-      await SecureStorageService.instance.setAuthToken(result['token']);
-      await SecureStorageService.instance.setUserId(result['user']['id'].toString());
-      await SecureStorageService.instance.setUserEmail(result['user']['email']);
+      print('✅ Login API successful');
 
+      // ✅ Store tokens and user info safely
+      await _storeAuthData(result);
+
+      // ✅ Create user object with error handling
+      final user = _createUserFromResult(result);
+
+      // ✅ Update state before navigation
       state = state.copyWith(
         isLoading: false,
-        user: User.fromJson(result['user']),
+        user: user,
         isAuthenticated: true,
       );
+
+      print('✅ Login state updated - User: ${user.email}, Auth: ${state.isAuthenticated}');
+
+      // ✅ Add small delay to ensure state is propagated
+      await Future.delayed(const Duration(milliseconds: 100));
+
     } catch (e) {
+      print('❌ Login failed: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString().replaceAll('Exception: ', ''),
@@ -124,15 +148,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> getProfile() async {
     try {
+      print('👤 Getting user profile');
       final authRepository = ref.read(authRepositoryProvider);
-      final user = await authRepository.getProfile();
+      final result = await authRepository.getProfile();
+
+      final user = User.fromJson(result['profile']);
 
       state = state.copyWith(
         isLoading: false,
-        user: User.fromJson(user['profile']),
+        user: user,
         isAuthenticated: true,
       );
+
+      print('✅ Profile loaded - User: ${user.email}');
     } catch (e) {
+      print('❌ Get profile failed: $e');
       // If getting profile fails, user might not be authenticated
       await logout();
       rethrow;
@@ -189,15 +219,56 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    print('🚪 Logging out user');
     try {
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.logout();
     } catch (e) {
       // Ignore logout errors
-      print('Logout error: $e');
+      print('⚠️ Logout API error (ignored): $e');
     } finally {
       await SecureStorageService.instance.clearAll();
       state = const AuthState();
+      print('✅ Logout completed');
+    }
+  }
+
+  // ✅ Helper method to safely store auth data
+  Future<void> _storeAuthData(Map<String, dynamic> result) async {
+    try {
+      final token = result['token']?.toString();
+      final userData = result['user'] as Map<String, dynamic>?;
+
+      if (token != null && userData != null) {
+        await SecureStorageService.instance.setAuthToken(token);
+        await SecureStorageService.instance.setUserId(userData['id']?.toString() ?? '0');
+        await SecureStorageService.instance.setUserEmail(userData['email']?.toString() ?? '');
+        print('✅ Auth data stored successfully');
+      } else {
+        throw Exception('Invalid auth response: missing token or user data');
+      }
+    } catch (e) {
+      print('❌ Failed to store auth data: $e');
+      throw Exception('Failed to store authentication data');
+    }
+  }
+
+  // ✅ Helper method to safely create User object
+  User _createUserFromResult(Map<String, dynamic> result) {
+    try {
+      final userData = result['user'] as Map<String, dynamic>?;
+      if (userData == null) {
+        throw Exception('User data is null');
+      }
+
+      print('📊 Creating user from data: ${userData.keys}');
+      final user = User.fromJson(userData);
+      print('✅ User object created successfully');
+      return user;
+    } catch (e) {
+      print('❌ Failed to create user object: $e');
+      print('📊 Raw user data: $result');
+      throw Exception('Failed to parse user data: $e');
     }
   }
 }

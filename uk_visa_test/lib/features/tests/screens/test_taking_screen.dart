@@ -28,7 +28,7 @@ class TestTakingScreen extends ConsumerStatefulWidget {
 class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   PageController? _pageController;
   int _currentQuestionIndex = 0;
-  late Map<int, List<String>> _answers;
+  late Map<String, List<String>> _answers;
   late DateTime _startTime;
 
   @override
@@ -259,7 +259,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
       try {
         final timeTaken = DateTime.now().difference(_startTime).inSeconds;
         final attemptId = await ref.read(testProvider.notifier).submitAttempt(
-          attemptId: widget.attemptId!,
+          attemptIdParam: widget.attemptId!,
           answers: _answers,
           timeTaken: timeTaken,
         );

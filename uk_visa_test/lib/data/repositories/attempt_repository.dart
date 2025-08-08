@@ -14,11 +14,14 @@ class AttemptRepository {
   AttemptRepository(this._attemptService);
 
   /// Start a new test attempt
-  Future<int> startAttempt(int testId) async {
+  Future<String> startAttempt(int testId) async {
     final response = await _attemptService.startAttempt(testId);
 
     if (response.success && response.data != null) {
-      return response.data!['attempt_id'] as int;
+      final attemptIdRaw = response.data!['attempt_id'];
+      final attemptId = attemptIdRaw?.toString() ?? '0';
+
+      return attemptId;
     } else {
       final errorMessage = response.message ?? 'Failed to start test';
       // Handle specific error cases

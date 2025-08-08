@@ -49,10 +49,10 @@ class AuthRepository {
     if (response.success && response.data != null) {
       final userData = response.data!['user'] as Map<String, dynamic>;
       return {
-        'user': User.fromJson(userData),
+        'user': userData, // Pass raw data to be parsed by User.fromJson
         'token': response.data!['token'] as String,
         'tokenType': response.data!['token_type'] as String,
-        'expiresIn': response.data!['expires_in'] as String?,
+        'expiresIn': response.data!['expires_in']?.toString(), // Convert to String safely
       };
     } else {
       throw Exception(response.message ?? 'Login failed');

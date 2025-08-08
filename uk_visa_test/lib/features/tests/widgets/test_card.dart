@@ -109,7 +109,7 @@ class TestCard extends StatelessWidget {
                   theme: theme,
                 ),
                 const SizedBox(width: 12),
-                if (test.attemptCount != null && test.attemptCount > 0)
+                if (test.attemptCount != null)
                   _buildStatChip(
                     icon: Icons.history,
                     label: '${test.attemptCount} attempts',
