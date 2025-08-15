@@ -1,6 +1,4 @@
-// lib/core/storage/shared_prefs.dart
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constants/storage_keys.dart';
 
 class SharedPrefsService {
@@ -32,6 +30,47 @@ class SharedPrefsService {
     return _prefs.getString(StorageKeys.languageCode);
   }
 
+  // 🆕 NEW: Bilingual Settings
+  Future<void> setBilingualEnabled(bool enabled) async {
+    await _prefs.setBool(StorageKeys.bilingualEnabled, enabled);
+  }
+
+  bool getBilingualEnabled() {
+    return _prefs.getBool(StorageKeys.bilingualEnabled) ?? false;
+  }
+
+  Future<void> setPrimaryLanguage(String language) async {
+    await _prefs.setString(StorageKeys.primaryLanguage, language);
+  }
+
+  String getPrimaryLanguage() {
+    return _prefs.getString(StorageKeys.primaryLanguage) ?? 'en';
+  }
+
+  Future<void> setSecondaryLanguage(String language) async {
+    await _prefs.setString(StorageKeys.secondaryLanguage, language);
+  }
+
+  String getSecondaryLanguage() {
+    return _prefs.getString(StorageKeys.secondaryLanguage) ?? 'vi';
+  }
+
+  Future<void> setShowBothLanguages(bool show) async {
+    await _prefs.setBool(StorageKeys.showBothLanguages, show);
+  }
+
+  bool getShowBothLanguages() {
+    return _prefs.getBool(StorageKeys.showBothLanguages) ?? true;
+  }
+
+  Future<void> setAutoTranslate(bool auto) async {
+    await _prefs.setBool(StorageKeys.autoTranslate, auto);
+  }
+
+  bool getAutoTranslate() {
+    return _prefs.getBool(StorageKeys.autoTranslate) ?? false;
+  }
+
   // User Preferences
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _prefs.setBool(StorageKeys.notificationsEnabled, enabled);
@@ -56,6 +95,26 @@ class SharedPrefsService {
 
   bool isFirstLaunch() {
     return _prefs.getBool(StorageKeys.isFirstLaunch) ?? true;
+  }
+
+  // 🆕 NEW: Get all bilingual preferences at once
+  Map<String, dynamic> getBilingualPreferences() {
+    return {
+      'enabled': getBilingualEnabled(),
+      'primary_language': getPrimaryLanguage(),
+      'secondary_language': getSecondaryLanguage(),
+      'show_both_languages': getShowBothLanguages(),
+      'auto_translate': getAutoTranslate(),
+    };
+  }
+
+  // 🆕 NEW: Set all bilingual preferences at once
+  Future<void> setBilingualPreferences(Map<String, dynamic> prefs) async {
+    await setBilingualEnabled(prefs['enabled'] ?? false);
+    await setPrimaryLanguage(prefs['primary_language'] ?? 'en');
+    await setSecondaryLanguage(prefs['secondary_language'] ?? 'vi');
+    await setShowBothLanguages(prefs['show_both_languages'] ?? true);
+    await setAutoTranslate(prefs['auto_translate'] ?? false);
   }
 
   // Clear all data

@@ -4,10 +4,10 @@ import '../../../data/repositories/chapter_repository.dart';
 
 final chaptersProvider = FutureProvider<List<Chapter>>((ref) async {
   final chapterRepository = ref.watch(chapterRepositoryProvider);
-  return await chapterRepository.getAllChapters();
+  return chapterRepository.getAllChapters();
 });
 
 final chapterDetailProvider = FutureProvider.family<Chapter, int>((ref, chapterId) async {
   final chapterRepository = ref.watch(chapterRepositoryProvider);
-  return await chapterRepository.getChapter(chapterId);
+  return chapterRepository.getChapter(chapterId);
 });

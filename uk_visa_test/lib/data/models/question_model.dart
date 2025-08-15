@@ -12,8 +12,10 @@ class Question extends Equatable {
   final String testId; // ✅ Changed to String
   final String questionId;
   final String questionText;
+  final String? questionTextVi;
   final String questionType;
   final String? explanation;
+  final String? explanationVi;
   final List<Answer> answers;
   final String createdAt;
 
@@ -22,8 +24,10 @@ class Question extends Equatable {
     required this.testId,
     required this.questionId,
     required this.questionText,
+    this.questionTextVi,
     required this.questionType,
     this.explanation,
+    this.explanationVi,
     required this.answers,
     required this.createdAt,
   });
@@ -35,8 +39,10 @@ class Question extends Equatable {
       testId: json['test_id']?.toString() ?? '0',
       questionId: json['question_id']?.toString() ?? '',
       questionText: json['question_text']?.toString() ?? '',
+      questionTextVi: json['question_text_vi']?.toString(),
       questionType: json['question_type']?.toString() ?? 'radio',
       explanation: json['explanation']?.toString(),
+      explanationVi: json['explanation_vi']?.toString(),
       answers: json['answers'] != null
           ? (json['answers'] as List).map((e) => Answer.fromJson(e)).toList()
           : <Answer>[],
@@ -45,6 +51,14 @@ class Question extends Equatable {
   }
 
   Map<String, dynamic> toJson() => _$QuestionToJson(this);
+
+  String getQuestionText({bool isVietnamese = false}) => isVietnamese && questionTextVi != null ? questionTextVi! : questionText;
+
+  String getExplanation({bool isVietnamese = false}) => isVietnamese && explanationVi != null ? explanationVi! : explanation ?? '';
+
+  bool get hasVietnameseTranslation => questionTextVi != null && questionTextVi!.isNotEmpty;
+
+  bool get hasVietnameseExplanation => explanationVi != null && explanationVi!.isNotEmpty;
 
   // ✅ Convenience getters for int values
   int get idInt => int.tryParse(id) ?? 0;
@@ -63,8 +77,10 @@ class Question extends Equatable {
     testId,
     questionId,
     questionText,
+    questionTextVi,
     questionType,
     explanation,
+    explanationVi,
     answers,
     createdAt,
   ];

@@ -164,38 +164,23 @@ class TestDetailScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: test.isFree == true
-                  ? AppColors.success.withValues(alpha:0.1)
-                  : AppColors.warning.withValues(alpha:0.1),
+              color: AppColors.success.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: test.isFree == true
-                    ? AppColors.success
-                    : AppColors.warning,
+                color: AppColors.success,
               ),
             ),
             child: Row(
               children: [
-                Icon(
-                  test.isFree == true
-                      ? Icons.check_circle
-                      : Icons.lock,
-                  color: test.isFree == true
-                      ? AppColors.success
-                      : AppColors.warning,
+                const Icon(Icons.check_circle,
+                  color: AppColors.success
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    test.isFree == true
-                        ? 'You can access this test'
-                        : test.isPremium
-                        ? 'Premium subscription required'
-                        : 'Free test limit reached',
+                    'You can access this test',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: test.isFree == true
-                          ? AppColors.success
-                          : AppColors.warning,
+                      color: AppColors.success,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -205,44 +190,14 @@ class TestDetailScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 32),
-
-          // Action Buttons
-          if (test.isFree == true) ...[
-            ElevatedButton.icon(
-              onPressed: () => _startTest(context, ref),
-              icon: const Icon(Icons.play_arrow),
-              label: Text(l10n.test_startTest),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+          ElevatedButton.icon(
+            onPressed: () => _startTest(context, ref),
+            icon: const Icon(Icons.play_arrow),
+            label: Text(l10n.test_startTest),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            if (test.attemptCount != null) ...[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  context.go('/progress');
-                },
-                icon: const Icon(Icons.history),
-                label: Text(l10n.test_viewResults),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-            ],
-          ] else ...[
-            ElevatedButton.icon(
-              onPressed: () {
-                // Navigate to subscription
-                context.go('/subscription');
-              },
-              icon: const Icon(Icons.upgrade),
-              label: Text(l10n.subscription_upgrade),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.warning,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );

@@ -1,4 +1,3 @@
-// lib/core/network/network_info.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 abstract class NetworkInfo {
@@ -7,9 +6,9 @@ abstract class NetworkInfo {
 }
 
 class NetworkInfoImpl implements NetworkInfo {
-  final Connectivity connectivity;
 
   NetworkInfoImpl(this.connectivity);
+  final Connectivity connectivity;
 
   @override
   Future<bool> get isConnected async {
@@ -18,9 +17,5 @@ class NetworkInfoImpl implements NetworkInfo {
   }
 
   @override
-  Stream<bool> get onConnectivityChanged {
-    return connectivity.onConnectivityChanged.map((result) {
-      return result != ConnectivityResult.none;
-    });
-  }
+  Stream<bool> get onConnectivityChanged => connectivity.onConnectivityChanged.map((result) => result != ConnectivityResult.none);
 }

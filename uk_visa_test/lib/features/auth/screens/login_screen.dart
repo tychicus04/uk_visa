@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/error/error_handler.dart';
+import '../../../data/states/AuthState.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/custom_button.dart';

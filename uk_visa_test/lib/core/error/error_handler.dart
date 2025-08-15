@@ -1,4 +1,3 @@
-// lib/core/error/error_handler.dart
 class ErrorHandler {
   static String getErrorMessage(dynamic error) {
     final String errorString = error.toString();

@@ -1,5 +1,3 @@
-// lib/features/tests/screens/test_taking_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,18 +7,20 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
-import '../widgets/question_widget.dart';
-import '../widgets/test_timer_widget.dart';
+import '../widgets/circular_timer_widget.dart';
+import '../widgets/enhanced_question_widget.dart';
+import '../widgets/language_settings_bottom_sheet.dart';
+import '../widgets/question_navigation_sheet.dart';
 
 class TestTakingScreen extends ConsumerStatefulWidget {
-  final int testId;
-  final int? attemptId;
-
   const TestTakingScreen({
     super.key,
     required this.testId,
     this.attemptId,
   });
+
+  final int testId;
+  final int? attemptId;
 
   @override
   ConsumerState<TestTakingScreen> createState() => _TestTakingScreenState();
@@ -54,72 +54,13 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
     return testState.when(
       data: (test) => Scaffold(
-        appBar: AppBar(
-          title: Text(test.title ?? 'Test ${test.testNumber}'),
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => _showExitDialog(context),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () => _showOptionsMenu(context),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Progress Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n.test_questionOf(
-                          _currentQuestionIndex + 1,
-                          test.questions?.length ?? 24,
-                        ),
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                            SizedBox(width: 4),
-                            TestTimerWidget(totalDuration: Duration(minutes: 45)), // 45 minutes
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  LinearProgressIndicator(
-                    value: (_currentQuestionIndex + 1) / (test.questions?.length ?? 24),
-                    backgroundColor: AppColors.borderLight,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  ),
-                ],
-              ),
-            ),
+        body: CustomScrollView(
+          slivers: [
+            // 🔥 SLIVER APP BAR WITH PROGRESS
+            _buildSliverAppBar(context, test),
 
-            // Questions
-            Expanded(
+            // 🔥 QUESTION CONTENT
+            SliverFillRemaining(
               child: test.questions != null
                   ? PageView.builder(
                 controller: _pageController,
@@ -131,60 +72,27 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                 itemCount: test.questions!.length,
                 itemBuilder: (context, index) {
                   final question = test.questions![index];
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: QuestionWidget(
-                      question: question,
-                      selectedAnswers: _answers[question.id] ?? [],
-                      onAnswerSelected: (answerId, isSelected) {
-                        _handleAnswerSelection(question, answerId, isSelected);
-                      },
-                    ),
+                  return EnhancedQuestionWidget(
+                    question: question,
+                    questionNumber: index + 1,
+                    totalQuestions: test.questions!.length,
+                    selectedAnswers: _answers[question.id] ?? [],
+                    onAnswerSelected: (answerId, isSelected) {
+                      _handleAnswerSelection(question, answerId, isSelected);
+                    },
                   );
                 },
               )
                   : const Center(child: LoadingWidget()),
             ),
-
-            // Navigation Buttons
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  if (_currentQuestionIndex > 0) ...[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _previousQuestion,
-                        icon: const Icon(Icons.arrow_back),
-                        label: Text(l10n.common_previous),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                  ],
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _currentQuestionIndex < (test.questions?.length ?? 0) - 1
-                          ? _nextQuestion
-                          : () => _submitTest(context, ref),
-                      icon: Icon(
-                        _currentQuestionIndex < (test.questions?.length ?? 0) - 1
-                            ? Icons.arrow_forward
-                            : Icons.check,
-                      ),
-                      label: Text(
-                        _currentQuestionIndex < (test.questions?.length ?? 0) - 1
-                            ? l10n.common_next
-                            : l10n.test_submitTest,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
+
+        // 🔥 FIXED BOTTOM ACTION BAR
+        bottomNavigationBar: _buildBottomActionBar(context, test),
       ),
       loading: () => const Scaffold(
+        backgroundColor: AppColors.primary,
         body: Center(child: LoadingWidget()),
       ),
       error: (error, stack) => Scaffold(
@@ -196,13 +104,182 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
+  // 🔥 SLIVER APP BAR WITH PROGRESS AND TIMER
+  Widget _buildSliverAppBar(BuildContext context, dynamic test) {
+    final totalQuestions = test.questions?.length ?? 24;
+    final progress = totalQuestions > 0 ? (_currentQuestionIndex + 1) / totalQuestions : 0.0;
+
+    return SliverAppBar(
+      expandedHeight: 140,
+      floating: false,
+      pinned: true,
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      leading: IconButton(
+        onPressed: () => _showExitDialog(context),
+        icon: const Icon(Icons.close),
+      ),
+      title: Text(
+        test.displayTitle,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+      actions: [
+        // Language Settings
+        IconButton(
+          onPressed: () => _showLanguageSettings(context),
+          icon: const Icon(Icons.language),
+          tooltip: 'Language Settings',
+        ),
+
+        // Question Navigation
+        IconButton(
+          onPressed: () => _showQuestionNavigation(context, test),
+          icon: const Icon(Icons.list),
+          tooltip: 'Question List',
+        ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.primary, AppColors.primaryDark],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+              child: Row(
+                children: [
+                  // Progress Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Question ${_currentQuestionIndex + 1} of $totalQuestions',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+
+                        // Linear Progress Bar
+                        LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                          minHeight: 6,
+                        ),
+
+                        const SizedBox(height: 4),
+                        Text(
+                          '${(progress * 100).round()}% Complete',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Circular Timer
+                  CircularTimerWidget(
+                    totalDuration: const Duration(minutes: 45),
+                    onTimeUp: () => _submitTest(context, ref),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 🔥 FIXED BOTTOM ACTION BAR
+  Widget _buildBottomActionBar(BuildContext context, dynamic test) {
+    final totalQuestions = test.questions?.length ?? 24;
+    final isFirstQuestion = _currentQuestionIndex == 0;
+    final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
+    final answeredCount = _answers.values.where((answers) => answers.isNotEmpty).length;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, -2),
+            blurRadius: 8,
+            color: Colors.black.withOpacity(0.1),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Previous Button
+              if (!isFirstQuestion) ...[
+                Expanded(
+                  flex: 2,
+                  child: OutlinedButton.icon(
+                    onPressed: _previousQuestion,
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Previous'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+
+              // Next/Submit Button
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: isLastQuestion
+                      ? () => _submitTest(context, ref)
+                      : _nextQuestion,
+                  icon: Icon(
+                    isLastQuestion ? Icons.check : Icons.arrow_forward,
+                    size: 18,
+                  ),
+                  label: Text(isLastQuestion ? 'Submit' : 'Next'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _handleAnswerSelection(dynamic question, String answerId, bool isSelected) {
     setState(() {
       if (question.questionType == 'radio') {
-        // Single selection
         _answers[question.id] = isSelected ? [answerId] : [];
       } else {
-        // Multiple selection
         final currentAnswers = _answers[question.id] ?? [];
         if (isSelected) {
           if (!currentAnswers.contains(answerId)) {
@@ -231,12 +308,43 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
+  void _showLanguageSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const LanguageSettingsBottomSheet(),
+    );
+  }
+
+  void _showQuestionNavigation(BuildContext context, dynamic test) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => QuestionNavigationSheet(
+        test: test,
+        currentQuestionIndex: _currentQuestionIndex,
+        answers: _answers,
+        onQuestionTap: (index) {
+          Navigator.pop(context);
+          _pageController?.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _submitTest(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Submit Test'),
-        content: const Text('Are you sure you want to submit your test? You cannot change your answers after submission.'),
+        content: const Text('Are you sure you want to submit your test? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -244,6 +352,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('Submit'),
           ),
         ],
@@ -268,6 +377,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             SnackBar(
               content: Text(e.toString()),
               backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         }
@@ -279,6 +390,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Exit Test'),
         content: const Text('Are you sure you want to exit? Your progress will be lost.'),
         actions: [
@@ -298,34 +410,5 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     if (shouldExit == true && context.mounted) {
       Navigator.of(context).pop();
     }
-  }
-
-  void _showOptionsMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.flag_outlined),
-              title: const Text('Mark for Review'),
-              onTap: () {
-                Navigator.of(context).pop();
-                // TODO: Implement mark for review
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.help_outline),
-              title: const Text('Test Instructions'),
-              onTap: () {
-                Navigator.of(context).pop();
-                // TODO: Show instructions
-              },
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

@@ -110,21 +110,6 @@ class HomeScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Progress Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: ProgressCard(
-                        title: l10n.home_practiceProgress,
-                        percentage: 76,
-                        subtitle: l10n.home_dailyQuestionAnswered(29),
-                        description: l10n.home_testsCompleted(34, 45),
-                        color: AppColors.progressBlue,
-                      ),
-                    )
-                  ],
-                ),
-
                 const SizedBox(height: 24),
 
                 // Study Schedule Card

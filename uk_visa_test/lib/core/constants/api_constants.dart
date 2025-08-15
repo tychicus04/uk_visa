@@ -53,12 +53,15 @@ class ApiConstants {
   static const String authRefresh = '/auth/refresh';
   static const String authLogout = '/auth/logout';
   static const String authChangePassword = '/auth/change-password';
+  static const String authLanguage = '/auth/language';
 
   // Test Endpoints
   static const String testsAvailable = '/tests/available';
   static const String testsFree = '/tests/free';
   static const String testsSearch = '/tests/search';
   static const String testDetail = '/tests'; // + /{id}
+  static const String testByType = '/tests/type'; // + /{type}
+  static const String testByChapter = '/tests/chapter'; // + /{chapterId}
 
   // Attempt Endpoints
   static const String attemptsStart = '/attempts/start';
@@ -75,6 +78,10 @@ class ApiConstants {
   static const String subscriptionSubscribe = '/subscriptions/subscribe';
   static const String subscriptionStatus = '/subscriptions/status';
 
+  // Question Endpoints
+  static const String questions = '/questions';
+  static const String questionsByTest = '/questions/test'; // + /{test_id}
+
   // System Endpoints
   static const String health = '/health';
   static const String test = '/test';
@@ -85,8 +92,46 @@ class ApiConstants {
     'Accept': 'application/json',
   };
 
+  static const String paramIncludeVietnamese = 'include_vietnamese';
+  static const String paramIncludeAnswers = 'include_answers';
+  static const String paramLanguageCode = 'language_code';
+  static const String paramBilingualMode = 'bilingual_mode';
+
   // Timeout
   static const Duration timeout = Duration(seconds: 30);
+
+  // NEW: Test filtering and grouping helpers
+  static Map<String, List<String>> get testGroupings => {
+    'practice': [testTypeChapter, testTypeComprehensive],
+    'exam': [testTypeExam],
+  };
+
+  // NEW: Test type display names
+  static Map<String, String> get testTypeDisplayNames => {
+    testTypeChapter: 'Chapter',
+    testTypeComprehensive: 'Mixed',
+    testTypeExam: 'Exam',
+  };
+
+  // NEW: Test type icons
+  static Map<String, String> get testTypeIcons => {
+    testTypeChapter: 'book',
+    testTypeComprehensive: 'quiz',
+    testTypeExam: 'assignment',
+  };
+
+  // NEW: Helper methods
+  static bool isPracticeTest(String testType) {
+    return testGroupings['practice']!.contains(testType);
+  }
+
+  static bool isExamTest(String testType) {
+    return testGroupings['exam']!.contains(testType);
+  }
+
+  static String getTestTypeDisplayName(String testType) {
+    return testTypeDisplayNames[testType] ?? testType;
+  }
 }
 
 

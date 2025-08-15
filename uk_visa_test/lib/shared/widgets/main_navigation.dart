@@ -37,11 +37,11 @@ class MainNavigation extends StatelessWidget {
             activeIcon: const Icon(Icons.menu_book),
             label: l10n.navigation_book,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.analytics_outlined),
-            activeIcon: const Icon(Icons.analytics),
-            label: l10n.navigation_progress,
-          ),
+          // BottomNavigationBarItem(
+          //   icon: const Icon(Icons.analytics_outlined),
+          //   activeIcon: const Icon(Icons.analytics),
+          //   label: l10n.navigation_progress,
+          // ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.settings_outlined),
             activeIcon: const Icon(Icons.settings),
@@ -60,11 +60,11 @@ class MainNavigation extends StatelessWidget {
     if (location.startsWith('/chapters')) {
       return 2;
     }
-    if (location.startsWith('/progress')) {
-      return 3;
-    }
+    // if (location.startsWith('/progress')) {
+    //   return 3;
+    // }
     if (location.startsWith('/settings')) {
-      return 4;
+      return 3;
     }
     return 0;
   }
@@ -80,10 +80,10 @@ class MainNavigation extends StatelessWidget {
       case 2:
         GoRouter.of(context).go('/chapters');
         break;
+      // case 3:
+      //   GoRouter.of(context).go('/progress');
+      //   break;
       case 3:
-        GoRouter.of(context).go('/progress');
-        break;
-      case 4:
         GoRouter.of(context).go('/settings');
         break;
     }

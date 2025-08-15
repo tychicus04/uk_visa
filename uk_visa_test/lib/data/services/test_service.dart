@@ -11,30 +11,48 @@ final testServiceProvider = Provider<TestService>((ref) {
 });
 
 class TestService {
-  final Dio _dio;
 
   TestService(this._dio);
+  final Dio _dio;
 
   /// Get available tests for user
-  Future<ApiResponse<Map<String, dynamic>>> getAvailableTests() async {
+  Future<ApiResponse<Map<String, dynamic>>> getAvailableTests({
+    bool includeVietnamese = false,
+  }) async {
     try {
-      final response = await _dio.get(ApiConstants.testsAvailable);
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+
+      final response = await _dio.get(
+          ApiConstants.testsAvailable,
+          queryParameters: queryParams.isNotEmpty ? queryParams : null);
+
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as Map<String, dynamic>,
+            (json) => json! as Map<String, dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  /// Get free tests (no auth required)
-  Future<ApiResponse<List<dynamic>>> getFreeTests() async {
+  Future<ApiResponse<List<dynamic>>> getFreeTests({
+    bool includeVietnamese = false,
+  }) async {
     try {
-      final response = await _dio.get(ApiConstants.testsFree);
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+      final response = await _dio.get(
+          ApiConstants.testsFree,
+          queryParameters: queryParams.isNotEmpty ? queryParams : null);
+
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as List<dynamic>,
+            (json) => json! as List<dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
@@ -42,12 +60,25 @@ class TestService {
   }
 
   /// Get specific test with questions
-  Future<ApiResponse<Map<String, dynamic>>> getTest(int testId) async {
+  Future<ApiResponse<Map<String, dynamic>>> getTest(
+      int testId,
+      { bool includeVietnamese = false,
+        bool includeCorrectAnswers = false}) async {
     try {
-      final response = await _dio.get('${ApiConstants.testDetail}/$testId');
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+      if (includeCorrectAnswers) {
+        queryParams['include_answers'] = 'true';
+      }
+      final response = await _dio.get(
+        '${ApiConstants.testDetail}/$testId',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as Map<String, dynamic>,
+            (json) => json! as Map<String, dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
@@ -59,12 +90,22 @@ class TestService {
     String? query,
     String? type,
     int? chapterId,
+    bool includeVietnamese = false,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (query != null) queryParams['q'] = query;
-      if (type != null) queryParams['type'] = type;
-      if (chapterId != null) queryParams['chapter_id'] = chapterId;
+      if (query != null) {
+        queryParams['q'] = query;
+      }
+      if (type != null) {
+        queryParams['type'] = type;
+      }
+      if (chapterId != null) {
+        queryParams['chapter_id'] = chapterId;
+      }
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
 
       final response = await _dio.get(
         ApiConstants.testsSearch,
@@ -73,7 +114,7 @@ class TestService {
 
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as List<dynamic>,
+            (json) => json! as List<dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
@@ -81,12 +122,21 @@ class TestService {
   }
 
   /// Get tests by type
-  Future<ApiResponse<List<dynamic>>> getTestsByType(String type) async {
+  Future<ApiResponse<List<dynamic>>> getTestsByType(
+      String type,
+      { bool includeVietnamese = false}) async {
     try {
-      final response = await _dio.get('/tests/type/$type');
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+
+      final response = await _dio.get(
+          '${ApiConstants.testByType}/$type',
+          queryParameters: queryParams.isNotEmpty ? queryParams : null);
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as List<dynamic>,
+            (json) => json! as List<dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
@@ -94,12 +144,82 @@ class TestService {
   }
 
   /// Get tests by chapter
-  Future<ApiResponse<List<dynamic>>> getTestsByChapter(int chapterId) async {
+  Future<ApiResponse<List<dynamic>>> getTestsByChapter(
+      int chapterId,
+      {bool includeVietnamese = false}) async {
     try {
-      final response = await _dio.get('/tests/chapter/$chapterId');
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+      final response = await _dio.get(
+          '${ApiConstants.testByChapter}/$chapterId',
+          queryParameters: queryParams.isNotEmpty ? queryParams : null);
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as List<dynamic>,
+            (json) => json! as List<dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getQuestion(
+      int questionId, {
+        bool includeVietnamese = false,
+        bool includeCorrectAnswers = false,
+      }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+      if (includeCorrectAnswers) {
+        queryParams['include_answers'] = 'true';
+      }
+
+      final response = await _dio.get(
+        '${ApiConstants.questions}/$questionId',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateLanguagePreference(
+      String languageCode,
+      ) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.authLanguage,
+        data: {
+          'language_code': languageCode,
+        },
+      );
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 🆕 NEW: Get translation statistics
+  Future<ApiResponse<Map<String, dynamic>>> getTranslationStats() async {
+    try {
+      final response = await _dio.get('/stats/translations');
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);

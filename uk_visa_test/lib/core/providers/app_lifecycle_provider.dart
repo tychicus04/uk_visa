@@ -1,43 +1,37 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../network/network_checker.dart';
-// import '../network/network_checker.dart';
 
-final appLifecycleProvider = StateNotifierProvider<AppLifecycleNotifier, AppLifecycleState>((ref) {
-  return AppLifecycleNotifier(ref);
-});
+final appLifecycleProvider = StateNotifierProvider<AppLifecycleNotifier, AppLifecycleState>(AppLifecycleNotifier.new);
 
 class AppLifecycleState {
-  final bool isOnline;
-  final bool isBackendConnected;
-  final String? lastError;
 
   const AppLifecycleState({
     this.isOnline = true,
     this.isBackendConnected = false,
     this.lastError,
   });
+  final bool isOnline;
+  final bool isBackendConnected;
+  final String? lastError;
 
   AppLifecycleState copyWith({
     bool? isOnline,
     bool? isBackendConnected,
     String? lastError,
-  }) {
-    return AppLifecycleState(
+  }) => AppLifecycleState(
       isOnline: isOnline ?? this.isOnline,
       isBackendConnected: isBackendConnected ?? this.isBackendConnected,
       lastError: lastError,
     );
-  }
 }
 
 class AppLifecycleNotifier extends StateNotifier<AppLifecycleState> {
-  final Ref ref;
 
   AppLifecycleNotifier(this.ref) : super(const AppLifecycleState()) {
     _checkConnectivity();
   }
+  final Ref ref;
 
   Future<void> _checkConnectivity() async {
     try {
@@ -46,10 +40,6 @@ class AppLifecycleNotifier extends StateNotifier<AppLifecycleState> {
         isOnline: true,
         isBackendConnected: isBackendConnected,
       );
-
-      if (!isBackendConnected && kDebugMode) {
-        print('⚠️  Backend is not reachable. Check your server configuration.');
-      }
     } catch (e) {
       state = state.copyWith(
         isOnline: false,

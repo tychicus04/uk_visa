@@ -2,9 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/shared_prefs.dart';
 
-final readingProgressProvider = StateNotifierProvider<ReadingProgressNotifier, Map<int, double>>((ref) {
-  return ReadingProgressNotifier();
-});
+final readingProgressProvider = StateNotifierProvider<ReadingProgressNotifier, Map<int, double>>((ref) => ReadingProgressNotifier());
 
 class ReadingProgressNotifier extends StateNotifier<Map<int, double>> {
   ReadingProgressNotifier() : super({}) {

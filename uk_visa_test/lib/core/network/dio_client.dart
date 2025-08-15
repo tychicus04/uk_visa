@@ -1,14 +1,13 @@
-// lib/core/network/dio_client.dart
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/api_constants.dart';
 import 'api_interceptor.dart';
 
 final dioProvider = Provider<Dio>((ref) {
-  final dio = Dio();
+  final dio = Dio()
 
   // Base configuration
-  dio.options = BaseOptions(
+  ..options = BaseOptions(
     baseUrl: ApiConstants.baseUrl,
     connectTimeout: ApiConstants.timeout,
     receiveTimeout: ApiConstants.timeout,
@@ -23,7 +22,7 @@ final dioProvider = Provider<Dio>((ref) {
     dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,
-      logPrint: (obj) => print(obj),
+      logPrint: print,
     ));
   }
 

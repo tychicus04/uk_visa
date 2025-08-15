@@ -17,17 +17,6 @@ class QuickActionsCard extends ConsumerWidget {
 
     return Column(
       children: [
-        // Daily Question
-        _buildActionCard(
-          context,
-          title: l10n.home_dailyQuestion,
-          icon: Icons.quiz,
-          trailing: const Icon(Icons.check, color: AppColors.success),
-          onTap: () {
-            // Navigate to daily question
-          },
-        ),
-        const SizedBox(height: 16),
 
         // Start Practicing
         _buildActionCard(

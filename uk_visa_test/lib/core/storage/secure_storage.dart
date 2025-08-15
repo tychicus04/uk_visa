@@ -4,9 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/storage_keys.dart';
 
 class SecureStorageService {
+  SecureStorageService._internal();
   static final SecureStorageService _instance = SecureStorageService._internal();
   static SecureStorageService get instance => _instance;
-  SecureStorageService._internal();
 
   late FlutterSecureStorage _storage;
 

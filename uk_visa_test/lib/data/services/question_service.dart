@@ -5,36 +5,38 @@ import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import '../models/api_response.dart';
 
-final chapterServiceProvider = Provider<ChapterService>((ref) {
+final questionServiceProvider = Provider<QuestionService>((ref) {
   final dio = ref.watch(dioProvider);
-  return ChapterService(dio);
+  return QuestionService(dio);
 });
 
-class ChapterService {
+class QuestionService {
 
-  ChapterService(this._dio);
+  QuestionService(this._dio);
+
   final Dio _dio;
 
-  /// Get all chapters
-  Future<ApiResponse<List<dynamic>>> getAllChapters() async {
+  Future<ApiResponse<Map<String, dynamic>>> getQuestion(int questionId, {
+    bool includeVietnamese = false,
+    bool includeCorrectAnswers = false,
+  }) async {
     try {
-      final response = await _dio.get(ApiConstants.chapters);
-      return ApiResponse.fromJson(
-        response.data,
-            (json) => json as List<dynamic>,
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+      if (includeCorrectAnswers) {
+        queryParams['include_answers'] = 'true';
+      }
 
-  /// Get specific chapter with tests
-  Future<ApiResponse<Map<String, dynamic>>> getChapter(int chapterId) async {
-    try {
-      final response = await _dio.get('${ApiConstants.chapterDetail}/$chapterId');
+      final response = await _dio.get(
+        '${ApiConstants.questions}/$questionId',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
       return ApiResponse.fromJson(
         response.data,
-            (json) => json as Map<String, dynamic>,
+            (json) => json! as Map<String, dynamic>,
       );
     } on DioException catch (e) {
       throw _handleError(e);
@@ -56,4 +58,5 @@ class ChapterService {
       return 'Network error. Please check your connection.';
     }
   }
+
 }

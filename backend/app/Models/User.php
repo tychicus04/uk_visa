@@ -40,34 +40,34 @@ class User extends BaseModel {
     }
     
     public function canAccessTest($userId, $testId) {
-        $sql = "SELECT t.is_free, t.is_premium, u.free_tests_used, u.free_tests_limit, 
-                       u.is_premium, u.premium_expires_at
-                FROM tests t
-                CROSS JOIN users u 
-                WHERE t.id = :test_id AND u.id = :user_id";
+        // $sql = "SELECT t.is_free, t.is_premium, u.free_tests_used, u.free_tests_limit, 
+        //                u.is_premium, u.premium_expires_at
+        //         FROM tests t
+        //         CROSS JOIN users u 
+        //         WHERE t.id = :test_id AND u.id = :user_id";
         
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':test_id', $testId);
-        $stmt->bindParam(':user_id', $userId);
-        $stmt->execute();
+        // $stmt = $this->db->prepare($sql);
+        // $stmt->bindParam(':test_id', $testId);
+        // $stmt->bindParam(':user_id', $userId);
+        // $stmt->execute();
         
-        $result = $stmt->fetch();
+        // $result = $stmt->fetch();
         
-        if (!$result) return false;
+        // if (!$result) return false;
         
-        // Free test check
-        if ($result['is_free']) {
-            return $result['free_tests_used'] < $result['free_tests_limit'];
-        }
+        // // Free test check
+        // if ($result['is_free']) {
+        //     return $result['free_tests_used'] < $result['free_tests_limit'];
+        // }
         
-        // Premium test check
-        if ($result['is_premium']) {
-            return $result['is_premium'] && 
-                   (is_null($result['premium_expires_at']) || 
-                    strtotime($result['premium_expires_at']) > time());
-        }
+        // // Premium test check
+        // if ($result['is_premium']) {
+        //     return $result['is_premium'] && 
+        //            (is_null($result['premium_expires_at']) || 
+        //             strtotime($result['premium_expires_at']) > time());
+        // }
         
-        return false;
+        return true;
     }
     
     public function incrementFreeTestUsage($userId) {

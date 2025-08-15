@@ -1,13 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
-import 'core/storage/shared_prefs.dart';
 import 'core/storage/secure_storage.dart';
-import 'core/utils/api_test_helper.dart';
+import 'core/storage/shared_prefs.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,13 +31,6 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-
-  // Debug: Test API configuration in debug mode
-  if (kDebugMode) {
-    ApiTestHelper.printApiConfiguration();
-    // Uncomment to run automatic connection tests on startup
-    // await ApiTestHelper.runConnectionTests();
-  }
 
   runApp(
     const ProviderScope(

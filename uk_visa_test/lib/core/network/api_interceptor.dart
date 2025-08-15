@@ -1,15 +1,14 @@
-// lib/core/network/api_interceptor.dart
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/secure_storage.dart';
 
 class ApiInterceptor extends Interceptor {
-  final Ref ref;
 
   ApiInterceptor(this.ref);
+  final Ref ref;
 
   @override
-  void onRequest(
+  Future<void> onRequest(
       RequestOptions options,
       RequestInterceptorHandler handler,
       ) async {
@@ -23,7 +22,7 @@ class ApiInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     // Handle 401 errors (unauthorized)
     if (err.response?.statusCode == 401) {
       // Try to refresh token

@@ -1,39 +1,11 @@
-// lib/features/auth/providers/auth_provider.dart - FIXED VERSION
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../core/utils/helpers.dart';
+import '../../../data/states/AuthState.dart';
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref);
-});
-
-class AuthState {
-  final User? user;
-  final bool isLoading;
-  final String? error;
-  final bool isAuthenticated;
-
-  const AuthState({
-    this.user,
-    this.isLoading = false,
-    this.error,
-    this.isAuthenticated = false,
-  });
-
-  AuthState copyWith({
-    User? user,
-    bool? isLoading,
-    String? error,
-    bool? isAuthenticated,
-  }) => AuthState(
-    user: user ?? this.user,
-    isLoading: isLoading ?? this.isLoading,
-    error: error,
-    isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-  );
-}
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref ref;
@@ -45,14 +17,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _checkAuthStatus() async {
     try {
       final token = await SecureStorageService.instance.getAuthToken();
-      print('🔍 Checking auth status - Token exists: ${token != null}');
 
       if (token != null && token.isNotEmpty) {
-        // Try to get user profile to validate token
         await getProfile();
       }
     } catch (e) {
-      print('❌ Auth check failed: $e');
       // Token might be invalid, clear it
       await SecureStorageService.instance.clearAll();
       state = const AuthState();
@@ -66,7 +35,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String languageCode = 'en',
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    print('📝 Starting registration for: $email');
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
@@ -76,13 +44,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         fullName: fullName,
         languageCode: languageCode,
       );
-
-      print('✅ Registration API successful');
-
-      // ✅ Store tokens and user info safely
       await _storeAuthData(result);
 
-      // ✅ Create user object with error handling
       final user = _createUserFromResult(result);
 
       state = state.copyWith(
@@ -90,10 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: user,
         isAuthenticated: true,
       );
-
-      print('✅ Registration state updated - User: ${user.email}');
     } catch (e) {
-      print('❌ Registration failed: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString().replaceAll('Exception: ', ''),

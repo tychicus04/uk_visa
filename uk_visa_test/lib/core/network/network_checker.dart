@@ -1,6 +1,6 @@
-// lib/core/network/network_checker.dart
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
 import '../constants/api_constants.dart';
 
 class NetworkChecker {
@@ -107,10 +107,7 @@ class NetworkChecker {
   }
 
   /// Test API endpoint with authentication
-  static Future<Map<String, dynamic>?> testAuthenticatedEndpoint(
-      String endpoint,
-      String token,
-      ) async {
+  static Future<Map<String, dynamic>?> testAuthenticatedEndpoint(String endpoint, String token) async {
     try {
       final dio = Dio();
       dio.options.connectTimeout = const Duration(seconds: 10);
@@ -120,38 +117,20 @@ class NetworkChecker {
 
       final url = '${ApiConstants.baseUrl}$endpoint';
 
-      if (kDebugMode) {
-        print('🔍 Testing authenticated endpoint: $url');
-      }
-
       final response = await dio.get(url);
-
-      if (kDebugMode) {
-        print('✅ Auth endpoint $endpoint: HTTP ${response.statusCode}');
-      }
 
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Auth endpoint $endpoint failed: $e');
-      }
       return null;
     }
   }
 
   /// Test authentication flow
-  static Future<Map<String, dynamic>?> testAuthentication({
-    required String email,
-    required String password,
-  }) async {
+  static Future<Map<String, dynamic>?> testAuthentication({required String email, required String password}) async {
     try {
       final dio = Dio();
       dio.options.connectTimeout = const Duration(seconds: 15);
       dio.options.receiveTimeout = const Duration(seconds: 15);
-
-      if (kDebugMode) {
-        print('🔍 Testing authentication with email: $email');
-      }
 
       final response = await dio.post(
         '${ApiConstants.baseUrl}/auth/login',
@@ -164,30 +143,8 @@ class NetworkChecker {
         ),
       );
 
-      if (kDebugMode) {
-        print('✅ Authentication test: HTTP ${response.statusCode}');
-        if (response.data is Map<String, dynamic>) {
-          final data = response.data as Map<String, dynamic>;
-          if (data['success'] == true) {
-            print('   - Login successful');
-            print('   - Token received: ${data['data']?['token']?.toString().substring(0, 20)}...');
-          }
-        }
-      }
-
       return response.data;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Authentication test failed: $e');
-
-        if (e is DioException && e.response != null) {
-          print('   - HTTP Status: ${e.response!.statusCode}');
-          final responseData = e.response!.data;
-          if (responseData is Map<String, dynamic>) {
-            print('   - Error message: ${responseData['message']}');
-          }
-        }
-      }
       return null;
     }
   }
@@ -203,9 +160,6 @@ class NetworkChecker {
       final response = await dio.get('https://www.google.com');
       return response.statusCode == 200;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ No internet connection: $e');
-      }
       return false;
     }
   }

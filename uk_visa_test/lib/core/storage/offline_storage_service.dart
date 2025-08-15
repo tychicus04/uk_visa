@@ -45,12 +45,10 @@ class OfflineStorageService {
   }
 
   // Get unsynced answers for upload when online
-  static List<Map<String, dynamic>> getUnsyncedAnswers() {
-    return _answers.values
+  static List<Map<String, dynamic>> getUnsyncedAnswers() => _answers.values
         .where((data) => data['synced'] == false)
         .map((data) => Map<String, dynamic>.from(data))
         .toList();
-  }
 
   // Mark answers as synced
   static Future<void> markAnswersSynced(String attemptId) async {

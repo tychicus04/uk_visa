@@ -12,9 +12,9 @@ final authServiceProvider = Provider<AuthService>((ref) {
 });
 
 class AuthService {
-  final Dio _dio;
 
   AuthService(this._dio);
+  final Dio _dio;
 
   Future<ApiResponse<Map<String, dynamic>>> register({
     required String email,
@@ -112,6 +112,40 @@ class AuthService {
           'new_password': newPassword,
         },
       );
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateLanguagePreference(
+      String languageCode,
+      ) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.authLanguage,
+        data: {
+          'language_code': languageCode,
+        },
+      );
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// 🆕 NEW: Get translation statistics
+  Future<ApiResponse<Map<String, dynamic>>> getTranslationStats() async {
+    try {
+      final response = await _dio.get('/stats/translations');
 
       return ApiResponse.fromJson(
         response.data,

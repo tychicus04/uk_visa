@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../shared/providers/bilingual_provider.dart';
 import '../shared/providers/locale_provider.dart';
 import '../shared/providers/theme_provider.dart';
 import 'router.dart';
@@ -14,6 +14,11 @@ class UKVisaTestApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(bilingualProvider, (previous, next) {
+      if (previous?.isEnabled != next.isEnabled) {
+        print('Bilingual mode changed: ${next.isEnabled}');
+      }
+    });
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
@@ -43,15 +48,17 @@ class UKVisaTestApp extends ConsumerWidget {
       ],
       locale: locale,
 
-      // Builder for global theme customization
-      builder: (context, child) {
-        return MediaQuery(
+      builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(1.0), // Prevent text scaling
+            textScaler: TextScaler.noScaling, // Prevent text scaling
           ),
-          child: child!,
-        );
-      },
+          child: Consumer(
+            builder: (context, ref, _) {
+              ref.watch(bilingualProvider);
+              return child!;
+            },
+          )
+        ),
     );
   }
 }

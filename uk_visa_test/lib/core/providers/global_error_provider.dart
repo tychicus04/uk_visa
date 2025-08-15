@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final globalErrorProvider = StateNotifierProvider<GlobalErrorNotifier, String?>((ref) {
-  return GlobalErrorNotifier();
-});
+final globalErrorProvider = StateNotifierProvider<GlobalErrorNotifier, String?>((ref) => GlobalErrorNotifier());
 
 class GlobalErrorNotifier extends StateNotifier<String?> {
   GlobalErrorNotifier() : super(null);

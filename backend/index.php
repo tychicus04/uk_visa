@@ -2,6 +2,7 @@
 /**
  * UK Visa Test API Router - Clean Version v1.0
  * Professional routing system with auto-loading
+ * 🆕 UPDATED: Added Vietnamese language support
  */
 
 error_reporting(E_ALL);
@@ -131,12 +132,16 @@ $routes = [
             'timestamp' => time(),
             'server_time' => date('Y-m-d H:i:s'),
             'endpoints' => [
-                'auth' => '/auth/{register|login|profile|refresh|logout}',
+                'auth' => '/auth/{register|login|profile|refresh|logout|language}',
                 'tests' => '/tests/{available|{id}|free|search}',
                 'attempts' => '/attempts/{start|submit|history|{id}}',
                 'chapters' => '/chapters',
-                'subscriptions' => '/subscriptions/{plans|subscribe|status}'
+                'subscriptions' => '/subscriptions/{plans|subscribe|status}',
+                'questions' => '/questions/{id}',
+                'stats' => '/stats/translations'
             ],
+            'vietnamese_support' => true,
+            'supported_languages' => ['en', 'vi'],
             'documentation' => 'Add ?debug=1 for debug info',
             'test_endpoint' => '/test'
         ]);
@@ -173,7 +178,8 @@ $routes = [
             'server_time' => date('Y-m-d H:i:s'),
             'timestamp' => time(),
             'php_version' => PHP_VERSION,
-            'environment' => $_ENV['APP_ENV'] ?? 'unknown'
+            'environment' => $_ENV['APP_ENV'] ?? 'unknown',
+            'vietnamese_support' => true
         ]);
     },
 
@@ -188,8 +194,12 @@ $routes = [
     'POST /auth/change-password' => 'AuthController@changePassword',
     'POST /auth/logout' => 'AuthController@logout',
     
+    // 🆕 NEW: Language preference endpoint
+    'POST /auth/language' => 'TestController@updateLanguagePreference',
+    'PUT /auth/language' => 'TestController@updateLanguagePreference',
+    
     // ==========================================================================
-    // TEST ROUTES
+    // TEST ROUTES (UPDATED with Vietnamese support)
     // ==========================================================================
     'GET /tests/available' => 'TestController@getAvailableTests',
     'GET /tests/free' => 'TestController@getFreeTests',
@@ -197,6 +207,12 @@ $routes = [
     'GET /tests/type/([a-zA-Z]+)' => 'TestController@getTestsByType',
     'GET /tests/chapter/(\d+)' => 'TestController@getTestsByChapter',
     'GET /tests/(\d+)' => 'TestController@getTest',
+    
+    // 🆕 NEW: Single question endpoint
+    'GET /questions/(\d+)' => 'TestController@getQuestion',
+    
+    // 🆕 NEW: Translation statistics endpoint
+    'GET /stats/translations' => 'TestController@getTranslationStats',
     
     // ==========================================================================
     // TEST ATTEMPT ROUTES
@@ -220,7 +236,34 @@ $routes = [
     'GET /subscriptions/plans' => 'SubscriptionController@getPlans',
     'POST /subscriptions/subscribe' => 'SubscriptionController@subscribe',
     'GET /subscriptions/status' => 'SubscriptionController@getStatus',
-    'POST /subscriptions/cancel' => 'SubscriptionController@cancel'
+    'POST /subscriptions/cancel' => 'SubscriptionController@cancel',
+    
+    // 🆕 NEW: Debug endpoint for routes (development only)
+    'GET /debug/routes' => function() {
+        if (!($_ENV['APP_DEBUG'] ?? false)) {
+            jsonResponse(['error' => 'Debug mode disabled'], 403);
+            return;
+        }
+        
+        global $routes;
+        $routeList = [];
+        foreach ($routes as $pattern => $handler) {
+            $routeList[] = [
+                'pattern' => $pattern,
+                'handler' => is_callable($handler) ? 'function' : $handler,
+                'vietnamese_support' => strpos($pattern, 'tests') !== false || 
+                                      strpos($pattern, 'language') !== false ||
+                                      strpos($pattern, 'questions') !== false ||
+                                      strpos($pattern, 'stats') !== false
+            ];
+        }
+        
+        jsonResponse([
+            'total_routes' => count($routeList),
+            'vietnamese_routes' => array_filter($routeList, function($r) { return $r['vietnamese_support']; }),
+            'all_routes' => $routeList
+        ]);
+    },
 ];
 
 /**
@@ -263,6 +306,8 @@ try {
                         'message' => "Controller $controller is not yet implemented or file missing",
                         'endpoint' => $routeMethod . ' ' . $routePath,
                         'suggestion' => "Create app/Controllers/$controller.php",
+                        'vietnamese_note' => strpos($routePath, 'language') !== false ? 
+                            'This endpoint is required for Vietnamese language support' : null,
                         'debug_info' => [
                             'file_path' => "app/Controllers/$controller.php",
                             'exists' => file_exists("app/Controllers/$controller.php")
@@ -280,7 +325,9 @@ try {
                         'controller' => $controller,
                         'method' => $method,
                         'message' => "Method $method not found in $controller",
-                        'available_methods' => get_class_methods($instance)
+                        'available_methods' => get_class_methods($instance),
+                        'vietnamese_note' => strpos($method, 'Language') !== false ? 
+                            'This method is required for Vietnamese language support' : null
                     ], 501);
                     $matched = true;
                     break;
@@ -297,10 +344,19 @@ try {
     if (!$matched) {
         // Show helpful 404 with suggestions
         $suggestions = [];
+        $vietnameseSuggestions = [];
+        
         foreach ($routes as $pattern => $handler) {
             list($routeMethod, $routePath) = explode(' ', $pattern, 2);
             if ($routeMethod === $requestMethod) {
                 $suggestions[] = $routePath;
+                
+                // Highlight Vietnamese-related endpoints
+                if (strpos($routePath, 'language') !== false || 
+                    strpos($routePath, 'stats') !== false ||
+                    strpos($routePath, 'questions') !== false) {
+                    $vietnameseSuggestions[] = $routePath . ' (Vietnamese support)';
+                }
             }
         }
         
@@ -316,6 +372,7 @@ try {
                 'base_path' => '/UK_Visa/Backend/'
             ],
             'suggestions' => array_slice($suggestions, 0, 5),
+            'vietnamese_endpoints' => $vietnameseSuggestions,
             'help' => 'Visit / for API information or /test for testing'
         ], 404);
     }

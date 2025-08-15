@@ -11,9 +11,9 @@ final attemptServiceProvider = Provider<AttemptService>((ref) {
 });
 
 class AttemptService {
-  final Dio _dio;
 
   AttemptService(this._dio);
+  final Dio _dio;
 
   /// Start a new test attempt
   Future<ApiResponse<Map<String, dynamic>>> startAttempt(int testId) async {
