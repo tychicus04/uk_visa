@@ -2,17 +2,20 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../../app/theme/app_colors.dart';
 
 class CircularTimerWidget extends StatefulWidget {
   final Duration totalDuration;
   final VoidCallback? onTimeUp;
   final Function(Duration remaining)? onTimeUpdate;
+  final bool isDarkMode;
 
   const CircularTimerWidget({
     super.key,
     required this.totalDuration,
     this.onTimeUp,
     this.onTimeUpdate,
+    this.isDarkMode = false,
   });
 
   @override
@@ -48,9 +51,26 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
 
   Color _getTimerColor() {
     final progress = _remaining.inSeconds / widget.totalDuration.inSeconds;
-    if (progress > 0.5) return Colors.white;
-    if (progress > 0.25) return Colors.orange;
-    return Colors.red;
+
+    if (widget.isDarkMode) {
+      // Dark mode colors
+      if (progress > 0.5) return AppColors.textPrimaryDark;
+      if (progress > 0.25) return AppColors.warning;
+      return AppColors.error;
+    } else {
+      // Light mode colors
+      if (progress > 0.5) return Colors.white;
+      if (progress > 0.25) return Colors.orange;
+      return Colors.red;
+    }
+  }
+
+  Color _getBackgroundColor() {
+    if (widget.isDarkMode) {
+      return AppColors.borderDark;
+    } else {
+      return Colors.white.withOpacity(0.2);
+    }
   }
 
   @override
@@ -66,7 +86,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
         painter: CircularTimerPainter(
           progress: progress,
           progressColor: _getTimerColor(),
-          backgroundColor: Colors.white.withOpacity(0.2),
+          backgroundColor: _getBackgroundColor(),
           strokeWidth: 6.0,
         ),
         child: Center(

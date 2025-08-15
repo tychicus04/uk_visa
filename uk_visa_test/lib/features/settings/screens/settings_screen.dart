@@ -57,18 +57,18 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Notifications Section
-          _buildSectionHeader(l10n.settings_notifications, theme),
-          _buildSwitchTile(
-            icon: Icons.notifications_outlined,
-            title: 'Study Reminders',
-            subtitle: 'Get notified about study time',
-            value: true,
-            onChanged: (value) {
-              // TODO: Handle notification settings
-            },
-            theme: theme,
-          ),
-          const SizedBox(height: 24),
+          // _buildSectionHeader(l10n.settings_notifications, theme),
+          // _buildSwitchTile(
+          //   icon: Icons.notifications_outlined,
+          //   title: 'Study Reminders',
+          //   subtitle: 'Get notified about study time',
+          //   value: true,
+          //   onChanged: (value) {
+          //     // TODO: Handle notification settings
+          //   },
+          //   theme: theme,
+          // ),
+          // const SizedBox(height: 24),
 
           // About Section
           _buildSectionHeader(l10n.settings_about, theme),

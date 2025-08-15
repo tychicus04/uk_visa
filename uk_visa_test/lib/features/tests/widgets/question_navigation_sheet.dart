@@ -20,11 +20,13 @@ class QuestionNavigationSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalQuestions = test.questions?.length ?? 24;
     final answeredCount = answers.values.where((answers) => answers.isNotEmpty).length;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -35,7 +37,7 @@ class QuestionNavigationSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: isDark ? AppColors.borderDark : Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -47,16 +49,16 @@ class QuestionNavigationSheet extends StatelessWidget {
               children: [
                 Text(
                   'Question Navigator',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimaryLight,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '$answeredCount of $totalQuestions questions answered',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondaryLight,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                 ),
               ],
@@ -73,16 +75,19 @@ class QuestionNavigationSheet extends StatelessWidget {
                   color: AppColors.primary,
                   label: 'Current',
                   icon: Icons.location_on,
+                  isDark: isDark,
                 ),
                 _buildLegendItem(
                   color: AppColors.success,
                   label: 'Answered',
                   icon: Icons.check_circle,
+                  isDark: isDark,
                 ),
                 _buildLegendItem(
-                  color: Colors.grey[300]!,
+                  color: isDark ? AppColors.borderDark : Colors.grey[300]!,
                   label: 'Not Answered',
                   icon: Icons.radio_button_unchecked,
+                  isDark: isDark,
                 ),
               ],
             ),
@@ -114,6 +119,7 @@ class QuestionNavigationSheet extends StatelessWidget {
                     isAnswered: isAnswered,
                     isCurrent: isCurrent,
                     onTap: () => onQuestionTap(index),
+                    isDark: isDark,
                   );
                 },
               ),
@@ -130,7 +136,14 @@ class QuestionNavigationSheet extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+                      side: BorderSide(
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.primary.withOpacity(0.3)
+                      ),
+                      foregroundColor: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.primary,
                     ),
                     child: const Text('Close'),
                   ),
@@ -166,6 +179,7 @@ class QuestionNavigationSheet extends StatelessWidget {
     required Color color,
     required String label,
     required IconData icon,
+    required bool isDark,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -176,7 +190,7 @@ class QuestionNavigationSheet extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: isDark ? AppColors.textSecondaryDark : Colors.grey[600],
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -189,6 +203,7 @@ class QuestionNavigationSheet extends StatelessWidget {
     required bool isAnswered,
     required bool isCurrent,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     Color backgroundColor;
     Color borderColor;
@@ -206,9 +221,9 @@ class QuestionNavigationSheet extends StatelessWidget {
       textColor = AppColors.success;
       icon = Icons.check;
     } else {
-      backgroundColor = Colors.grey[100]!;
-      borderColor = Colors.grey[300]!;
-      textColor = Colors.grey[600]!;
+      backgroundColor = isDark ? AppColors.cardDark : Colors.grey[100]!;
+      borderColor = isDark ? AppColors.borderDark : Colors.grey[300]!;
+      textColor = isDark ? AppColors.textSecondaryDark : Colors.grey[600]!;
     }
 
     return Material(

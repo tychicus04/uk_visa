@@ -10,11 +10,13 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bilingualState = ref.watch(bilingualProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -25,7 +27,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: isDark ? AppColors.borderDark : Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -43,9 +45,9 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Text(
                   'Language Settings',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimaryLight,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   ),
                 ),
               ],
@@ -79,7 +81,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           'Vietnamese Translation',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,
                           ),
@@ -101,7 +103,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                     bilingualState.isEnabled
                         ? '🇻🇳 Vietnamese translations are now displayed alongside English questions and answers.'
                         : '🇬🇧 Only English content is displayed. Enable Vietnamese to see translations.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.primary.withOpacity(0.8),
                       height: 1.3,
                     ),
@@ -121,9 +123,9 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                 children: [
                   Text(
                     'Translation Quality',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondaryLight,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -133,6 +135,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                     title: 'Professional Translation',
                     description: 'All content has been professionally translated and reviewed for accuracy.',
                     color: AppColors.success,
+                    isDark: isDark,
                   ),
                 ],
               ),
@@ -167,6 +170,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
     required String title,
     required String description,
     required Color color,
+    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),

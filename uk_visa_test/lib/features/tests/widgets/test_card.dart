@@ -17,9 +17,12 @@ class TestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      elevation: 2,
+      elevation: isDark ? 4 : 2,
+      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+      shadowColor: isDark ? AppColors.shadowDark : AppColors.shadowLight,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -37,6 +40,10 @@ class TestCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: _getTestTypeColor(test.testType).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _getTestTypeColor(test.testType).withOpacity(isDark ? 0.3 : 0.2),
+                        width: 1,
+                      ),
                     ),
                     child: Icon(
                       _getTestTypeIcon(test.testType),
@@ -55,6 +62,7 @@ class TestCard extends StatelessWidget {
                           test.displayTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -63,7 +71,7 @@ class TestCard extends StatelessWidget {
                         Row(
                           children: [
                             if (showTestType) ...[
-                              _buildTestTypeBadge(context),
+                              _buildTestTypeBadge(context, isDark),
                             ],
                             if (test.chapterName != null) ...[
                               const SizedBox(width: 8),
@@ -71,7 +79,9 @@ class TestCard extends StatelessWidget {
                                 child: Text(
                                   test.chapterName!,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.outline,
+                                    color: isDark
+                                        ? AppColors.textSecondaryDark
+                                        : AppColors.textSecondaryLight,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -85,7 +95,7 @@ class TestCard extends StatelessWidget {
                   ),
 
                   // Access indicator
-                  _buildAccessIndicator(context),
+                  _buildAccessIndicator(context, isDark),
                 ],
               ),
 
@@ -100,6 +110,7 @@ class TestCard extends StatelessWidget {
                     icon: Icons.quiz_outlined,
                     label: '${test.questionCountInt} questions',
                     color: AppColors.info,
+                    isDark: isDark,
                   ),
                   const SizedBox(width: 8),
 
@@ -110,6 +121,7 @@ class TestCard extends StatelessWidget {
                       icon: Icons.history,
                       label: '${test.attemptCountInt} attempts',
                       color: AppColors.secondary,
+                      isDark: isDark,
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -121,26 +133,26 @@ class TestCard extends StatelessWidget {
                       icon: Icons.star_outlined,
                       label: '${test.bestScore!.toInt()}%',
                       color: _getScoreColor(test.bestScore!),
+                      isDark: isDark,
                     ),
                   ],
 
                   const Spacer(),
 
-
-                    _buildStatChip(
-                      context,
-                      icon: Icons.free_breakfast,
-                      label: 'Free',
-                      color: AppColors.success,
-                    )
-
+                  _buildStatChip(
+                    context,
+                    icon: Icons.free_breakfast,
+                    label: 'Free',
+                    color: AppColors.success,
+                    isDark: isDark,
+                  )
                 ],
               ),
 
               // Progress indicator if there are attempts
               if (test.attemptCountInt > 0 && test.bestScore != null) ...[
                 const SizedBox(height: 12),
-                _buildProgressIndicator(context),
+                _buildProgressIndicator(context, isDark),
               ],
             ],
           ),
@@ -149,7 +161,7 @@ class TestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTestTypeBadge(BuildContext context) {
+  Widget _buildTestTypeBadge(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
 
     String label;
@@ -170,10 +182,10 @@ class TestCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: _getTestTypeColor(test.testType).withOpacity(0.1),
+        color: _getTestTypeColor(test.testType).withOpacity(isDark ? 0.15 : 0.1),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: _getTestTypeColor(test.testType).withOpacity(0.3),
+          color: _getTestTypeColor(test.testType).withOpacity(isDark ? 0.4 : 0.3),
           width: 1,
         ),
       ),
@@ -188,15 +200,19 @@ class TestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAccessIndicator(BuildContext context) {
+  Widget _buildAccessIndicator(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
 
     if (!test.isAccessible) {
       return Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withOpacity(isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: AppColors.error.withOpacity(isDark ? 0.3 : 0.2),
+            width: 1,
+          ),
         ),
         child: Icon(
           Icons.lock_outline,
@@ -209,8 +225,12 @@ class TestCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: AppColors.success.withOpacity(0.1),
+        color: AppColors.success.withOpacity(isDark ? 0.15 : 0.1),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: AppColors.success.withOpacity(isDark ? 0.3 : 0.2),
+          width: 1,
+        ),
       ),
       child: Icon(
         Icons.play_arrow,
@@ -225,14 +245,19 @@ class TestCard extends StatelessWidget {
         required IconData icon,
         required String label,
         required Color color,
+        required bool isDark,
       }) {
     final theme = Theme.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withOpacity(isDark ? 0.15 : 0.1),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(isDark ? 0.3 : 0.2),
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -256,7 +281,7 @@ class TestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressIndicator(BuildContext context) {
+  Widget _buildProgressIndicator(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
     final progress = (test.bestScore ?? 0) / 100;
     final color = _getScoreColor(test.bestScore ?? 0);
@@ -270,7 +295,9 @@ class TestCard extends StatelessWidget {
             Text(
               'Best Score',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.outline,
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
                 fontSize: 11,
               ),
             ),
@@ -285,11 +312,26 @@ class TestCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: color.withOpacity(0.2),
-          valueColor: AlwaysStoppedAnimation<Color>(color),
-          minHeight: 3,
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            boxShadow: isDark ? [] : [
+              BoxShadow(
+                color: color.withOpacity(0.2),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: isDark
+                ? color.withOpacity(0.15)
+                : color.withOpacity(0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 4,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
       ],
     );

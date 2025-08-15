@@ -50,14 +50,16 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final testState = ref.watch(testDetailProvider(widget.testId));
 
     return testState.when(
       data: (test) => Scaffold(
+        backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
         body: CustomScrollView(
           slivers: [
             // 🔥 SLIVER APP BAR WITH PROGRESS
-            _buildSliverAppBar(context, test),
+            _buildSliverAppBar(context, test, theme, isDark),
 
             // 🔥 QUESTION CONTENT
             SliverFillRemaining(
@@ -89,13 +91,14 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         ),
 
         // 🔥 FIXED BOTTOM ACTION BAR
-        bottomNavigationBar: _buildBottomActionBar(context, test),
+        bottomNavigationBar: _buildBottomActionBar(context, test, theme, isDark),
       ),
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.primary,
-        body: Center(child: LoadingWidget()),
+      loading: () => Scaffold(
+        backgroundColor: isDark ? AppColors.backgroundDark : AppColors.primary,
+        body: const Center(child: LoadingWidget()),
       ),
       error: (error, stack) => Scaffold(
+        backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
         body: CustomErrorWidget(
           message: error.toString(),
           onRetry: () => ref.refresh(testDetailProvider(widget.testId)),
@@ -105,50 +108,60 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   }
 
   // 🔥 SLIVER APP BAR WITH PROGRESS AND TIMER
-  Widget _buildSliverAppBar(BuildContext context, dynamic test) {
+  Widget _buildSliverAppBar(BuildContext context, dynamic test, ThemeData theme, bool isDark) {
     final totalQuestions = test.questions?.length ?? 24;
     final progress = totalQuestions > 0 ? (_currentQuestionIndex + 1) / totalQuestions : 0.0;
+
+    // Theme-aware colors
+    final appBarBackground = isDark ? AppColors.surfaceDark : AppColors.primary;
+    final appBarForeground = isDark ? AppColors.textPrimaryDark : Colors.white;
+    final progressBackground = isDark
+        ? AppColors.borderDark
+        : Colors.white.withOpacity(0.3);
+    final progressValue = isDark ? AppColors.primary : Colors.white;
 
     return SliverAppBar(
       expandedHeight: 140,
       floating: false,
       pinned: true,
-      backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
+      backgroundColor: appBarBackground,
+      foregroundColor: appBarForeground,
       leading: IconButton(
         onPressed: () => _showExitDialog(context),
-        icon: const Icon(Icons.close),
+        icon: Icon(Icons.close, color: appBarForeground),
       ),
       title: Text(
         test.displayTitle,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: appBarForeground,
         ),
       ),
       actions: [
         // Language Settings
         IconButton(
           onPressed: () => _showLanguageSettings(context),
-          icon: const Icon(Icons.language),
+          icon: Icon(Icons.language, color: appBarForeground),
           tooltip: 'Language Settings',
         ),
 
         // Question Navigation
         IconButton(
           onPressed: () => _showQuestionNavigation(context, test),
-          icon: const Icon(Icons.list),
+          icon: Icon(Icons.list, color: appBarForeground),
           tooltip: 'Question List',
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.primary, AppColors.primaryDark],
+              colors: isDark
+                  ? [AppColors.surfaceDark, AppColors.cardDark]
+                  : [AppColors.primary, AppColors.primaryDark],
             ),
           ),
           child: SafeArea(
@@ -164,8 +177,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                       children: [
                         Text(
                           'Question ${_currentQuestionIndex + 1} of $totalQuestions',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: appBarForeground,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -175,8 +188,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                         // Linear Progress Bar
                         LinearProgressIndicator(
                           value: progress,
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                          backgroundColor: progressBackground,
+                          valueColor: AlwaysStoppedAnimation<Color>(progressValue),
                           minHeight: 6,
                         ),
 
@@ -184,7 +197,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                         Text(
                           '${(progress * 100).round()}% Complete',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: appBarForeground.withOpacity(0.9),
                             fontSize: 12,
                           ),
                         ),
@@ -198,6 +211,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                   CircularTimerWidget(
                     totalDuration: const Duration(minutes: 45),
                     onTimeUp: () => _submitTest(context, ref),
+                    isDarkMode: isDark,
                   ),
                 ],
               ),
@@ -209,7 +223,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   }
 
   // 🔥 FIXED BOTTOM ACTION BAR
-  Widget _buildBottomActionBar(BuildContext context, dynamic test) {
+  Widget _buildBottomActionBar(BuildContext context, dynamic test, ThemeData theme, bool isDark) {
     final totalQuestions = test.questions?.length ?? 24;
     final isFirstQuestion = _currentQuestionIndex == 0;
     final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
@@ -217,12 +231,12 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.surfaceDark : Colors.white,
         boxShadow: [
           BoxShadow(
             offset: const Offset(0, -2),
             blurRadius: 8,
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
           ),
         ],
       ),
@@ -241,7 +255,14 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                     label: const Text('Previous'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+                      side: BorderSide(
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.primary.withOpacity(0.3)
+                      ),
+                      foregroundColor: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.primary,
                     ),
                   ),
                 ),
@@ -339,16 +360,35 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   }
 
   Future<void> _submitTest(BuildContext context, WidgetRef ref) async {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Submit Test'),
-        content: const Text('Are you sure you want to submit your test? This action cannot be undone.'),
+        title: Text(
+          'Submit Test',
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to submit your test? This action cannot be undone.',
+          style: TextStyle(
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -387,16 +427,35 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   }
 
   Future<void> _showExitDialog(BuildContext context) async {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Exit Test'),
-        content: const Text('Are you sure you want to exit? Your progress will be lost.'),
+        title: Text(
+          'Exit Test',
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to exit? Your progress will be lost.',
+          style: TextStyle(
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
