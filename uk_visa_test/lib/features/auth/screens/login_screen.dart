@@ -39,14 +39,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authProvider);
     final isDark = theme.brightness == Brightness.dark;
 
-    // ✅ ĐÚNG: ref.listen PHẢI ở trong build method
     ref.listen<AuthState>(authProvider, (previous, next) {
-      print('🔄 Auth state changed in LoginScreen - isAuth: ${next.isAuthenticated}, user: ${next.user?.email}');
-
       if (next.isAuthenticated && next.user != null && mounted) {
-        // ✅ Navigate only if we're coming from a non-authenticated state
         if (previous?.isAuthenticated != true) {
-          print('➡️ Navigating to home from login');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               context.go('/');
@@ -60,7 +55,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Stack(
         children: [
-          // Main content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -70,8 +64,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 40),
-
-                    // UK Flag and Title
                     Center(
                       child: Column(
                         children: [
@@ -118,10 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 48),
-
-                    // Welcome Back
                     Text(
                       l10n.auth_welcome,
                       style: theme.textTheme.headlineMedium?.copyWith(
@@ -130,17 +119,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Sign in to continue your UK citizenship test preparation',
+                      l10n.sign_in_to_continue_your_test,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
                             : AppColors.textSecondaryLight,
                       ),
                     ),
-
                     const SizedBox(height: 32),
-
-                    // Email Field
                     CustomTextField(
                       controller: _emailController,
                       labelText: l10n.auth_email,
@@ -157,10 +143,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         return null;
                       },
                     ),
-
                     const SizedBox(height: 16),
-
-                    // Password Field
                     CustomTextField(
                       controller: _passwordController,
                       labelText: l10n.auth_password,
@@ -187,15 +170,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         return null;
                       },
                     ),
-
                     const SizedBox(height: 12),
-
-                    // Forgot Password
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: authState.isLoading ? null : () {
-                          // Handle forgot password
+                          context.go('/forgot-password');
                         },
                         child: Text(l10n.auth_forgotPassword),
                       ),

@@ -55,6 +55,11 @@ class ApiConstants {
   static const String authChangePassword = '/auth/change-password';
   static const String authLanguage = '/auth/language';
 
+  // 🆕 NEW: Password Reset Endpoints
+  static const String authForgotPassword = '/auth/forgot-password';
+  static const String authResetPassword = '/auth/reset-password';
+  static const String authVerifyResetToken = '/auth/verify-reset-token';
+
   // Test Endpoints
   static const String testsAvailable = '/tests/available';
   static const String testsFree = '/tests/free';

@@ -1,24 +1,26 @@
 // lib/app/router.dart - UPDATED WITH REVIEW ANSWERS ROUTE
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/states/AuthState.dart';
+import '../features/auth/providers/auth_provider.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/login_screen.dart';
-import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/profile_screen.dart';
+import '../features/auth/screens/register_screen.dart';
+import '../features/auth/screens/reset_password_screen.dart';
+import '../features/chapters/screens/chapter_detail_screen.dart';
+import '../features/chapters/screens/chapter_list_screen.dart';
 import '../features/chapters/screens/chapter_reading_screen.dart';
 import '../features/home/screens/home_screen.dart';
-import '../features/tests/screens/test_list_screen.dart';
-import '../features/tests/screens/test_detail_screen.dart';
-import '../features/tests/screens/test_taking_screen.dart';
-import '../features/tests/screens/test_result_screen.dart';
-import '../features/tests/screens/review_answers_screen.dart';
-import '../features/chapters/screens/chapter_list_screen.dart';
-import '../features/chapters/screens/chapter_detail_screen.dart';
 import '../features/progress/screens/progress_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
-import '../features/auth/providers/auth_provider.dart';
+import '../features/tests/screens/review_answers_screen.dart';
+import '../features/tests/screens/test_detail_screen.dart';
+import '../features/tests/screens/test_list_screen.dart';
+import '../features/tests/screens/test_result_screen.dart';
+import '../features/tests/screens/test_taking_screen.dart';
 import '../shared/widgets/main_navigation.dart';
 
 // ✅ Create a separate provider for router that can access auth state
@@ -41,7 +43,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       final isLoggedIn = authState.isAuthenticated && authState.user != null;
-      final isLoggingIn = state.fullPath == '/login' || state.fullPath == '/register';
+      // Thêm forgot password và reset password vào auth screens
+      final isLoggingIn = state.fullPath == '/login' ||
+          state.fullPath == '/register' ||
+          state.fullPath == '/forgot-password' ||
+          state.fullPath?.startsWith('/reset-password') == true;
       final currentLocation = state.fullPath;
 
       print('🔄 Router Redirect Check:');
@@ -77,6 +83,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           print('🏗️ Building LoginScreen');
           return const LoginScreen();
+        },
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        name: 'reset-password',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'];
+
+          if (token == null || token.isEmpty) {
+            return const ForgotPasswordScreen(); // Fallback
+          }
+
+          return ResetPasswordScreen(token: token);
         },
       ),
       GoRoute(
