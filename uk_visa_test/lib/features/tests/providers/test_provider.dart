@@ -267,13 +267,25 @@ class TestNotifier extends StateNotifier<TestState> {
 
 final attemptDetailProvider = FutureProvider.family<TestAttempt, dynamic>((ref, attemptIdParam) async {
   try {
-    print('🔄 Loading attempt detail: $attemptIdParam');
+    print('📄 Loading attempt detail: $attemptIdParam');
 
     final attemptRepository = ref.watch(attemptRepositoryProvider);
     final attemptId = _convertToInt(attemptIdParam, 'attemptId');
-    final result = await attemptRepository.getAttemptDetail(attemptId);
+
+    // ✅ Get Vietnamese preference for review answers
+    final shouldShowVietnamese = ref.read(shouldShowVietnameseProvider);
+
+    // ✅ Call repository with Vietnamese support
+    final result = await attemptRepository.getAttemptDetail(
+      attemptId,
+      includeVietnamese: shouldShowVietnamese,
+    );
 
     print('✅ Attempt detail loaded: ${result.id}');
+    if (shouldShowVietnamese) {
+      print('🇻🇳 Vietnamese support enabled for attempt review');
+    }
+
     return result;
   } catch (e) {
     print('💥 Failed to load attempt $attemptIdParam: $e');
@@ -384,7 +396,14 @@ final userTestStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   }
 });
 
-// ✅ Helper function for safe ID conversion
+extension TestProviderHelpers on dynamic {
+  /// Convert any ID parameter to int for API calls
+  int toIntId([String fieldName = 'id']) => _convertToInt(this, fieldName);
+
+  /// Convert any ID parameter to string for UI usage
+  String toStringId() => this?.toString() ?? '0';
+}
+
 int _convertToInt(dynamic value, String fieldName) {
   if (value is int) return value;
   if (value is String) {
@@ -394,13 +413,4 @@ int _convertToInt(dynamic value, String fieldName) {
 
   print('⚠️ Warning: Invalid $fieldName: $value (${value.runtimeType})');
   throw ArgumentError('Invalid $fieldName: expected int or parseable string, got $value');
-}
-
-// ✅ Helper extension for backward compatibility
-extension TestProviderHelpers on dynamic {
-  /// Convert any ID parameter to int for API calls
-  int toIntId([String fieldName = 'id']) => _convertToInt(this, fieldName);
-
-  /// Convert any ID parameter to string for UI usage
-  String toStringId() => this?.toString() ?? '0';
 }

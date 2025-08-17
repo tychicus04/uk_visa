@@ -16,7 +16,7 @@ class AttemptRepository {
   /// Start a new test attempt
   Future<String> startAttempt(int testId) async {
     try {
-      print('🔄 Repository: Starting attempt for test $testId');
+      print('📄 Repository: Starting attempt for test $testId');
 
       final response = await _attemptService.startAttempt(testId);
 
@@ -50,7 +50,7 @@ class AttemptRepository {
     required int timeTaken,
   }) async {
     try {
-      print('🔄 Repository: Submitting attempt $attemptId with ${answers.length} answers');
+      print('📄 Repository: Submitting attempt $attemptId with ${answers.length} answers');
 
       final response = await _attemptService.submitAttempt(
         attemptId: attemptId,
@@ -91,7 +91,7 @@ class AttemptRepository {
   /// Get attempt history with pagination
   Future<Map<String, dynamic>> getAttemptHistory({int page = 1, int limit = 20}) async {
     try {
-      print('🔄 Repository: Loading attempt history page $page, limit $limit');
+      print('📄 Repository: Loading attempt history page $page, limit $limit');
 
       final response = await _attemptService.getAttemptHistory(page: page, limit: limit);
 
@@ -113,16 +113,27 @@ class AttemptRepository {
     }
   }
 
-  /// Get specific attempt details
-  Future<TestAttempt> getAttemptDetail(int attemptId) async {
+  /// ✅ UPDATED: Get specific attempt details with Vietnamese support
+  Future<TestAttempt> getAttemptDetail(
+      int attemptId, {
+        bool includeVietnamese = false,
+      }) async {
     try {
-      print('🔄 Repository: Loading attempt detail for $attemptId');
+      print('📄 Repository: Loading attempt detail for $attemptId (Vietnamese: $includeVietnamese)');
 
-      final response = await _attemptService.getAttemptDetail(attemptId);
+      final response = await _attemptService.getAttemptDetail(
+        attemptId,
+        includeVietnamese: includeVietnamese,
+      );
 
       if (response.success && response.data != null) {
         final attempt = TestAttempt.fromJson(response.data!);
+
         print('✅ Repository: Loaded attempt detail: ${attempt.id}');
+        if (includeVietnamese) {
+          print('🇻🇳 Repository: Vietnamese support enabled for attempt review');
+        }
+
         return attempt;
       } else {
         print('❌ Repository: Failed to load attempt $attemptId - ${response.message}');
@@ -137,7 +148,7 @@ class AttemptRepository {
   /// Retake a test
   Future<int> retakeTest(int testId) async {
     try {
-      print('🔄 Repository: Retaking test $testId');
+      print('📄 Repository: Retaking test $testId');
 
       final response = await _attemptService.retakeTest(testId);
 
@@ -161,7 +172,7 @@ class AttemptRepository {
   /// Get leaderboard
   Future<List<Map<String, dynamic>>> getLeaderboard() async {
     try {
-      print('🔄 Repository: Loading leaderboard');
+      print('📄 Repository: Loading leaderboard');
 
       final response = await _attemptService.getLeaderboard();
 

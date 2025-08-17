@@ -1,4 +1,4 @@
-// lib/features/auth/screens/login_screen.dart - FIXED VERSION
+// lib/features/auth/screens/login_screen.dart - PROPERLY FIXED VERSION
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,16 +26,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isPasswordVisible = false;
 
   @override
-  void initState() {
-    super.initState();
-    // ✅ Listen to auth state changes for automatic navigation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _setupAuthListener();
-    });
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  void _setupAuthListener() {
-    // ✅ Listen to auth state and navigate when authenticated
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // ✅ ĐÚNG: ref.listen PHẢI ở trong build method
     ref.listen<AuthState>(authProvider, (previous, next) {
       print('🔄 Auth state changed in LoginScreen - isAuth: ${next.isAuthenticated}, user: ${next.user?.email}');
 
@@ -51,23 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
       }
     });
-  }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final authState = ref.watch(authProvider);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // ✅ Show loading overlay when authenticating
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Stack(
@@ -158,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       labelText: l10n.auth_email,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
-                      enabled: !authState.isLoading, // ✅ Disable when loading
+                      enabled: !authState.isLoading,
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
                           return l10n.validation_emailRequired;
@@ -178,7 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       labelText: l10n.auth_password,
                       obscureText: !_isPasswordVisible,
                       prefixIcon: Icons.lock_outlined,
-                      enabled: !authState.isLoading, // ✅ Disable when loading
+                      enabled: !authState.isLoading,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -272,9 +260,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       print('✅ Login completed successfully');
-
-      // ✅ Navigation will be handled by the auth listener
-      // No need for manual navigation here
+      // ✅ Navigation will be handled by the auth listener in build method
 
     } catch (e) {
       print('❌ Login error: $e');

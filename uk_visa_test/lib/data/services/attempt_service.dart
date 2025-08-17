@@ -77,15 +77,33 @@ class AttemptService {
     }
   }
 
-  /// Get specific attempt details
-  Future<ApiResponse<Map<String, dynamic>>> getAttemptDetail(int attemptId) async {
+  /// ✅ UPDATED: Get specific attempt details with Vietnamese support
+  Future<ApiResponse<Map<String, dynamic>>> getAttemptDetail(
+      int attemptId, {
+        bool includeVietnamese = false,
+      }) async {
     try {
-      final response = await _dio.get('${ApiConstants.attemptDetail}/$attemptId');
+      print('🔄 Service: Loading attempt detail $attemptId (Vietnamese: $includeVietnamese)');
+
+      // ✅ Build query parameters
+      final queryParams = <String, dynamic>{};
+      if (includeVietnamese) {
+        queryParams['include_vietnamese'] = 'true';
+      }
+
+      final response = await _dio.get(
+        '${ApiConstants.attemptDetail}/$attemptId',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      print('✅ Service: Attempt detail API response received');
+
       return ApiResponse.fromJson(
         response.data,
             (json) => json as Map<String, dynamic>,
       );
     } on DioException catch (e) {
+      print('💥 Service: DioException in getAttemptDetail: ${e.message}');
       throw _handleError(e);
     }
   }

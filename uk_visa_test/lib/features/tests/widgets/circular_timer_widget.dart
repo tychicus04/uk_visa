@@ -87,7 +87,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
           progress: progress,
           progressColor: _getTimerColor(),
           backgroundColor: _getBackgroundColor(),
-          strokeWidth: 6.0,
+          strokeWidth: 3.0,
         ),
         child: Center(
           child: Column(

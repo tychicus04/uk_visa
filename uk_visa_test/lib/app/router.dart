@@ -1,4 +1,4 @@
-// lib/app/router.dart - FIXED WITH SAFE PARSING
+// lib/app/router.dart - UPDATED WITH REVIEW ANSWERS ROUTE
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +13,7 @@ import '../features/tests/screens/test_list_screen.dart';
 import '../features/tests/screens/test_detail_screen.dart';
 import '../features/tests/screens/test_taking_screen.dart';
 import '../features/tests/screens/test_result_screen.dart';
+import '../features/tests/screens/review_answers_screen.dart';
 import '../features/chapters/screens/chapter_list_screen.dart';
 import '../features/chapters/screens/chapter_detail_screen.dart';
 import '../features/progress/screens/progress_screen.dart';
@@ -202,11 +203,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                     return _buildErrorScreen('Missing attempt ID');
                   }
 
-                  // ✅ This is the main issue - check for object strings
+                  // ✅ Check for object strings
                   if (attemptIdParam.contains('(') ||
                       attemptIdParam.contains('TestAttempt') ||
                       attemptIdParam.contains('Object') ||
-                      attemptIdParam.length > 20) { // IDs shouldn't be very long
+                      attemptIdParam.length > 20) {
                     print('❌ Invalid attempt ID - looks like object representation:');
                     print('   Full string: $attemptIdParam');
                     return _buildErrorScreen('Invalid attempt ID format. Expected number, got object.');
@@ -221,6 +222,33 @@ final routerProvider = Provider<GoRouter>((ref) {
                   print('🏗️ Building TestResultScreen for attempt: $attemptId');
                   return TestResultScreen(attemptId: attemptId);
                 },
+                routes: [
+                  // ✅ NEW: Review Answers Route
+                  GoRoute(
+                    path: 'review',
+                    name: 'review-answers',
+                    builder: (context, state) {
+                      final attemptIdParam = state.pathParameters['attemptId'];
+                      print('🔍 Review answers route - Attempt ID: "$attemptIdParam"');
+
+                      if (attemptIdParam == null || attemptIdParam.isEmpty) {
+                        return _buildErrorScreen('Missing attempt ID for review');
+                      }
+
+                      if (attemptIdParam.contains('(') || attemptIdParam.contains('TestAttempt')) {
+                        return _buildErrorScreen('Invalid attempt ID format for review');
+                      }
+
+                      final attemptId = int.tryParse(attemptIdParam);
+                      if (attemptId == null) {
+                        return _buildErrorScreen('Invalid attempt ID for review: $attemptIdParam');
+                      }
+
+                      print('🏗️ Building ReviewAnswersScreen for attempt: $attemptId');
+                      return ReviewAnswersScreen(attemptId: attemptId);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -379,52 +407,52 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 // ✅ Helper function to build error screens
 Widget _buildErrorScreen(String message) => Builder(
-    builder: (context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Invalid Route'),
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.warning, size: 64, color: Colors.orange),
-                const SizedBox(height: 16),
-                Text(
-                  'Invalid Route Parameter',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => context.go('/'),
-                  icon: const Icon(Icons.home),
-                  label: const Text('Go Home'),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/');
-                    }
-                  },
-                  child: const Text('Go Back'),
-                ),
-              ],
+  builder: (context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Invalid Route'),
+      backgroundColor: Colors.orange,
+      foregroundColor: Colors.white,
+    ),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.warning, size: 64, color: Colors.orange),
+            const SizedBox(height: 16),
+            Text(
+              'Invalid Route Parameter',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.go('/'),
+              icon: const Icon(Icons.home),
+              label: const Text('Go Home'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+              child: const Text('Go Back'),
+            ),
+          ],
         ),
       ),
-  );
+    ),
+  ),
+);

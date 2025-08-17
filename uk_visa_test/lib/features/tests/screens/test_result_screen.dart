@@ -1,4 +1,4 @@
-// lib/features/tests/screens/test_result_screen.dart
+// lib/features/tests/screens/test_result_screen.dart - FIXED VERSION
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,7 +63,7 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      result.isPassed ? l10n.test_passed : l10n.test_failed,
+                      result.isPassed ? (l10n.test_passed ?? 'Test Passed') : (l10n.test_failed ?? 'Test Failed'),
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -71,14 +71,14 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n.test_yourScore(result.percentage ?? 0),
+                      '${l10n.score ?? 'Score'}: ${result.percentage?.toStringAsFixed(1) ?? '0'}%',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.test_passingScore,
+                      l10n.test_passingScore ?? 'Passing Score: 75%',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withOpacity(0.9),
                       ),
@@ -107,7 +107,7 @@ class TestResultScreen extends ConsumerWidget {
                     child: _buildScoreCard(
                       icon: Icons.access_time,
                       label: 'Time Taken',
-                      value: _formatTime(result.timeTakenInt ?? 0),
+                      value: _formatTime(result.timeTakenInt),
                       total: '45 min',
                       color: AppColors.primary,
                       theme: theme,
@@ -121,12 +121,15 @@ class TestResultScreen extends ConsumerWidget {
               // Action Buttons
               ElevatedButton.icon(
                 onPressed: () {
-                  // Review answers
+                  // ✅ Navigate to review answers screen
+                  context.go('/tests/result/$attemptId/review');
                 },
                 icon: const Icon(Icons.reviews),
                 label: const Text('Review Answers'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                 ),
               ),
 
@@ -134,12 +137,18 @@ class TestResultScreen extends ConsumerWidget {
 
               OutlinedButton.icon(
                 onPressed: () {
-                  context.go('/tests/${result.testId}');
+                  // Navigate to retake test
+                  final testId = result.testIdInt;
+                  if (testId > 0) {
+                    context.go('/tests/$testId');
+                  }
                 },
                 icon: const Icon(Icons.refresh),
-                label: Text(l10n.test_retakeTest),
+                label: Text(l10n.test_retakeTest ?? 'Retake Test'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: AppColors.primary),
+                  foregroundColor: AppColors.primary,
                 ),
               ),
 
@@ -151,8 +160,71 @@ class TestResultScreen extends ConsumerWidget {
                 label: const Text('Back to Home'),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  foregroundColor: theme.brightness == Brightness.dark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              // Additional Test Information
+              if (result.title != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark
+                        ? AppColors.cardDark
+                        : AppColors.cardLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.brightness == Brightness.dark
+                          ? AppColors.borderDark
+                          : AppColors.borderLight,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Test Information',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        context,
+                        'Test',
+                        result.title ?? 'Unknown',
+                      ),
+                      if (result.testNumber != null)
+                        _buildInfoRow(
+                          context,
+                          'Test Number',
+                          result.testNumber!,
+                        ),
+                      if (result.chapterName != null)
+                        _buildInfoRow(
+                          context,
+                          'Chapter',
+                          result.chapterName!,
+                        ),
+                      _buildInfoRow(
+                        context,
+                        'Completed',
+                        _formatDate(result.completedAt),
+                      ),
+                      if (result.timeTakenInt > 0)
+                        _buildInfoRow(
+                          context,
+                          'Duration',
+                          _formatTime(result.timeTakenInt),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -217,9 +289,52 @@ class TestResultScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.brightness == Brightness.dark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
     final remainingSeconds = seconds % 60;
     return '${minutes}m ${remainingSeconds}s';
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'Unknown';
+
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateString;
+    }
   }
 }

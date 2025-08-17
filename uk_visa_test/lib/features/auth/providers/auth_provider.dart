@@ -1,3 +1,4 @@
+// lib/features/auth/providers/auth_provider.dart - FIXED VERSION
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -44,8 +45,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         fullName: fullName,
         languageCode: languageCode,
       );
+
+      print('📊 Register API response: ${result.keys}');
+
+      // ✅ Store auth data safely
       await _storeAuthData(result);
 
+      // ✅ Create user object
       final user = _createUserFromResult(result);
 
       state = state.copyWith(
@@ -53,7 +59,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: user,
         isAuthenticated: true,
       );
+
+      print('✅ Registration completed successfully');
     } catch (e) {
+      print('❌ Registration failed: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString().replaceAll('Exception: ', ''),
@@ -77,6 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       print('✅ Login API successful');
+      print('📊 Login API response: ${result.keys}');
 
       // ✅ Store tokens and user info safely
       await _storeAuthData(result);
@@ -193,41 +203,78 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // ✅ Helper method to safely store auth data
+  // ✅ FIXED: Helper method to safely store auth data
   Future<void> _storeAuthData(Map<String, dynamic> result) async {
     try {
-      final token = result['token']?.toString();
-      final userData = result['user'] as Map<String, dynamic>?;
+      print('💾 Storing auth data...');
+      print('📊 Result structure: ${result.keys}');
 
-      if (token != null && userData != null) {
-        await SecureStorageService.instance.setAuthToken(token);
-        await SecureStorageService.instance.setUserId(userData['id']?.toString() ?? '0');
-        await SecureStorageService.instance.setUserEmail(userData['email']?.toString() ?? '');
-        print('✅ Auth data stored successfully');
-      } else {
-        throw Exception('Invalid auth response: missing token or user data');
+      // ✅ Safely extract token
+      final token = result['token']?.toString();
+      if (token == null || token.isEmpty) {
+        throw Exception('No token found in auth response');
       }
+
+      // ✅ Safely extract user data as Map
+      final userData = result['user'];
+      if (userData == null) {
+        throw Exception('No user data found in auth response');
+      }
+
+      // ✅ Ensure userData is a Map, not a User object
+      Map<String, dynamic> userMap;
+      if (userData is Map<String, dynamic>) {
+        userMap = userData;
+      } else if (userData is User) {
+        // ✅ Convert User object to Map if needed
+        userMap = userData.toJson();
+      } else {
+        throw Exception('Invalid user data type: ${userData.runtimeType}');
+      }
+
+      print('📊 User data keys: ${userMap.keys}');
+
+      // ✅ Store auth data
+      await SecureStorageService.instance.setAuthToken(token);
+      await SecureStorageService.instance.setUserId(userMap['id']?.toString() ?? '0');
+      await SecureStorageService.instance.setUserEmail(userMap['email']?.toString() ?? '');
+
+      print('✅ Auth data stored successfully');
     } catch (e) {
       print('❌ Failed to store auth data: $e');
-      throw Exception('Failed to store authentication data');
+      print('📊 Raw result: $result');
+      throw Exception('Failed to store authentication data: $e');
     }
   }
 
-  // ✅ Helper method to safely create User object
+  // ✅ FIXED: Helper method to safely create User object
   User _createUserFromResult(Map<String, dynamic> result) {
     try {
-      final userData = result['user'] as Map<String, dynamic>?;
+      print('👤 Creating user from result...');
+      print('📊 Result keys: ${result.keys}');
+
+      final userData = result['user'];
       if (userData == null) {
-        throw Exception('User data is null');
+        throw Exception('User data is null in result');
       }
 
-      print('📊 Creating user from data: ${userData.keys}');
-      final user = User.fromJson(userData);
-      print('✅ User object created successfully');
+      // ✅ Handle different userData types
+      User user;
+      if (userData is Map<String, dynamic>) {
+        print('📊 Creating user from Map data: ${userData.keys}');
+        user = User.fromJson(userData);
+      } else if (userData is User) {
+        print('📊 User data is already a User object');
+        user = userData;
+      } else {
+        throw Exception('Invalid user data type: ${userData.runtimeType}');
+      }
+
+      print('✅ User object created successfully - ID: ${user.id}, Email: ${user.email}');
       return user;
     } catch (e) {
       print('❌ Failed to create user object: $e');
-      print('📊 Raw user data: $result');
+      print('📊 Raw result data: $result');
       throw Exception('Failed to parse user data: $e');
     }
   }

@@ -1,4 +1,4 @@
-// lib/features/auth/screens/register_screen.dart
+// lib/features/auth/screens/register_screen.dart - FIXED VERSION
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,6 +42,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
     final isDark = theme.brightness == Brightness.dark;
+
+    // ✅ Listen to auth state changes WITHIN build method
+    ref.listen(authProvider, (previous, next) {
+      print('🔄 Auth state changed in RegisterScreen - isAuth: ${next.isAuthenticated}, user: ${next.user?.email}');
+
+      if (next.isAuthenticated && next.user != null && mounted) {
+        // ✅ Navigate only if we're coming from a non-authenticated state
+        if (previous?.isAuthenticated != true) {
+          print('➡️ Navigating to home from register');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.go('/');
+            }
+          });
+        }
+      }
+    });
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -206,6 +223,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister(BuildContext context, WidgetRef ref) async {
     if (!_formKey.currentState!.validate()) return;
 
+    print('📝 Register button pressed');
+
     try {
       await ref.read(authProvider.notifier).register(
         email: _emailController.text.trim(),
@@ -213,19 +232,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         fullName: _nameController.text.trim(),
       );
 
-      if (mounted) {
-        context.go('/');
-      }
+      print('✅ Registration completed successfully');
+      // ✅ Navigation will be handled by the auth listener in build method
+
     } catch (e) {
+      print('❌ Registration error: $e');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }
     }
   }
 }
-
