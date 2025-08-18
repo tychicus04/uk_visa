@@ -1,5 +1,3 @@
-// lib/features/home/widgets/test_exemptions_card.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -35,7 +33,7 @@ class TestExemptionsCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Test Exemptions',
+                l10n.test_exemptions,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -44,7 +42,7 @@ class TestExemptionsCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            "You don't need to take the test if you're under the age of 18 or over the age of 65. If you've passed the test before when completing your settlement application, there's no need to take the test again.",
+            l10n.test_exemptions_description,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: isDark
                   ? AppColors.textSecondaryDark

@@ -22,7 +22,7 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); // Changed from 3 to 2
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -44,11 +44,11 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
           controller: _tabController,
           tabs: [
             Tab(
-              text: 'Practice', // Combined practice tests
+              text: l10n.test_practice, // ✅ Localized
               icon: const Icon(Icons.quiz_outlined),
             ),
             Tab(
-              text: 'Exam', // Real exam simulation
+              text: l10n.test_exam, // ✅ Localized
               icon: const Icon(Icons.assignment_outlined),
             ),
           ],
@@ -56,7 +56,6 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
       ),
       body: testsState.when(
         data: (tests) {
-          // Combine chapter and comprehensive tests for Practice tab
           final practiceTests = [
             ...(tests['chapter'] ?? []),
             ...(tests['comprehensive'] ?? []),
@@ -68,14 +67,15 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
             controller: _tabController,
             children: [
               _buildTestList(
+                l10n,
                 practiceTests,
-                emptyMessage: 'No practice tests available',
-                showTestType: true, // Show test type badges since we're mixing types
+                emptyMessage: l10n.test_noPracticeTests,
+                showTestType: true,
               ),
               _buildTestList(
+                l10n,
                 examTests,
-                emptyMessage: 'No exam tests available',
-                showTestType: false, // All are exam type, no need to show
+                emptyMessage: l10n.test_noExamTests,
               ),
             ],
           );
@@ -90,6 +90,7 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
   }
 
   Widget _buildTestList(
+      AppLocalizations l10n,
       List<dynamic> tests, {
         required String emptyMessage,
         bool showTestType = false,
@@ -116,9 +117,7 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
       );
     }
 
-    // Sort tests for better organization
     final sortedTests = List.from(tests)..sort((a, b) {
-      // First sort by test type (chapter first, then comprehensive, then exam)
       final typeOrder = {'chapter': 0, 'comprehensive': 1, 'exam': 2};
       final aOrder = typeOrder[a.testType] ?? 3;
       final bOrder = typeOrder[b.testType] ?? 3;
@@ -127,13 +126,13 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
         return aOrder.compareTo(bOrder);
       }
 
-      // Then sort by chapter if available
       if (a.chapterId != null && b.chapterId != null) {
         final chapterCompare = a.chapterIdInt.compareTo(b.chapterIdInt);
-        if (chapterCompare != 0) return chapterCompare;
+        if (chapterCompare != 0) {
+          return chapterCompare;
+        }
       }
 
-      // Finally sort by test number
       return a.testNumber.compareTo(b.testNumber);
     });
 

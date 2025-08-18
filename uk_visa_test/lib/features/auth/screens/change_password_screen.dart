@@ -1,8 +1,8 @@
-// lib/features/auth/screens/change_password_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
 
@@ -33,6 +33,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final authState = ref.watch(authProvider);
@@ -41,7 +42,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: Text(
-          'Change Password',
+          l10n.profile_changePassword,
           style: TextStyle(
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
           ),
@@ -60,24 +61,24 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Security Icon and Description
-              _buildSecurityHeader(context, isDark),
+              _buildSecurityHeader(context, l10n, isDark),
 
               const SizedBox(height: 32),
 
               // Password Requirements Card
-              _buildPasswordRequirements(context, isDark),
+              _buildPasswordRequirements(context, l10n, isDark),
 
               const SizedBox(height: 24),
 
               // Password Form
-              _buildPasswordForm(context, isDark),
+              _buildPasswordForm(context, l10n, isDark),
 
               const SizedBox(height: 32),
 
               // Change Password Button
               CustomButton(
-                text: 'Change Password',
-                onPressed: authState.isLoading ? null : _changePassword,
+                text: l10n.password_changePasswordButton,
+                onPressed: authState.isLoading ? null : () => _changePassword(l10n),
                 isLoading: authState.isLoading,
                 icon: Icons.security,
               ),
@@ -85,7 +86,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               const SizedBox(height: 16),
 
               // Additional Security Info
-              _buildSecurityTips(context, isDark),
+              _buildSecurityTips(context, l10n, isDark),
 
               const SizedBox(height: 24),
             ],
@@ -95,7 +96,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildSecurityHeader(BuildContext context, bool isDark) {
+  Widget _buildSecurityHeader(BuildContext context, AppLocalizations l10n, bool isDark) {
     final theme = Theme.of(context);
 
     return Column(
@@ -118,7 +119,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Secure Your Account',
+          l10n.password_secureYourAccount,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -127,7 +128,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Choose a strong password to keep your account safe and secure.',
+          l10n.password_securityDescription,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
           ),
@@ -137,7 +138,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildPasswordRequirements(BuildContext context, bool isDark) {
+  Widget _buildPasswordRequirements(BuildContext context, AppLocalizations l10n, bool isDark) {
     final theme = Theme.of(context);
 
     return Card(
@@ -159,7 +160,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Password Requirements',
+                  l10n.password_requirements,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -168,11 +169,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildRequirementItem('At least 8 characters long', isDark),
-            _buildRequirementItem('Contains uppercase letter (A-Z)', isDark),
-            _buildRequirementItem('Contains lowercase letter (a-z)', isDark),
-            _buildRequirementItem('Contains at least one number (0-9)', isDark),
-            _buildRequirementItem('Contains special character (!@#\$%^&*)', isDark),
+            _buildRequirementItem(l10n.password_requirement_length, isDark),
+            _buildRequirementItem(l10n.password_requirement_uppercase, isDark),
+            _buildRequirementItem(l10n.password_requirement_lowercase, isDark),
+            _buildRequirementItem(l10n.password_requirement_number, isDark),
+            _buildRequirementItem(l10n.password_requirement_special, isDark),
           ],
         ),
       ),
@@ -205,7 +206,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildPasswordForm(BuildContext context, bool isDark) {
+  Widget _buildPasswordForm(BuildContext context, AppLocalizations l10n, bool isDark) {
     return Card(
       elevation: isDark ? 4 : 2,
       color: isDark ? AppColors.cardDark : AppColors.cardLight,
@@ -223,7 +224,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
               decoration: InputDecoration(
-                labelText: 'Current Password',
+                labelText: l10n.password_currentPassword,
                 labelStyle: TextStyle(
                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
@@ -259,7 +260,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your current password';
+                  return l10n.password_validation_currentRequired;
                 }
                 return null;
               },
@@ -275,7 +276,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
               decoration: InputDecoration(
-                labelText: 'New Password',
+                labelText: l10n.auth_newPassword,
                 labelStyle: TextStyle(
                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
@@ -311,13 +312,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a new password';
+                  return l10n.password_validation_newRequired;
                 }
                 if (value.length < 8) {
-                  return 'Password must be at least 8 characters long';
+                  return l10n.password_validation_minLength;
                 }
                 if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]').hasMatch(value)) {
-                  return 'Password must meet all requirements';
+                  return l10n.password_validation_requirements;
                 }
                 return null;
               },
@@ -330,7 +331,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
             // Password Strength Indicator
             if (_newPasswordController.text.isNotEmpty)
-              _buildPasswordStrengthIndicator(isDark),
+              _buildPasswordStrengthIndicator(l10n, isDark),
 
             const SizedBox(height: 20),
 
@@ -342,7 +343,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
               decoration: InputDecoration(
-                labelText: 'Confirm New Password',
+                labelText: l10n.auth_confirmPassword,
                 labelStyle: TextStyle(
                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
@@ -378,10 +379,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please confirm your new password';
+                  return l10n.password_validation_confirmRequired;
                 }
                 if (value != _newPasswordController.text) {
-                  return 'Passwords do not match';
+                  return l10n.validation_passwordsDoNotMatch;
                 }
                 return null;
               },
@@ -392,7 +393,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildPasswordStrengthIndicator(bool isDark) {
+  Widget _buildPasswordStrengthIndicator(AppLocalizations l10n, bool isDark) {
     final password = _newPasswordController.text;
     final strength = _calculatePasswordStrength(password);
 
@@ -403,24 +404,24 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       case 0:
       case 1:
         strengthColor = AppColors.error;
-        strengthText = 'Weak';
+        strengthText = l10n.password_strength_weak;
         break;
       case 2:
         strengthColor = AppColors.warning;
-        strengthText = 'Fair';
+        strengthText = l10n.password_strength_fair;
         break;
       case 3:
         strengthColor = AppColors.info;
-        strengthText = 'Good';
+        strengthText = l10n.password_strength_good;
         break;
       case 4:
       case 5:
         strengthColor = AppColors.success;
-        strengthText = 'Strong';
+        strengthText = l10n.password_strength_strong;
         break;
       default:
         strengthColor = AppColors.error;
-        strengthText = 'Weak';
+        strengthText = l10n.password_strength_weak;
     }
 
     return Column(
@@ -430,7 +431,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Password Strength:',
+              l10n.password_strengthLabel,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
               ),
@@ -467,7 +468,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     return strength;
   }
 
-  Widget _buildSecurityTips(BuildContext context, bool isDark) {
+  Widget _buildSecurityTips(BuildContext context, AppLocalizations l10n, bool isDark) {
     final theme = Theme.of(context);
 
     return Card(
@@ -489,7 +490,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Security Tips',
+                  l10n.password_securityTips,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -499,10 +500,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              '• Use a unique password that you don\'t use elsewhere\n'
-                  '• Don\'t share your password with anyone\n'
-                  '• Consider using a password manager\n'
-                  '• Change your password regularly',
+              l10n.password_securityTipsContent,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 height: 1.5,
@@ -514,7 +512,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     );
   }
 
-  Future<void> _changePassword() async {
+  Future<void> _changePassword(AppLocalizations l10n) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -527,8 +525,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully!'),
+          SnackBar(
+            content: Text(l10n.password_changeSuccess),
             backgroundColor: AppColors.success,
           ),
         );
@@ -538,7 +536,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to change password: ${e.toString()}'),
+            content: Text('${l10n.password_changeFailed}: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );

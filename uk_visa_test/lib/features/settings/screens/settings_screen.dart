@@ -1,13 +1,13 @@
-// lib/features/settings/screens/settings_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
+import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -19,6 +19,7 @@ class SettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
+    final bilingualState = ref.watch(bilingualProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -31,58 +32,56 @@ class SettingsScreen extends ConsumerWidget {
           _buildSectionHeader(l10n.auth_profile, theme),
           _buildSettingTile(
             icon: Icons.person_outline,
-            title: 'Profile',
-            subtitle: 'Manage your account',
+            title: l10n.profile_editProfile,
+            subtitle: l10n.profile_accountInformation,
             onTap: () => context.go('/settings/profile'),
             theme: theme,
           ),
           const SizedBox(height: 24),
-
-          // Appearance Section
-          _buildSectionHeader('Appearance', theme),
+          _buildSectionHeader(l10n.settings_appearance, theme), // ✅ Localized
           _buildSettingTile(
             icon: Icons.language,
             title: l10n.settings_language,
-            subtitle: locale.languageCode == 'en' ? 'English' : 'Tiếng Việt',
-            onTap: () => _showLanguageDialog(context, ref),
+            subtitle: locale.languageCode == 'en' ? l10n.settings_english : l10n.settings_vietnamese, // ✅ Localized
+            onTap: () => _showLanguageDialog(context, ref, l10n),
             theme: theme,
           ),
           _buildSettingTile(
             icon: Icons.dark_mode_outlined,
             title: l10n.settings_theme,
             subtitle: _getThemeModeText(themeMode, l10n),
-            onTap: () => _showThemeDialog(context, ref),
+            onTap: () => _showThemeDialog(context, ref, l10n),
             theme: theme,
           ),
+
+          _buildSettingTile(
+            icon: Icons.translate,
+            title: l10n.vietnamese_languageSupport,
+            subtitle: bilingualState.isEnabled
+                ? l10n.vietnamese_translationsEnabled
+                : l10n.vietnamese_showTranslations,
+            onTap: () => ref.read(bilingualProvider.notifier).toggleBilingual(),
+            theme: theme,
+            trailing: Switch.adaptive(
+              value: bilingualState.isEnabled,
+              onChanged: (value) => ref.read(bilingualProvider.notifier).setBilingualMode(value),
+              activeColor: AppColors.info,
+            ),
+          ),
+
           const SizedBox(height: 24),
-
-          // Notifications Section
-          // _buildSectionHeader(l10n.settings_notifications, theme),
-          // _buildSwitchTile(
-          //   icon: Icons.notifications_outlined,
-          //   title: 'Study Reminders',
-          //   subtitle: 'Get notified about study time',
-          //   value: true,
-          //   onChanged: (value) {
-          //     // TODO: Handle notification settings
-          //   },
-          //   theme: theme,
-          // ),
-          // const SizedBox(height: 24),
-
-          // About Section
           _buildSectionHeader(l10n.settings_about, theme),
           _buildSettingTile(
             icon: Icons.info_outline,
             title: l10n.settings_about,
-            subtitle: 'App information',
-            onTap: () => _showAboutDialog(context),
+            subtitle: l10n.app_information,
+            onTap: () => _showAboutDialog(context, l10n, theme),
             theme: theme,
           ),
           _buildSettingTile(
             icon: Icons.privacy_tip_outlined,
             title: l10n.settings_privacy,
-            subtitle: 'Privacy policy',
+            subtitle: l10n.settings_privacy,
             onTap: () {
               // TODO: Open privacy policy
             },
@@ -91,20 +90,17 @@ class SettingsScreen extends ConsumerWidget {
           _buildSettingTile(
             icon: Icons.description_outlined,
             title: l10n.settings_terms,
-            subtitle: 'Terms of service',
+            subtitle: l10n.settings_terms,
             onTap: () {
               // TODO: Open terms of service
             },
             theme: theme,
           ),
           const SizedBox(height: 24),
-
-          // Logout
           _buildSettingTile(
             icon: Icons.logout,
             title: l10n.auth_logout,
-            subtitle: 'Sign out of your account',
-            onTap: () => _showLogoutDialog(context, ref),
+            onTap: () => _showLogoutDialog(context, ref, l10n, theme),
             theme: theme,
             textColor: AppColors.error,
           ),
@@ -113,8 +109,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, ThemeData theme) {
-    return Padding(
+  Widget _buildSectionHeader(String title, ThemeData theme) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
@@ -124,15 +119,15 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
 
   Widget _buildSettingTile({
     required IconData icon,
     required String title,
-    required String subtitle,
+    String? subtitle,
     required VoidCallback onTap,
     required ThemeData theme,
     Color? textColor,
+    Widget? trailing,
   }) {
     final isDark = theme.brightness == Brightness.dark;
 
@@ -168,83 +163,26 @@ class SettingsScreen extends ConsumerWidget {
                       color: textColor,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
+                      ),
                     ),
-                  ),
+                  ]
                 ],
               ),
             ),
-            Icon(
+            trailing ?? Icon(
               Icons.chevron_right,
               color: isDark ? AppColors.iconDark : AppColors.iconLight,
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    required ThemeData theme,
-  }) {
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: isDark ? AppColors.iconDark : AppColors.iconLight,
-            size: 24,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-          ),
-        ],
       ),
     );
   }
@@ -260,23 +198,23 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+  void _showLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Language'),
+        title: Text(l10n.settings_language),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('English'),
+              title: Text(l10n.settings_english), // ✅ Localized
               onTap: () {
                 ref.read(localeProvider.notifier).setLocale(const Locale('en'));
                 Navigator.of(context).pop();
               },
             ),
             ListTile(
-              title: const Text('Tiếng Việt'),
+              title: Text(l10n.settings_vietnamese), // ✅ Localized
               onTap: () {
                 ref.read(localeProvider.notifier).setLocale(const Locale('vi'));
                 Navigator.of(context).pop();
@@ -288,9 +226,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-
+  void _showThemeDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -325,42 +261,58 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
+  void _showAboutDialog(BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     showAboutDialog(
       context: context,
-      applicationName: 'Life in the UK',
-      applicationVersion: '1.0.0',
-      applicationLegalese: '© 2024 UK Visa Test App',
+      applicationName: l10n.appTitle,
+      applicationVersion: l10n.appVersion,
+      applicationLegalese: l10n.appCopyright,
       children: [
         const SizedBox(height: 16),
-        const Text(
-          'This app helps you prepare for the UK Life in the UK citizenship test with practice questions and study materials.',
-        ),
+        Text(
+          l10n.appAbout,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontStyle: FontStyle.italic,
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondaryLight,
+          )
+        )
       ],
     );
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-
+  void _showLogoutDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.auth_logout),
-        content: const Text('Are you sure you want to sign out?'),
+        content: Text(
+          l10n.logout_confirmation,
+          style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
+        ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.common_cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await ref.read(authProvider.notifier).logout();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: Text(l10n.auth_logout),
-          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              CustomButton(
+                onPressed: () => Navigator.of(context).pop(),
+                text: l10n.common_cancel,
+              ),
+              CustomButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  ref.read(authProvider.notifier).logout();
+                },
+                text: l10n.auth_logout, // ✅ Localized
+                backgroundColor: AppColors.error,
+                textColor: Colors.white,
+              ),
+            ],
+          )
         ],
       ),
     );

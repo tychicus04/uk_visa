@@ -1,5 +1,3 @@
-// lib/features/auth/screens/register_screen.dart - FIXED VERSION
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,14 +41,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authProvider);
     final isDark = theme.brightness == Brightness.dark;
 
-    // ✅ Listen to auth state changes WITHIN build method
     ref.listen(authProvider, (previous, next) {
-      print('🔄 Auth state changed in RegisterScreen - isAuth: ${next.isAuthenticated}, user: ${next.user?.email}');
-
       if (next.isAuthenticated && next.user != null && mounted) {
-        // ✅ Navigate only if we're coming from a non-authenticated state
         if (previous?.isAuthenticated != true) {
-          print('➡️ Navigating to home from register');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               context.go('/');
@@ -76,7 +69,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Title
                 Text(
                   l10n.auth_createAccount,
                   style: theme.textTheme.headlineLarge?.copyWith(
@@ -85,7 +77,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Join thousands preparing for their UK citizenship test',
+                  l10n.home_joinThousands, // ✅ Localized
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isDark
                         ? AppColors.textSecondaryDark
@@ -95,7 +87,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 32),
 
-                // Full Name Field
                 CustomTextField(
                   controller: _nameController,
                   labelText: l10n.auth_fullName,
@@ -110,7 +101,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 16),
 
-                // Email Field
                 CustomTextField(
                   controller: _emailController,
                   labelText: l10n.auth_email,
@@ -129,7 +119,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 16),
 
-                // Password Field
                 CustomTextField(
                   controller: _passwordController,
                   labelText: l10n.auth_password,
@@ -158,7 +147,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 16),
 
-                // Confirm Password Field
                 CustomTextField(
                   controller: _confirmPasswordController,
                   labelText: l10n.auth_confirmPassword,
@@ -187,9 +175,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 32),
 
-                // Register Button
                 if (authState.isLoading)
-                  const Center(child: LoadingWidget())
+                  Center(child: LoadingWidget(message: l10n.auth_registering)) // ✅ Localized
                 else
                   CustomButton(
                     text: l10n.auth_signUp,
@@ -198,7 +185,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 24),
 
-                // Sign In Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -223,21 +209,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister(BuildContext context, WidgetRef ref) async {
     if (!_formKey.currentState!.validate()) return;
 
-    print('📝 Register button pressed');
-
     try {
       await ref.read(authProvider.notifier).register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
       );
-
-      print('✅ Registration completed successfully');
-      // ✅ Navigation will be handled by the auth listener in build method
-
     } catch (e) {
-      print('❌ Registration error: $e');
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

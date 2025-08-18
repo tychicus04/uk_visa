@@ -1,4 +1,3 @@
-// lib/features/auth/screens/edit_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,7 +20,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _emailController = TextEditingController();
 
   String? _selectedLanguage = 'en';
-  bool _notificationsEnabled = true;
 
   @override
   void initState() {
@@ -51,7 +49,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: Text(
-          'Edit Profile',
+          l10n.profile_editProfile,
           style: TextStyle(
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
           ),
@@ -65,7 +63,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           TextButton(
             onPressed: authState.isLoading ? null : _saveProfile,
             child: Text(
-              'Save',
+              l10n.common_save,
               style: TextStyle(
                 color: authState.isLoading
                     ? (isDark ? AppColors.disabledTextDark : AppColors.disabledTextLight)
@@ -83,26 +81,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile Avatar Section
-              _buildAvatarSection(context, authState, isDark),
+              _buildAvatarSection(context, l10n, authState, isDark),
 
               const SizedBox(height: 32),
-
-              // Personal Information
-              _buildSectionTitle(context, 'Personal Information', isDark),
+              _buildSectionTitle(context, l10n.profile_personalInformation, isDark),
               const SizedBox(height: 16),
-              _buildPersonalInfoCard(context, isDark),
+              _buildPersonalInfoCard(context, l10n, isDark),
 
               const SizedBox(height: 32),
-
-              // Preferences
-              // _buildSectionTitle(context, 'Preferences', isDark),
-              // const SizedBox(height: 16),
-              // _buildPreferencesCard(context, isDark),
-              //
-              // const SizedBox(height: 32),
-
-              // Save Button
               if (authState.isLoading)
                 Center(
                   child: CircularProgressIndicator(
@@ -112,7 +98,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 )
               else
                 CustomButton(
-                  text: 'Save Changes',
+                  text: l10n.profile_saveChanges,
                   onPressed: _saveProfile,
                   icon: Icons.save_outlined,
                 ),
@@ -136,7 +122,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildAvatarSection(BuildContext context, AuthState authState, bool isDark) {
+  Widget _buildAvatarSection(BuildContext context, AppLocalizations l10n, AuthState authState, bool isDark) {
     final theme = Theme.of(context);
 
     return Center(
@@ -146,7 +132,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             children: [
               Hero(
                 tag: 'profile-avatar',
-                child: Container(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
@@ -196,7 +182,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ],
                   ),
                   child: IconButton(
-                    onPressed: _changeAvatar,
+                    onPressed: () => _changeAvatar(l10n),
                     icon: const Icon(
                       Icons.camera_alt,
                       color: Colors.white,
@@ -213,7 +199,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Tap to change profile photo',
+            l10n.profile_tapToChangePhoto,
             style: theme.textTheme.bodySmall?.copyWith(
               color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
             ),
@@ -223,188 +209,97 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildPersonalInfoCard(BuildContext context, bool isDark) {
-    return Card(
-      elevation: isDark ? 4 : 2,
-      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-      shadowColor: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _fullNameController,
-              style: TextStyle(
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              ),
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                labelStyle: TextStyle(
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                ),
-                prefixIcon: Icon(
-                  Icons.person_outline,
-                  color: isDark ? AppColors.iconDark : AppColors.iconLight,
-                ),
-                filled: true,
-                fillColor: isDark ? AppColors.inputFillDark : AppColors.inputFillLight,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter your full name';
-                }
-                if (value.trim().length < 2) {
-                  return 'Name must be at least 2 characters long';
-                }
-                return null;
-              },
+  Widget _buildPersonalInfoCard(BuildContext context, AppLocalizations l10n, bool isDark) => Card(
+    elevation: isDark ? 4 : 2,
+    color: isDark ? AppColors.cardDark : AppColors.cardLight,
+    shadowColor: isDark ? AppColors.shadowDark : AppColors.shadowLight,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _fullNameController,
+            style: TextStyle(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
             ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _emailController,
-              style: TextStyle(
-                color: isDark ? AppColors.disabledTextDark : AppColors.disabledTextLight,
+            decoration: InputDecoration(
+              labelText: l10n.auth_fullName,
+              labelStyle: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
               ),
-              decoration: InputDecoration(
-                labelText: 'Email Address',
-                labelStyle: TextStyle(
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                ),
-                prefixIcon: Icon(
-                  Icons.email_outlined,
-                  color: isDark ? AppColors.iconDark : AppColors.iconLight,
-                ),
-                filled: true,
-                fillColor: isDark ? AppColors.disabledDark : AppColors.disabledLight,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
-                  ),
+              prefixIcon: Icon(
+                Icons.person_outline,
+                color: isDark ? AppColors.iconDark : AppColors.iconLight,
+              ),
+              filled: true,
+              fillColor: isDark ? AppColors.inputFillDark : AppColors.inputFillLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
                 ),
               ),
-              enabled: false, // Usually email is not editable
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
             ),
-          ],
-        ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return l10n.profile_validation_fullNameRequired;
+              }
+              if (value.trim().length < 2) {
+                return l10n.profile_validation_nameMinLength;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _emailController,
+            style: TextStyle(
+              color: isDark ? AppColors.disabledTextDark : AppColors.disabledTextLight,
+            ),
+            decoration: InputDecoration(
+              labelText: l10n.profile_emailAddress,
+              labelStyle: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: isDark ? AppColors.iconDark : AppColors.iconLight,
+              ),
+              filled: true,
+              fillColor: isDark ? AppColors.disabledDark : AppColors.disabledLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.inputBorderDark : AppColors.inputBorderLight,
+                ),
+              ),
+            ),
+            enabled: false, // Usually email is not editable
+          ),
+
+          const SizedBox(height: 20),
+        ],
       ),
-    );
-  }
-
-  Widget _buildPreferencesCard(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-
-    return Card(
-      elevation: isDark ? 4 : 2,
-      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-      shadowColor: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Language Selection
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(isDark ? 0.3 : 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.language_outlined,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Language',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
-                      ),
-                      DropdownButtonFormField<String>(
-                        value: _selectedLanguage,
-                        dropdownColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                        style: TextStyle(
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: 'en',
-                            child: Text(
-                              'English',
-                              style: TextStyle(
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                              ),
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'vi',
-                            child: Text(
-                              'Tiếng Việt',
-                              style: TextStyle(
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                              ),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedLanguage = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _changeAvatar() {
+    ),
+  );
+  void _changeAvatar(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Implement avatar change functionality
@@ -434,7 +329,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             ),
             Text(
-              'Change Profile Photo',
+              l10n.profile_changeProfilePhoto,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -446,8 +341,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               children: [
                 _buildAvatarOption(
                   context,
+                  l10n,
                   icon: Icons.camera_alt,
-                  label: 'Camera',
+                  label: l10n.profile_camera,
                   onTap: () {
                     Navigator.pop(context);
                     // Implement camera functionality
@@ -456,8 +352,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
                 _buildAvatarOption(
                   context,
+                  l10n,
                   icon: Icons.photo_library,
-                  label: 'Gallery',
+                  label: l10n.profile_gallery,
                   onTap: () {
                     Navigator.pop(context);
                     // Implement gallery functionality
@@ -466,8 +363,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
                 _buildAvatarOption(
                   context,
+                  l10n,
                   icon: Icons.delete,
-                  label: 'Remove',
+                  label: l10n.profile_remove,
                   onTap: () {
                     Navigator.pop(context);
                     // Implement remove functionality
@@ -484,48 +382,49 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildAvatarOption(
-      BuildContext context, {
+      BuildContext context,
+      AppLocalizations l10n, {
         required IconData icon,
         required String label,
         required VoidCallback onTap,
         required bool isDark,
-      }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: isDark ? AppColors.cardDark : AppColors.cardLight,
+      }) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
         ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              ),
-            ),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(12),
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
       ),
-    );
-  }
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 32,
+            color: AppColors.primary,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+
+    final l10n = AppLocalizations.of(context);
 
     try {
       await ref.read(authProvider.notifier).updateProfile(
@@ -535,8 +434,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
+          SnackBar(
+            content: Text(l10n.profile_updateSuccess),
             backgroundColor: AppColors.success,
           ),
         );
@@ -546,7 +445,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update profile: ${e.toString()}'),
+            content: Text('${l10n.profile_updateFailed}: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );

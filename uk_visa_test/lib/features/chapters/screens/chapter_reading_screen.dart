@@ -1,4 +1,3 @@
-// lib/features/chapters/screens/chapter_reading_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,12 +8,11 @@ import '../../../shared/widgets/custom_button.dart';
 import '../data/chapter_content.dart';
 
 class ChapterReadingScreen extends ConsumerStatefulWidget {
-  final int chapterId;
 
   const ChapterReadingScreen({
-    super.key,
-    required this.chapterId,
+    required this.chapterId, super.key,
   });
+  final int chapterId;
 
   @override
   ConsumerState<ChapterReadingScreen> createState() => _ChapterReadingScreenState();
@@ -50,6 +48,7 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final chapterContent = ChapterContent.getChapterContent(widget.chapterId);
@@ -77,7 +76,7 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
             backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                'CHAPTER ${widget.chapterId}',
+                '${l10n.chapter_capitalized} ${widget.chapterId}',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.primary,
@@ -111,7 +110,6 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Chapter Title
                 Text(
                   chapterContent.title,
                   style: theme.textTheme.headlineLarge?.copyWith(
@@ -119,10 +117,7 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
                     height: 1.2,
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
-                // Chapter Image (if available)
                 if (chapterContent.imageUrl != null) ...[
                   Container(
                     height: 300,
@@ -148,24 +143,19 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
                     ),
                   const SizedBox(height: 24),
                 ],
-
-                // Content Sections
                 ...chapterContent.sections.map((section) => _buildSection(
                   context,
                   section,
                 )),
-
                 const SizedBox(height: 32),
-
-                // Key Points Summary
                 if (chapterContent.keyPoints.isNotEmpty) ...[
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.1),
+                      color: AppColors.info.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppColors.info.withOpacity(0.3),
+                        color: AppColors.info.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(
@@ -342,22 +332,6 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
                 Navigator.pop(context);
                 // TODO: Implement bookmarking
 
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.text_increase),
-              title: const Text('Adjust Text Size'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Implement text size adjustment
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.share),
-              title: const Text('Share Chapter'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Implement sharing
               },
             ),
             ListTile(

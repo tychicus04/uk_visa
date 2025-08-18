@@ -1,4 +1,3 @@
-// lib/features/auth/screens/login_screen.dart - PROPERLY FIXED VERSION
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -119,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n.sign_in_to_continue_your_test,
+                      l10n.sign_in_to_continue_your_test, // ✅ Localized
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
@@ -183,7 +182,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Login Button
                     CustomButton(
                       text: l10n.auth_signIn,
                       onPressed: authState.isLoading ? null : () => _handleLogin(),
@@ -192,7 +190,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Sign Up Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -212,12 +209,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
 
-          // ✅ Loading overlay
           if (authState.isLoading)
             Container(
               color: Colors.black.withOpacity(0.3),
-              child: const Center(
-                child: LoadingWidget(message: 'Signing in...'),
+              child: Center(
+                child: LoadingWidget(message: l10n.auth_signingIn), // ✅ Localized
               ),
             ),
         ],
@@ -230,25 +226,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    print('🔐 Login button pressed');
-
     try {
-      // ✅ Call login and let the auth listener handle navigation
       await ref.read(authProvider.notifier).login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-
-      print('✅ Login completed successfully');
-      // ✅ Navigation will be handled by the auth listener in build method
-
     } catch (e) {
-      print('❌ Login error: $e');
-
       if (mounted) {
         final errorMessage = ErrorHandler.getErrorMessage(e);
-
-        // ✅ Show error using SnackBar
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),

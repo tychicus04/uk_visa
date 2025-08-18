@@ -1,4 +1,4 @@
-// lib/app/router.dart - UPDATED WITH REVIEW ANSWERS ROUTE
+// lib/app/router.dart - UPDATED: Removed bottom nav for test taking and review screens
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -76,7 +76,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Auth Routes
+
+      // 🔐 AUTH ROUTES (No bottom navigation)
       GoRoute(
         path: '/login',
         name: 'login',
@@ -112,7 +113,80 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Main Shell Route with Bottom Navigation
+      // 🎯 TEST TAKING ROUTES (No bottom navigation)
+      GoRoute(
+        path: '/test-taking/:testId',
+        name: 'test-taking',
+        builder: (context, state) {
+          // ✅ Safe parsing for test taking
+          final idParam = state.pathParameters['testId'];
+          final attemptIdParam = state.uri.queryParameters['attemptId'];
+
+          print('📝 Test taking route - Test ID: "$idParam", Attempt ID: "$attemptIdParam"');
+
+          if (idParam == null || idParam.isEmpty) {
+            print('❌ Missing test ID for test taking');
+            return _buildErrorScreen('Missing test ID');
+          }
+
+          // Check for object strings
+          if (idParam.contains('(') || idParam.contains('Test')) {
+            print('❌ Invalid test ID for taking - looks like object: $idParam');
+            return _buildErrorScreen('Invalid test ID format');
+          }
+
+          final id = int.tryParse(idParam);
+          if (id == null) {
+            print('❌ Invalid test ID for taking: "$idParam"');
+            return _buildErrorScreen('Invalid test ID: $idParam');
+          }
+
+          // ✅ Safe parsing for attempt ID (optional)
+          int? attemptId;
+          if (attemptIdParam != null && attemptIdParam.isNotEmpty) {
+            if (attemptIdParam.contains('(') || attemptIdParam.contains('TestAttempt')) {
+              print('❌ Invalid attempt ID - looks like object: $attemptIdParam');
+              return _buildErrorScreen('Invalid attempt ID format');
+            }
+            attemptId = int.tryParse(attemptIdParam);
+            if (attemptId == null) {
+              print('❌ Invalid attempt ID: "$attemptIdParam"');
+              return _buildErrorScreen('Invalid attempt ID: $attemptIdParam');
+            }
+          }
+
+          print('🏗️ Building TestTakingScreen - Test: $id, Attempt: $attemptId');
+          return TestTakingScreen(testId: id, attemptId: attemptId);
+        },
+      ),
+
+      // 🔍 REVIEW ANSWERS ROUTES (No bottom navigation)
+      GoRoute(
+        path: '/review-answers/:attemptId',
+        name: 'review-answers',
+        builder: (context, state) {
+          final attemptIdParam = state.pathParameters['attemptId'];
+          print('📝 Review answers route - Attempt ID: "$attemptIdParam"');
+
+          if (attemptIdParam == null || attemptIdParam.isEmpty) {
+            return _buildErrorScreen('Missing attempt ID for review');
+          }
+
+          if (attemptIdParam.contains('(') || attemptIdParam.contains('TestAttempt')) {
+            return _buildErrorScreen('Invalid attempt ID format for review');
+          }
+
+          final attemptId = int.tryParse(attemptIdParam);
+          if (attemptId == null) {
+            return _buildErrorScreen('Invalid attempt ID for review: $attemptIdParam');
+          }
+
+          print('🏗️ Building ReviewAnswersScreen for attempt: $attemptId');
+          return ReviewAnswersScreen(attemptId: attemptId);
+        },
+      ),
+
+      // 🏠 MAIN SHELL ROUTE WITH BOTTOM NAVIGATION
       ShellRoute(
         builder: (context, state, child) {
           print('🏗️ Building MainNavigation shell for: ${state.fullPath}');
@@ -129,7 +203,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
 
-          // Tests
+          // Tests (List and Detail only - taking and review moved out)
           GoRoute(
             path: '/tests',
             name: 'tests',
@@ -144,7 +218,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) {
                   // ✅ Safe ID parsing with detailed error handling
                   final idParam = state.pathParameters['id'];
-                  print('🔍 Test detail route - Raw ID param: "$idParam"');
+                  print('📖 Test detail route - Raw ID param: "$idParam"');
 
                   if (idParam == null || idParam.isEmpty) {
                     print('❌ Missing test ID parameter');
@@ -166,61 +240,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                   print('🏗️ Building TestDetailScreen for test: $id');
                   return TestDetailScreen(testId: id);
                 },
-                routes: [
-                  GoRoute(
-                    path: 'take',
-                    name: 'test-taking',
-                    builder: (context, state) {
-                      // ✅ Safe parsing for test taking
-                      final idParam = state.pathParameters['id'];
-                      final attemptIdParam = state.uri.queryParameters['attemptId'];
-
-                      print('🔍 Test taking route - Test ID: "$idParam", Attempt ID: "$attemptIdParam"');
-
-                      if (idParam == null || idParam.isEmpty) {
-                        print('❌ Missing test ID for test taking');
-                        return _buildErrorScreen('Missing test ID');
-                      }
-
-                      // Check for object strings
-                      if (idParam.contains('(') || idParam.contains('Test')) {
-                        print('❌ Invalid test ID for taking - looks like object: $idParam');
-                        return _buildErrorScreen('Invalid test ID format');
-                      }
-
-                      final id = int.tryParse(idParam);
-                      if (id == null) {
-                        print('❌ Invalid test ID for taking: "$idParam"');
-                        return _buildErrorScreen('Invalid test ID: $idParam');
-                      }
-
-                      // ✅ Safe parsing for attempt ID (optional)
-                      int? attemptId;
-                      if (attemptIdParam != null && attemptIdParam.isNotEmpty) {
-                        if (attemptIdParam.contains('(') || attemptIdParam.contains('TestAttempt')) {
-                          print('❌ Invalid attempt ID - looks like object: $attemptIdParam');
-                          return _buildErrorScreen('Invalid attempt ID format');
-                        }
-                        attemptId = int.tryParse(attemptIdParam);
-                        if (attemptId == null) {
-                          print('❌ Invalid attempt ID: "$attemptIdParam"');
-                          return _buildErrorScreen('Invalid attempt ID: $attemptIdParam');
-                        }
-                      }
-
-                      print('🏗️ Building TestTakingScreen - Test: $id, Attempt: $attemptId');
-                      return TestTakingScreen(testId: id, attemptId: attemptId);
-                    },
-                  ),
-                ],
               ),
+              // Test Results
               GoRoute(
                 path: 'result/:attemptId',
                 name: 'test-result',
                 builder: (context, state) {
                   // ✅ Safe parsing for test results
                   final attemptIdParam = state.pathParameters['attemptId'];
-                  print('🔍 Test result route - Attempt ID: "$attemptIdParam"');
+                  print('📊 Test result route - Attempt ID: "$attemptIdParam"');
 
                   if (attemptIdParam == null || attemptIdParam.isEmpty) {
                     print('❌ Missing attempt ID for results');
@@ -246,33 +274,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                   print('🏗️ Building TestResultScreen for attempt: $attemptId');
                   return TestResultScreen(attemptId: attemptId);
                 },
-                routes: [
-                  // ✅ NEW: Review Answers Route
-                  GoRoute(
-                    path: 'review',
-                    name: 'review-answers',
-                    builder: (context, state) {
-                      final attemptIdParam = state.pathParameters['attemptId'];
-                      print('🔍 Review answers route - Attempt ID: "$attemptIdParam"');
-
-                      if (attemptIdParam == null || attemptIdParam.isEmpty) {
-                        return _buildErrorScreen('Missing attempt ID for review');
-                      }
-
-                      if (attemptIdParam.contains('(') || attemptIdParam.contains('TestAttempt')) {
-                        return _buildErrorScreen('Invalid attempt ID format for review');
-                      }
-
-                      final attemptId = int.tryParse(attemptIdParam);
-                      if (attemptId == null) {
-                        return _buildErrorScreen('Invalid attempt ID for review: $attemptIdParam');
-                      }
-
-                      print('🏗️ Building ReviewAnswersScreen for attempt: $attemptId');
-                      return ReviewAnswersScreen(attemptId: attemptId);
-                    },
-                  ),
-                ],
               ),
             ],
           ),
@@ -292,7 +293,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) {
                   // ✅ Safe parsing for chapter detail
                   final idParam = state.pathParameters['id'];
-                  print('🔍 Chapter detail route - ID: "$idParam"');
+                  print('📖 Chapter detail route - ID: "$idParam"');
 
                   if (idParam == null || idParam.isEmpty) {
                     return _buildErrorScreen('Missing chapter ID');

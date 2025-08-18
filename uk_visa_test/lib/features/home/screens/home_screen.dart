@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
-import '../widgets/progress_card.dart';
-import '../widgets/study_schedule_card.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../widgets/quick_actions_card.dart';
+import '../widgets/study_schedule_card.dart';
 import '../widgets/test_exemptions_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -23,10 +19,8 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: CustomScrollView(
         slivers: [
-          // Custom App Bar with UK Flag
           SliverAppBar(
             expandedHeight: 120,
-            floating: false,
             pinned: true,
             elevation: 0,
             backgroundColor: Colors.transparent,
@@ -49,7 +43,6 @@ class HomeScreen extends ConsumerWidget {
                         const SizedBox(height: 20),
                         Row(
                           children: [
-                            // UK Flag Icon
                             Container(
                               width: 48,
                               height: 48,
@@ -104,28 +97,17 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-
-          // Content
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 24),
-
-                // Study Schedule Card
-                StudyScheduleCard(),
-
+                const StudyScheduleCard(),
                 const SizedBox(height: 24),
-
-                // Quick Actions
-                QuickActionsCard(),
-
+                const QuickActionsCard(),
                 const SizedBox(height: 24),
-
-                // Test Exemptions Info
-                TestExemptionsCard(),
-
-                const SizedBox(height: 100), // Bottom padding for navigation
+                const TestExemptionsCard(),
+                const SizedBox(height: 100),
               ]),
             ),
           ),

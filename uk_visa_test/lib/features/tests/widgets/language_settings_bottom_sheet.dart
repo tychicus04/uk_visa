@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 
 class LanguageSettingsBottomSheet extends ConsumerWidget {
@@ -9,11 +10,12 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final bilingualState = ref.watch(bilingualProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -37,14 +39,14 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.language,
                   color: AppColors.primary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Language Settings',
+                  l10n.languageSettings_title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -60,10 +62,10 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -72,7 +74,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.translate,
                         color: AppColors.primary,
                         size: 20,
@@ -80,7 +82,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Vietnamese Translation',
+                          l10n.languageSettings_vietnameseTranslation,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,
@@ -101,10 +103,10 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
 
                   Text(
                     bilingualState.isEnabled
-                        ? '🇻🇳 Vietnamese translations are now displayed alongside English questions and answers.'
-                        : '🇬🇧 Only English content is displayed. Enable Vietnamese to see translations.',
+                        ? l10n.languageSettings_translationsEnabled
+                        : l10n.languageSettings_translationsDisabled,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.primary.withOpacity(0.8),
+                      color: AppColors.primary.withValues(alpha: 0.8),
                       height: 1.3,
                     ),
                   ),
@@ -113,7 +115,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
             ),
           ),
 
-          // 🔥 LANGUAGE OPTIONS (FUTURE FEATURE)
+          // 🔥 TRANSLATION QUALITY INFO (Only shown when Vietnamese is enabled)
           if (bilingualState.isEnabled) ...[
             const SizedBox(height: 20),
             Padding(
@@ -122,7 +124,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Translation Quality',
+                    l10n.languageSettings_translationQuality,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -132,8 +134,8 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
 
                   _buildInfoCard(
                     icon: Icons.info_outline,
-                    title: 'Professional Translation',
-                    description: 'All content has been professionally translated and reviewed for accuracy.',
+                    title: l10n.languageSettings_professionalTranslation,
+                    description: l10n.languageSettings_qualityDescription,
                     color: AppColors.success,
                     isDark: isDark,
                   ),
@@ -142,7 +144,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
             ),
           ],
 
-          // 🔥 BOTTOM ACTIONS
+          // 🔥 DONE BUTTON
           Padding(
             padding: const EdgeInsets.all(20),
             child: SizedBox(
@@ -151,71 +153,81 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
                 ),
-                child: const Text('Done'),
+                child: Text(
+                  l10n.languageSettings_done,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ),
 
-          // Add bottom padding for safe area
+          // Safe area padding for bottom
           SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
   }
 
+  /// Build info card widget with localized content
   Widget _buildInfoCard({
     required IconData icon,
     required String title,
     required String description,
     required Color color,
     required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
+  }) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: color.withValues(alpha: 0.3),
+        width: 1,
+      ),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          icon,
+          color: color,
+          size: 20,
         ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                    fontSize: 14,
-                  ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  fontSize: 14,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: color.withOpacity(0.8),
-                    fontSize: 12,
-                    height: 1.2,
-                  ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: TextStyle(
+                  color: color.withValues(alpha: 0.8),
+                  fontSize: 12,
+                  height: 1.2,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

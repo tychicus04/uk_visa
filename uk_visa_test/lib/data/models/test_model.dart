@@ -10,14 +10,14 @@ class Test extends Equatable {
 
   const Test({
     required this.id,
-    this.chapterId,
     required this.testNumber,
     required this.testType,
-    this.title,
-    this.url,
     required this.isFree,
     required this.isPremium,
     required this.createdAt,
+    this.chapterId,
+    this.title,
+    this.url,
     this.chapterName,
     this.questionCount,
     this.canAccess,

@@ -1,22 +1,21 @@
-// lib/features/tests/screens/test_detail_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../data/models/test_model.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
 
 class TestDetailScreen extends ConsumerWidget {
-  final int testId;
 
   const TestDetailScreen({
-    super.key,
     required this.testId,
+    super.key,
   });
+  final int testId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,7 +25,7 @@ class TestDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Test Details'),
+        title: Text(l10n.test_details),
       ),
       body: testState.when(
         data: (test) => _buildTestDetails(context, test, ref),
@@ -39,7 +38,7 @@ class TestDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTestDetails(BuildContext context, dynamic test, WidgetRef ref) {
+  Widget _buildTestDetails(BuildContext context, Test test, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -49,7 +48,6 @@ class TestDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Test Info Card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -75,34 +73,32 @@ class TestDetailScreen extends ConsumerWidget {
                 if (test.chapterName != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    test.chapterName,
+                    test.chapterName!,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.primary,
                     ),
                   ),
                 ],
                 const SizedBox(height: 16),
-
-                // Test Stats
                 Row(
                   children: [
                     _buildStatItem(
                       icon: Icons.quiz,
-                      label: 'Questions',
+                      label: l10n.questions,
                       value: '${test.questionCount ?? 24}',
                       theme: theme,
                     ),
                     const SizedBox(width: 24),
                     _buildStatItem(
                       icon: Icons.timer,
-                      label: 'Duration',
-                      value: '45 min',
+                      label: l10n.duration,
+                      value: '45 ${l10n.minutes}',
                       theme: theme,
                     ),
                     const SizedBox(width: 24),
                     _buildStatItem(
                       icon: Icons.trending_up,
-                      label: 'Pass Rate',
+                      label: l10n.pass_rate,
                       value: '75%',
                       theme: theme,
                     ),
@@ -111,10 +107,7 @@ class TestDetailScreen extends ConsumerWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Previous Attempts
           if (test.attemptCount != null) ...[
             Container(
               padding: const EdgeInsets.all(20),
@@ -129,7 +122,7 @@ class TestDetailScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your Progress',
+                    l10n.your_progress,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -139,7 +132,7 @@ class TestDetailScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _buildProgressItem(
-                          label: 'Attempts',
+                          label: l10n.attempts,
                           value: '${test.attemptCount}',
                           theme: theme,
                         ),
@@ -147,7 +140,7 @@ class TestDetailScreen extends ConsumerWidget {
                       if (test.bestScore != null)
                         Expanded(
                           child: _buildProgressItem(
-                            label: 'Best Score',
+                            label: l10n.best_score,
                             value: '${test.bestScore?.toInt()}%',
                             theme: theme,
                           ),
@@ -159,8 +152,6 @@ class TestDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
           ],
-
-          // Access Status
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -178,7 +169,7 @@ class TestDetailScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'You can access this test',
+                    l10n.you_can_access_this_test,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.success,
                       fontWeight: FontWeight.w500,
@@ -208,8 +199,7 @@ class TestDetailScreen extends ConsumerWidget {
     required String label,
     required String value,
     required ThemeData theme,
-  }) {
-    return Column(
+  }) => Column(
       children: [
         Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(height: 4),
@@ -227,14 +217,12 @@ class TestDetailScreen extends ConsumerWidget {
         ),
       ],
     );
-  }
 
   Widget _buildProgressItem({
     required String label,
     required String value,
     required ThemeData theme,
-  }) {
-    return Column(
+  }) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -252,22 +240,56 @@ class TestDetailScreen extends ConsumerWidget {
         ),
       ],
     );
-  }
 
   Future<void> _startTest(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     try {
-      // Start test attempt
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(l10n.test_startingTest),
+            ],
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 10),
+        ),
+      );
+
       final attemptId = await ref.read(testProvider.notifier).startAttempt(testId);
+
       if (context.mounted) {
-        // FIXED: Navigation to test taking screen
-        context.go('/tests/$testId/take?attemptId=$attemptId');
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        context.go('/test-taking/$testId?attemptId=$attemptId');
       }
     } catch (e) {
       if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(l10n.test_testStartError),
             backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            action: SnackBarAction(
+              label: l10n.common_retry,
+              textColor: Colors.white,
+              onPressed: () => _startTest(context, ref),
+            ),
           ),
         );
       }

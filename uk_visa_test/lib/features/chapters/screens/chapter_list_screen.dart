@@ -1,14 +1,13 @@
-// lib/features/chapters/screens/chapter_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
-import '../widgets/chapter_card.dart';
+import '../../../shared/widgets/loading_widget.dart';
 import '../providers/chapter_provider.dart';
+import '../widgets/chapter_card.dart';
 
 class ChapterListScreen extends ConsumerWidget {
   const ChapterListScreen({super.key});
@@ -29,7 +28,6 @@ class ChapterListScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -61,10 +59,7 @@ class ChapterListScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Study Book Info
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -93,18 +88,14 @@ class ChapterListScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Chapters List
               Text(
-                'Study Chapters',
+                l10n.study_chapters,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-
               ...chapters.map((chapter) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: ChapterCard(
@@ -114,10 +105,7 @@ class ChapterListScreen extends ConsumerWidget {
                   },
                 ),
               )),
-
               const SizedBox(height: 24),
-
-              // Test Centre Info
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -141,7 +129,7 @@ class ChapterListScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Test Centres',
+                          l10n.test_centres,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),

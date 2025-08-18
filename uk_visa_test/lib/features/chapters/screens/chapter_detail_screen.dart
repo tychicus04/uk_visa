@@ -1,5 +1,3 @@
-// lib/features/chapters/screens/chapter_detail_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,12 +9,11 @@ import '../../tests/widgets/test_card.dart';
 import '../providers/chapter_provider.dart';
 
 class ChapterDetailScreen extends ConsumerWidget {
-  final int chapterId;
 
   const ChapterDetailScreen({
-    super.key,
-    required this.chapterId,
+    required this.chapterId, super.key,
   });
+  final int chapterId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,14 +24,13 @@ class ChapterDetailScreen extends ConsumerWidget {
     return chapterState.when(
       data: (chapter) => Scaffold(
         appBar: AppBar(
-          title: Text('Chapter ${chapter.chapterNumber}'),
+          title: Text('${l10n.chapter} ${chapter.chapterNumber}'),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Chapter Header
               Text(
                 chapter.name,
                 style: theme.textTheme.headlineMedium?.copyWith(
@@ -50,19 +46,15 @@ class ChapterDetailScreen extends ConsumerWidget {
                   ),
                 ),
               ],
-
               const SizedBox(height: 32),
-
-              // Chapter Tests
               if (chapter.tests != null && chapter.tests!.isNotEmpty) ...[
                 Text(
-                  'Chapter Tests',
+                  l10n.chapter_tests,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 ...chapter.tests!.map((test) => Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: TestCard(
@@ -75,8 +67,6 @@ class ChapterDetailScreen extends ConsumerWidget {
 
                 const SizedBox(height: 24),
               ],
-
-              // Action Buttons
               Row(
                 children: [
                   Expanded(
@@ -85,7 +75,7 @@ class ChapterDetailScreen extends ConsumerWidget {
                         context.go('/chapters/${chapter.id}/read');
                       },
                       icon: const Icon(Icons.menu_book),
-                      label: const Text('Read Chapter'),
+                      label: Text(l10n.read_chapter),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
@@ -96,11 +86,10 @@ class ChapterDetailScreen extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          // Navigate to chapter tests
                           context.go('/tests?chapter=${chapter.id}');
                         },
                         icon: const Icon(Icons.quiz),
-                        label: const Text('Practice Tests'),
+                        label: Text(l10n.practice_tests),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),

@@ -1,26 +1,25 @@
-// lib/features/tests/screens/review_answers_screen.dart - ENHANCED VERSION
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../data/models/attempt_model.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
-import '../../../shared/providers/bilingual_provider.dart';
-import '../../../data/models/attempt_model.dart';
+import '../widgets/enhanced_review_question_widget.dart';
 import '../widgets/language_settings_bottom_sheet.dart';
 import '../widgets/review_question_navigation_sheet.dart';
-import '../widgets/enhanced_review_question_widget.dart';
 
 class ReviewAnswersScreen extends ConsumerStatefulWidget {
-  final int attemptId;
 
   const ReviewAnswersScreen({
     super.key,
     required this.attemptId,
   });
+  final int attemptId;
 
   @override
   ConsumerState<ReviewAnswersScreen> createState() => _ReviewAnswersScreenState();
@@ -57,10 +56,10 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
         if (answers.isEmpty) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(l10n.review_answers ?? 'Review Answers'),
+              title: Text(l10n.review_answers),
             ),
             body: Center(
-              child: Text(l10n.no_answers_found ?? 'No answers found'),
+              child: Text(l10n.no_answers_found),
             ),
           );
         }
@@ -69,8 +68,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: CustomScrollView(
             slivers: [
-              // 🔥 SLIVER APP BAR WITH PROGRESS
-              _buildSliverAppBar(context, attempt, answers, theme, isDark),
+              _buildSliverAppBar(context, attempt, answers, theme, isDark, l10n),
 
               // 🔥 QUESTION CONTENT
               SliverFillRemaining(
@@ -97,7 +95,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           ),
 
           // 🔥 FIXED BOTTOM ACTION BAR
-          bottomNavigationBar: _buildBottomActionBar(context, answers, theme, isDark),
+          bottomNavigationBar: _buildBottomActionBar(context, answers, theme, isDark, l10n),
         );
       },
       loading: () => Scaffold(
@@ -113,35 +111,30 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
       ),
     );
   }
-
-  // 🔥 SLIVER APP BAR WITH PROGRESS AND RESULT INFO
-  Widget _buildSliverAppBar(BuildContext context, TestAttempt attempt, List<AttemptAnswer> answers, ThemeData theme, bool isDark) {
-    final l10n = AppLocalizations.of(context);
+  
+  Widget _buildSliverAppBar(BuildContext context, TestAttempt attempt, List<AttemptAnswer> answers, ThemeData theme, bool isDark, AppLocalizations l10n) {
     final totalQuestions = answers.length;
     final progress = totalQuestions > 0 ? (_currentQuestionIndex + 1) / totalQuestions : 0.0;
     final correctCount = answers.where((a) => a.isCorrect).length;
-
-    // Theme-aware colors
     final appBarBackground = attempt.isPassed
-        ? (isDark ? AppColors.success.withOpacity(0.8) : AppColors.success)
-        : (isDark ? AppColors.error.withOpacity(0.8) : AppColors.error);
-    final appBarForeground = Colors.white;
-    final progressBackground = Colors.white.withOpacity(0.3);
-    final progressValue = Colors.white;
+        ? (isDark ? AppColors.success.withValues(alpha: 0.8) : AppColors.success)
+        : (isDark ? AppColors.error.withValues(alpha: 0.8) : AppColors.error);
+    const appBarForeground = Colors.white;
+    final progressBackground = Colors.white.withValues(alpha: 0.3);
+    const progressValue = Colors.white;
 
     return SliverAppBar(
       expandedHeight: 200,
-      floating: false,
       pinned: true,
       backgroundColor: appBarBackground,
       foregroundColor: appBarForeground,
       leading: IconButton(
-        onPressed: () => context.pop(),
-        icon: Icon(Icons.arrow_back, color: appBarForeground),
+        onPressed: () => context.go('/tests/result/${widget.attemptId}'),
+        icon: const Icon(Icons.arrow_back, color: appBarForeground),
       ),
       title: Text(
-        l10n.review_answers ?? 'Review Answers',
-        style: TextStyle(
+        l10n.review_answers,
+        style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: appBarForeground,
@@ -151,14 +144,14 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
         // Language Settings
         IconButton(
           onPressed: () => _showLanguageSettings(context),
-          icon: Icon(Icons.language, color: appBarForeground),
+          icon: const Icon(Icons.language, color: appBarForeground),
           tooltip: 'Language Settings',
         ),
 
         // Question Navigation
         IconButton(
           onPressed: () => _showQuestionNavigation(context, attempt, answers),
-          icon: Icon(Icons.list, color: appBarForeground),
+          icon: const Icon(Icons.list, color: appBarForeground),
           tooltip: 'Question List',
         ),
 
@@ -170,8 +163,8 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: attempt.isPassed
-                  ? [AppColors.success, AppColors.success.withOpacity(0.8)]
-                  : [AppColors.error, AppColors.error.withOpacity(0.8)],
+                  ? [AppColors.success, AppColors.success.withValues(alpha: 0.8)]
+                  : [AppColors.error, AppColors.error.withValues(alpha: 0.8)],
             ),
           ),
           child: SafeArea(
@@ -195,7 +188,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                           attempt.isPassed
                               ? (l10n.test_passed ?? 'Test Passed!')
                               : (l10n.test_failed ?? 'Test Failed'),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: appBarForeground,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -205,12 +198,12 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           '${attempt.percentage?.toStringAsFixed(1)}%',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: appBarForeground,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -224,8 +217,8 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
 
                   // Progress Info
                   Text(
-                    'Question ${_currentQuestionIndex + 1} of $totalQuestions',
-                    style: TextStyle(
+                    '${l10n.question} ${_currentQuestionIndex + 1} ${l10n.of_} $totalQuestions',
+                    style: const TextStyle(
                       color: appBarForeground,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -247,18 +240,18 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                   Row(
                     children: [
                       Text(
-                        '${l10n.correct ?? 'Correct'}: $correctCount/$totalQuestions',
+                        '${l10n.correct}: $correctCount/$totalQuestions',
                         style: TextStyle(
-                          color: appBarForeground.withOpacity(0.9),
+                          color: appBarForeground.withValues(alpha: 0.9),
                           fontSize: 14,
                         ),
                       ),
                       const Spacer(),
                       if (attempt.timeTakenInt > 0)
                         Text(
-                          'Time: ${_formatTime(attempt.timeTakenInt)}',
+                          '${l10n.time}: ${_formatTime(attempt.timeTakenInt)}',
                           style: TextStyle(
-                            color: appBarForeground.withOpacity(0.9),
+                            color: appBarForeground.withValues(alpha: 0.9),
                             fontSize: 14,
                           ),
                         ),
@@ -274,21 +267,20 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
   }
 
   // 🔥 FIXED BOTTOM ACTION BAR
-  Widget _buildBottomActionBar(BuildContext context, List<AttemptAnswer> answers, ThemeData theme, bool isDark) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildBottomActionBar(BuildContext context, List<AttemptAnswer> answers, ThemeData theme, bool isDark, AppLocalizations  l10n) {
     final totalQuestions = answers.length;
     final isFirstQuestion = _currentQuestionIndex == 0;
     final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
     final currentAnswer = answers[_currentQuestionIndex];
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         boxShadow: [
           BoxShadow(
             offset: const Offset(0, -2),
             blurRadius: 8,
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
           ),
         ],
       ),
@@ -298,47 +290,8 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Question Status Indicator
-              // Container(
-              //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              //   decoration: BoxDecoration(
-              //     color: currentAnswer.isCorrect
-              //         ? AppColors.success.withOpacity(0.1)
-              //         : AppColors.error.withOpacity(0.1),
-              //     borderRadius: BorderRadius.circular(20),
-              //     border: Border.all(
-              //       color: currentAnswer.isCorrect ? AppColors.success : AppColors.error,
-              //     ),
-              //   ),
-              //   child: Row(
-              //     mainAxisSize: MainAxisSize.min,
-              //     children: [
-              //       Icon(
-              //         currentAnswer.isCorrect ? Icons.check_circle : Icons.cancel,
-              //         color: currentAnswer.isCorrect ? AppColors.success : AppColors.error,
-              //         size: 16,
-              //       ),
-              //       const SizedBox(width: 4),
-              //       Text(
-              //         currentAnswer.isCorrect
-              //             ? (l10n.correct_answer ?? 'Correct')
-              //             : (l10n.incorrect_answer ?? 'Incorrect'),
-              //         style: TextStyle(
-              //           color: currentAnswer.isCorrect ? AppColors.success : AppColors.error,
-              //           fontWeight: FontWeight.bold,
-              //           fontSize: 12,
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-
-              // const SizedBox(height: 12),
-
-              // Navigation Buttons
               Row(
                 children: [
-                  // Previous Button
                   if (!isFirstQuestion) ...[
                     Expanded(
                       flex: 2,
@@ -351,7 +304,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                           side: BorderSide(
                               color: isDark
                                   ? AppColors.borderDark
-                                  : AppColors.primary.withOpacity(0.3)
+                                  : AppColors.primary.withValues(alpha: 0.3)
                           ),
                           foregroundColor: isDark
                               ? AppColors.textPrimaryDark
@@ -367,7 +320,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                     flex: 2,
                     child: ElevatedButton.icon(
                       onPressed: isLastQuestion
-                          ? () => context.pop()
+                          ? () => context.go('/tests/result/${widget.attemptId}')
                           : _nextQuestion,
                       icon: Icon(
                         isLastQuestion ? Icons.close : Icons.arrow_forward,
@@ -433,98 +386,6 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
             curve: Curves.easeInOut,
           );
         },
-      ),
-    );
-  }
-
-  void _showOptionsMenu(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(
-                    'Review Options',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Vietnamese Toggle
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final showVietnamese = ref.watch(shouldShowVietnameseProvider);
-                      return ListTile(
-                        leading: Icon(
-                          Icons.language,
-                          color: AppColors.primary,
-                        ),
-                        title: Text('Vietnamese Support'),
-                        subtitle: Text('Show Vietnamese translations'),
-                        trailing: Switch(
-                          value: showVietnamese,
-                          onChanged: (value) {
-                            ref.read(bilingualProvider.notifier).setBilingualMode(value);
-                          },
-                          activeColor: AppColors.primary,
-                        ),
-                        onTap: () {
-                          ref.read(bilingualProvider.notifier).toggleBilingual();
-                        },
-                      );
-                    },
-                  ),
-
-                  const Divider(),
-
-                  // Back to Test Result
-                  ListTile(
-                    leading: Icon(
-                      Icons.assessment,
-                      color: AppColors.info,
-                    ),
-                    title: Text('Back to Results'),
-                    subtitle: Text('Return to test result summary'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      Navigator.pop(context); // Close bottom sheet
-                      context.pop(); // Go back to result screen
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

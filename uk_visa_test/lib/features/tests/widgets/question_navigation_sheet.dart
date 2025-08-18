@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class QuestionNavigationSheet extends StatelessWidget {
+  const QuestionNavigationSheet({
+    required this.test,
+    required this.currentQuestionIndex,
+    required this.answers,
+    required this.onQuestionTap,
+    super.key,
+  });
+
   final dynamic test;
   final int currentQuestionIndex;
   final Map<String, List<String>> answers;
   final Function(int index) onQuestionTap;
 
-  const QuestionNavigationSheet({
-    super.key,
-    required this.test,
-    required this.currentQuestionIndex,
-    required this.answers,
-    required this.onQuestionTap,
-  });
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final totalQuestions = test.questions?.length ?? 24;
     final answeredCount = answers.values.where((answers) => answers.isNotEmpty).length;
     final theme = Theme.of(context);
@@ -48,7 +50,7 @@ class QuestionNavigationSheet extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Question Navigator',
+                  l10n.questionNavigation_title,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -56,7 +58,7 @@ class QuestionNavigationSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$answeredCount of $totalQuestions questions answered',
+                  l10n.questionNavigation_progress(answeredCount, totalQuestions),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
@@ -73,19 +75,19 @@ class QuestionNavigationSheet extends StatelessWidget {
               children: [
                 _buildLegendItem(
                   color: AppColors.primary,
-                  label: 'Current',
+                  label: l10n.questionNavigation_current,
                   icon: Icons.location_on,
                   isDark: isDark,
                 ),
                 _buildLegendItem(
                   color: AppColors.success,
-                  label: 'Answered',
+                  label: l10n.questionNavigation_answered,
                   icon: Icons.check_circle,
                   isDark: isDark,
                 ),
                 _buildLegendItem(
                   color: isDark ? AppColors.borderDark : Colors.grey[300]!,
-                  label: 'Not Answered',
+                  label: l10n.questionNavigation_notAnswered,
                   icon: Icons.radio_button_unchecked,
                   isDark: isDark,
                 ),
@@ -144,8 +146,11 @@ class QuestionNavigationSheet extends StatelessWidget {
                       foregroundColor: isDark
                           ? AppColors.textPrimaryDark
                           : AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Close'),
+                    child: Text(l10n.questionNavigation_close),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -159,9 +164,13 @@ class QuestionNavigationSheet extends StatelessWidget {
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Submit Test'),
+                    child: Text(l10n.questionNavigation_submitTest),
                   ),
                 ),
               ],
@@ -175,29 +184,29 @@ class QuestionNavigationSheet extends StatelessWidget {
     );
   }
 
+  /// Build legend item with localized label
   Widget _buildLegendItem({
     required Color color,
     required String label,
     required IconData icon,
     required bool isDark,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 16),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? AppColors.textSecondaryDark : Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
+  }) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, color: color, size: 16),
+      const SizedBox(width: 4),
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: isDark ? AppColors.textSecondaryDark : Colors.grey[600],
+          fontWeight: FontWeight.w500,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 
+  /// Build question button with visual state indicators
   Widget _buildQuestionButton({
     required int questionNumber,
     required bool isAnswered,

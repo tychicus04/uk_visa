@@ -1,9 +1,8 @@
-// lib/features/chapters/widgets/chapter_card.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ChapterCard extends StatelessWidget {
 
@@ -17,6 +16,7 @@ class ChapterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -41,7 +41,6 @@ class ChapterCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Chapter Number Badge
                 Container(
                   width: 48,
                   height: 48,
@@ -65,7 +64,7 @@ class ChapterCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'CHAPTER ${chapter.chapterNumber}',
+                        '${l10n.chapter_capitalized} ${chapter.chapterNumber}',
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -94,31 +93,21 @@ class ChapterCard extends StatelessWidget {
                 if (chapter.totalTests != null)
                   _buildStatChip(
                     icon: Icons.quiz,
-                    label: '${chapter.totalTests} tests',
+                    label: '${chapter.totalTests} ${l10n.tests}',
                     theme: theme,
                   ),
                 if (chapter.freeTests != null) ...[
                   const SizedBox(width: 12),
                   _buildStatChip(
                     icon: Icons.free_breakfast,
-                    label: '${chapter.freeTests} free',
+                    label: '${chapter.freeTests} ${l10n.free}',
                     theme: theme,
                   ),
-                ],
-                if (chapter.premiumTests != null) ...[
-                  const SizedBox(width: 12),
-                  _buildStatChip(
-                    icon: Icons.star,
-                    label: '${chapter.premiumTests} premium',
-                    theme: theme,
-                  ),
-                ],
+                ]
               ],
             ),
 
             const SizedBox(height: 16),
-
-            // Action Buttons
             Row(
               children: [
                 Expanded(
@@ -127,9 +116,9 @@ class ChapterCard extends StatelessWidget {
                       context.go('/chapters/${chapter.id}/read');
                     },
                     icon: const Icon(Icons.menu_book, size: 16),
-                    label: const Text(
-                      'Read',
-                      style: TextStyle(fontSize: 12),
+                    label: Text(
+                      l10n.read,
+                      style: const TextStyle(fontSize: 12),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -142,9 +131,9 @@ class ChapterCard extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onTap,
                     icon: const Icon(Icons.quiz, size: 16),
-                    label: const Text(
-                      'Tests',
-                      style: TextStyle(fontSize: 12),
+                    label: Text(
+                      l10n.tests,
+                      style: const TextStyle(fontSize: 12),
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),

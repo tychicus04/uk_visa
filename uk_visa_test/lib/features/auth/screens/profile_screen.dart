@@ -1,15 +1,12 @@
-// lib/features/auth/screens/profile_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../data/states/AuthState.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
-import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -92,7 +89,7 @@ class ProfileScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       // User Name
                       Text(
-                        authState.user!.fullName ?? 'User',
+                        authState.user!.fullName ?? l10n.profile_defaultUserName,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           color: isDark ? AppColors.textPrimaryDark : Colors.white,
                           fontWeight: FontWeight.bold,
@@ -122,22 +119,26 @@ class ProfileScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Account Information Section
-                    _buildSectionTitle(context, 'Account Information', isDark),
+                    _buildSectionTitle(context, l10n.profile_accountInformation, isDark),
                     const SizedBox(height: 16),
-                    _buildAccountInfoCard(context, authState, isDark),
+                    _buildAccountInfoCard(context, l10n, authState, isDark),
 
                     const SizedBox(height: 32),
 
                     // Quick Actions Section
-                    _buildSectionTitle(context, 'Quick Actions', isDark),
+                    _buildSectionTitle(context, l10n.profile_quickActions, isDark),
                     const SizedBox(height: 16),
-                    _buildQuickActionsGrid(context, ref, isDark),
+                    _buildQuickActionsGrid(context, l10n, ref, isDark),
 
                     const SizedBox(height: 32),
 
-                    // Logout Section
-                    _buildLogoutSection(context, ref, l10n, authState, isDark),
-
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.profile_appVersion,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      ),
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -160,7 +161,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAccountInfoCard(BuildContext context, AuthState authState, bool isDark) {
+  Widget _buildAccountInfoCard(BuildContext context, AppLocalizations l10n, AuthState authState, bool isDark) {
     final theme = Theme.of(context);
 
     return Card(
@@ -175,8 +176,8 @@ class ProfileScreen extends ConsumerWidget {
             _buildInfoRow(
               context,
               icon: Icons.person_outline,
-              label: 'Full Name',
-              value: authState.user?.fullName ?? 'Not set',
+              label: l10n.auth_fullName,
+              value: authState.user?.fullName ?? l10n.profile_notSet,
               isDark: isDark,
             ),
             Divider(
@@ -186,7 +187,7 @@ class ProfileScreen extends ConsumerWidget {
             _buildInfoRow(
               context,
               icon: Icons.email_outlined,
-              label: 'Email Address',
+              label: l10n.profile_emailAddress,
               value: authState.user?.email ?? '',
               isDark: isDark,
             ),
@@ -197,14 +198,27 @@ class ProfileScreen extends ConsumerWidget {
             _buildInfoRow(
               context,
               icon: Icons.language_outlined,
-              label: 'Language',
-              value: 'English', // You can get this from user preferences
+              label: l10n.settings_language,
+              value: _getLanguageDisplayName(l10n),
               isDark: isDark,
             ),
           ],
         ),
       ),
     );
+  }
+
+  // Helper method để hiển thị tên ngôn ngữ hiện tại
+  String _getLanguageDisplayName(AppLocalizations l10n) {
+    // Bạn có thể lấy từ user preferences hoặc Locale hiện tại
+    final currentLocale = l10n.localeName;
+    switch (currentLocale) {
+      case 'vi':
+        return l10n.settings_vietnamese;
+      case 'en':
+      default:
+        return l10n.settings_english;
+    }
   }
 
   Widget _buildInfoRow(
@@ -267,43 +281,41 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActionsGrid(BuildContext context, WidgetRef ref, bool isDark) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildActionCard(
-            context,
-            icon: Icons.edit_outlined,
-            title: 'Edit Profile',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const EditProfileScreen(),
-                ),
-              );
-            },
-            isDark: isDark,
-          ),
+  Widget _buildQuickActionsGrid(BuildContext context, AppLocalizations l10n, WidgetRef ref, bool isDark) => Row(
+    children: [
+      Expanded(
+        child: _buildActionCard(
+          context,
+          icon: Icons.edit_outlined,
+          title: l10n.profile_editProfile,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const EditProfileScreen(),
+              ),
+            );
+          },
+          isDark: isDark,
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActionCard(
-            context,
-            icon: Icons.lock_outline,
-            title: 'Change Password',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ChangePasswordScreen(),
-                ),
-              );
-            },
-            isDark: isDark,
-          ),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: _buildActionCard(
+          context,
+          icon: Icons.lock_outline,
+          title: l10n.profile_changePassword,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const ChangePasswordScreen(),
+              ),
+            );
+          },
+          isDark: isDark,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 
   Widget _buildActionCard(
       BuildContext context, {
@@ -356,193 +368,5 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildSettingsCard(BuildContext context, WidgetRef ref, bool isDark) {
-    return Card(
-      elevation: isDark ? 4 : 2,
-      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-      shadowColor: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        children: [
-          _buildSettingsTile(
-            context,
-            icon: Icons.notifications_outlined,
-            title: 'Notifications',
-            subtitle: 'Manage your notification preferences',
-            onTap: () {
-              // Navigate to notifications settings
-            },
-            isDark: isDark,
-          ),
-          Divider(height: 1, color: isDark ? AppColors.borderDark : AppColors.borderLight),
-          _buildSettingsTile(
-            context,
-            icon: Icons.language_outlined,
-            title: 'Language',
-            subtitle: 'Change app language',
-            onTap: () {
-              // Navigate to language settings
-            },
-            isDark: isDark,
-          ),
-          Divider(height: 1, color: isDark ? AppColors.borderDark : AppColors.borderLight),
-          _buildSettingsTile(
-            context,
-            icon: Icons.dark_mode_outlined,
-            title: 'Theme',
-            subtitle: 'Light or dark mode',
-            onTap: () {
-              // Navigate to theme settings
-            },
-            isDark: isDark,
-          ),
-          Divider(height: 1, color: isDark ? AppColors.borderDark : AppColors.borderLight),
-          _buildSettingsTile(
-            context,
-            icon: Icons.help_outline,
-            title: 'Help & Support',
-            subtitle: 'Get help and contact support',
-            onTap: () {
-              // Navigate to help
-            },
-            isDark: isDark,
-          ),
-          Divider(height: 1, color: isDark ? AppColors.borderDark : AppColors.borderLight),
-          _buildSettingsTile(
-            context,
-            icon: Icons.info_outline,
-            title: 'About',
-            subtitle: 'App version and information',
-            onTap: () {
-              // Navigate to about
-            },
-            isDark: isDark,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsTile(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String subtitle,
-        required VoidCallback onTap,
-        required bool isDark,
-      }) {
-    final theme = Theme.of(context);
-
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.primary.withOpacity(isDark ? 0.3 : 0.2),
-            width: 1,
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: AppColors.primary,
-        ),
-      ),
-      title: Text(
-        title,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: isDark ? AppColors.iconDark : AppColors.iconLight,
-      ),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildLogoutSection(
-      BuildContext context,
-      WidgetRef ref,
-      AppLocalizations l10n,
-      AuthState authState,
-      bool isDark,
-      ) {
-    return Column(
-      children: [
-        // CustomButton(
-        //   text: l10n.auth_logout,
-        //   onPressed: authState.isLoading ? null : () async {
-        //     await _showLogoutConfirmation(context, ref, isDark);
-        //   },
-        //   backgroundColor: AppColors.error,
-        //   isLoading: authState.isLoading,
-        //   icon: Icons.logout,
-        // ),
-        const SizedBox(height: 16),
-        Text(
-          'App Version 1.0.0',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _showLogoutConfirmation(BuildContext context, WidgetRef ref, bool isDark) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Confirm Logout',
-          style: TextStyle(
-            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to logout from your account?',
-          style: TextStyle(
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (result == true) {
-      await ref.read(authProvider.notifier).logout();
-    }
   }
 }
