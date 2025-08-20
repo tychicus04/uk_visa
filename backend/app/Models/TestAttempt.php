@@ -111,7 +111,11 @@ class TestAttempt extends BaseModel {
         return $stmt->fetchAll();
     }
     
+    // ✅ UPDATED: getAttemptDetails with Vietnamese support
     public function getAttemptDetails($attemptId, $userId) {
+        // Check if Vietnamese support is requested
+        $includeVietnamese = $_GET['include_vietnamese'] ?? false;
+        
         $sql = "SELECT uta.*, t.title, t.test_number, c.name as chapter_name
                 FROM {$this->table} uta
                 JOIN tests t ON uta.test_id = t.id
@@ -126,12 +130,23 @@ class TestAttempt extends BaseModel {
         $attempt = $stmt->fetch();
         
         if ($attempt) {
-            // Get detailed answers
-            $sql = "SELECT ua.*, q.question_text, q.question_type,
+            // ✅ Enhanced query with Vietnamese support
+            $questionFields = "q.question_text, q.question_type, q.explanation";
+            $answerFields = "a.answer_text";
+            
+            if ($includeVietnamese) {
+                $questionFields .= ", q.question_text_vi, q.explanation_vi";
+                $answerFields .= ", a.answer_text_vi";
+            }
+            
+            // Get detailed answers with Vietnamese support
+            $sql = "SELECT ua.*, 
+                           {$questionFields},
                            GROUP_CONCAT(
                                JSON_OBJECT(
                                    'answer_id', a.answer_id,
                                    'answer_text', a.answer_text,
+                                   " . ($includeVietnamese ? "'answer_text_vi', a.answer_text_vi," : "") . "
                                    'is_correct', a.is_correct,
                                    'was_selected', CASE WHEN JSON_CONTAINS(ua.selected_answer_ids, JSON_QUOTE(a.answer_id)) THEN 1 ELSE 0 END
                                ) SEPARATOR '|||'
@@ -160,9 +175,21 @@ class TestAttempt extends BaseModel {
                 }
                 $answer['answer_details'] = $details;
                 $answer['selected_answer_ids'] = json_decode($answer['selected_answer_ids'], true);
+                
+                // ✅ Add Vietnamese support indicator
+                if ($includeVietnamese) {
+                    $answer['has_vietnamese'] = !empty($answer['question_text_vi']);
+                }
             }
             
             $attempt['answers'] = $answers;
+            
+            // ✅ Add response metadata
+            $attempt['response_metadata'] = [
+                'vietnamese_supported' => $includeVietnamese,
+                'total_answers' => count($answers),
+                'generated_at' => date('Y-m-d H:i:s')
+            ];
         }
         
         return $attempt;

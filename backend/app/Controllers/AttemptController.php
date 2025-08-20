@@ -160,15 +160,35 @@ class AttemptController extends BaseController {
         }
     }
     
+    // ✅ UPDATED: getAttemptDetails with Vietnamese support
     public function getAttemptDetails($attemptId) {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::authenticate();
         
         try {
+            // ✅ Check for Vietnamese support parameter
+            $includeVietnamese = isset($_GET['include_vietnamese']) && 
+                               (strtolower($_GET['include_vietnamese']) === 'true' || 
+                                $_GET['include_vietnamese'] === '1');
+            
+            // ✅ Pass Vietnamese parameter to model
+            if ($includeVietnamese) {
+                $_GET['include_vietnamese'] = true; // Ensure it's set for model
+            }
+            
             $attempt = $this->attemptModel->getAttemptDetails($attemptId, $user['user_id']);
             
             if (!$attempt) {
                 $this->error('Test attempt not found', 404);
+            }
+            
+            // ✅ Add debug information in development
+            if ($_ENV['APP_DEBUG'] ?? false) {
+                $attempt['debug_info'] = [
+                    'vietnamese_requested' => $includeVietnamese,
+                    'query_params' => $_GET,
+                    'request_time' => date('Y-m-d H:i:s')
+                ];
             }
             
             $this->success($attempt);
@@ -176,7 +196,8 @@ class AttemptController extends BaseController {
         } catch (Exception $e) {
             logError('Get attempt details error: ' . $e->getMessage(), [
                 'user_id' => $user['user_id'], 
-                'attempt_id' => $attemptId
+                'attempt_id' => $attemptId,
+                'include_vietnamese' => $includeVietnamese ?? false
             ]);
             $this->error('Failed to retrieve attempt details', 500);
         }
