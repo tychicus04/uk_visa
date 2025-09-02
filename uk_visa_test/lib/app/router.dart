@@ -1,4 +1,4 @@
-// lib/app/router.dart - UPDATED: Removed bottom nav for test taking and review screens
+// lib/app/router.dart - UPDATED: Removed auto-redirect, MainNavigation handles auth confirmation
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +14,6 @@ import '../features/chapters/screens/chapter_detail_screen.dart';
 import '../features/chapters/screens/chapter_list_screen.dart';
 import '../features/chapters/screens/chapter_reading_screen.dart';
 import '../features/home/screens/home_screen.dart';
-import '../features/progress/screens/progress_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
 import '../features/tests/screens/review_answers_screen.dart';
 import '../features/tests/screens/test_detail_screen.dart';
@@ -23,7 +22,7 @@ import '../features/tests/screens/test_result_screen.dart';
 import '../features/tests/screens/test_taking_screen.dart';
 import '../shared/widgets/main_navigation.dart';
 
-// ✅ Create a separate provider for router that can access auth state
+// Create a separate provider for router that can access auth state
 final routerProvider = Provider<GoRouter>((ref) {
   // Create a notifier to listen to auth changes
   final authNotifier = ValueNotifier<AsyncValue<AuthState>>(
@@ -32,7 +31,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   // Listen to auth changes and update the notifier
   ref.listen(authProvider, (previous, next) {
-    print('🔄 Router: Auth state changed - wasAuth: ${previous?.isAuthenticated}, nowAuth: ${next.isAuthenticated}');
+    print('Auth state changed - wasAuth: ${previous?.isAuthenticated}, nowAuth: ${next.isAuthenticated}');
     authNotifier.value = AsyncValue.data(next);
   });
 
@@ -43,46 +42,49 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       final isLoggedIn = authState.isAuthenticated && authState.user != null;
-      // Thêm forgot password và reset password vào auth screens
-      final isLoggingIn = state.fullPath == '/login' ||
-          state.fullPath == '/register' ||
-          state.fullPath == '/forgot-password' ||
-          state.fullPath?.startsWith('/reset-password') == true;
       final currentLocation = state.fullPath;
 
-      print('🔄 Router Redirect Check:');
-      print('   📍 Current location: $currentLocation');
-      print('   🔐 Is logged in: $isLoggedIn');
-      print('   👤 User: ${authState.user?.email ?? 'null'}');
-      print('   🔄 Is auth screen: $isLoggingIn');
-      print('   ⏳ Is loading: ${authState.isLoading}');
-
+      // If auth is loading, don't redirect
       if (authState.isLoading) {
-        print('   ⏳ Auth is loading, no redirect');
+        print('   Auth is loading, no redirect');
         return null;
       }
 
-      if (!isLoggedIn && !isLoggingIn) {
-        print('   ➡️ Redirecting to login (not authenticated)');
-        return '/login';
+      // Only block deep links that absolutely require auth (not main navigation routes)
+      final deepAuthRequiredPaths = [
+        '/settings/profile', // Profile requires auth
+      ];
+
+      // Paths that start with these require auth (deep links)
+      final deepAuthRequiredStartsWith = [
+        '/test-taking/',
+        '/tests/result/',
+        '/review-answers/',
+      ];
+
+      // Check if current path requires authentication (only for deep links)
+      final requiresAuth = deepAuthRequiredPaths.contains(currentLocation) ||
+          deepAuthRequiredStartsWith.any((prefix) => currentLocation?.startsWith(prefix) == true);
+
+      if (requiresAuth && !isLoggedIn) {
+        print('   Redirecting to login (auth required for deep link: $currentLocation)');
+        // Store the intended destination for redirect after login
+        return '/login?redirect=${Uri.encodeComponent(currentLocation ?? '/')}';
       }
 
-      if (isLoggedIn && isLoggingIn) {
-        print('   ➡️ Redirecting to home (already authenticated)');
-        return '/';
-      }
-
-      print('   ✅ No redirect needed');
+      // Allow access to all main navigation routes (/, /tests, /settings)
+      // MainNavigation will handle auth confirmation dialogs
+      print('   No redirect needed for: $currentLocation');
       return null;
     },
     routes: [
 
-      // 🔐 AUTH ROUTES (No bottom navigation)
+      // AUTH ROUTES (No bottom navigation)
       GoRoute(
         path: '/login',
         name: 'login',
         builder: (context, state) {
-          print('🏗️ Building LoginScreen');
+          print('Building LoginScreen');
           return const LoginScreen();
         },
       ),
@@ -108,65 +110,68 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         name: 'register',
         builder: (context, state) {
-          print('🏗️ Building RegisterScreen');
+          print('Building RegisterScreen');
           return const RegisterScreen();
         },
       ),
 
-      // 🎯 TEST TAKING ROUTES (No bottom navigation)
+      // TEST TAKING ROUTES (No bottom navigation, requires auth via deep link redirect)
       GoRoute(
         path: '/test-taking/:testId',
         name: 'test-taking',
         builder: (context, state) {
-          // ✅ Safe parsing for test taking
+          // Safe parsing for test taking
           final idParam = state.pathParameters['testId'];
           final attemptIdParam = state.uri.queryParameters['attemptId'];
 
-          print('📝 Test taking route - Test ID: "$idParam", Attempt ID: "$attemptIdParam"');
+          print('Test taking route - Test ID: "$idParam", Attempt ID: "$attemptIdParam"');
 
           if (idParam == null || idParam.isEmpty) {
-            print('❌ Missing test ID for test taking');
+            print('Missing test ID for test taking');
             return _buildErrorScreen('Missing test ID');
           }
 
           // Check for object strings
           if (idParam.contains('(') || idParam.contains('Test')) {
-            print('❌ Invalid test ID for taking - looks like object: $idParam');
+            print('Invalid test ID for taking - looks like object: $idParam');
             return _buildErrorScreen('Invalid test ID format');
           }
 
           final id = int.tryParse(idParam);
           if (id == null) {
-            print('❌ Invalid test ID for taking: "$idParam"');
+            print('Invalid test ID for taking: "$idParam"');
             return _buildErrorScreen('Invalid test ID: $idParam');
           }
 
-          // ✅ Safe parsing for attempt ID (optional)
+          // Safe parsing for attempt ID (optional)
           int? attemptId;
           if (attemptIdParam != null && attemptIdParam.isNotEmpty) {
             if (attemptIdParam.contains('(') || attemptIdParam.contains('TestAttempt')) {
-              print('❌ Invalid attempt ID - looks like object: $attemptIdParam');
+              print('Invalid attempt ID - looks like object: $attemptIdParam');
               return _buildErrorScreen('Invalid attempt ID format');
             }
             attemptId = int.tryParse(attemptIdParam);
             if (attemptId == null) {
-              print('❌ Invalid attempt ID: "$attemptIdParam"');
+              print('Invalid attempt ID: "$attemptIdParam"');
               return _buildErrorScreen('Invalid attempt ID: $attemptIdParam');
             }
           }
 
-          print('🏗️ Building TestTakingScreen - Test: $id, Attempt: $attemptId');
-          return TestTakingScreen(testId: id, attemptId: attemptId);
+          print('Building TestTakingScreen - Test: $id, Attempt: $attemptId');
+          return TestTakingScreen(
+            testId: id,
+            attemptId: attemptId,
+          );
         },
       ),
 
-      // 🔍 REVIEW ANSWERS ROUTES (No bottom navigation)
+      // REVIEW ANSWERS ROUTES (No bottom navigation, requires auth via deep link redirect)
       GoRoute(
         path: '/review-answers/:attemptId',
         name: 'review-answers',
         builder: (context, state) {
           final attemptIdParam = state.pathParameters['attemptId'];
-          print('📝 Review answers route - Attempt ID: "$attemptIdParam"');
+          print('Review answers route - Attempt ID: "$attemptIdParam"');
 
           if (attemptIdParam == null || attemptIdParam.isEmpty) {
             return _buildErrorScreen('Missing attempt ID for review');
@@ -181,34 +186,34 @@ final routerProvider = Provider<GoRouter>((ref) {
             return _buildErrorScreen('Invalid attempt ID for review: $attemptIdParam');
           }
 
-          print('🏗️ Building ReviewAnswersScreen for attempt: $attemptId');
+          print('Building ReviewAnswersScreen for attempt: $attemptId');
           return ReviewAnswersScreen(attemptId: attemptId);
         },
       ),
 
-      // 🏠 MAIN SHELL ROUTE WITH BOTTOM NAVIGATION
+      // MAIN SHELL ROUTE WITH BOTTOM NAVIGATION
       ShellRoute(
         builder: (context, state, child) {
-          print('🏗️ Building MainNavigation shell for: ${state.fullPath}');
+          print('Building MainNavigation shell for: ${state.fullPath}');
           return MainNavigation(child: child);
         },
         routes: [
-          // Home
+          // Home (Public - no auth required)
           GoRoute(
             path: '/',
             name: 'home',
             builder: (context, state) {
-              print('🏗️ Building HomeScreen');
+              print('Building HomeScreen');
               return const HomeScreen();
             },
           ),
 
-          // Tests (List and Detail only - taking and review moved out)
+          // Tests (Auth handled by MainNavigation confirmation dialog)
           GoRoute(
             path: '/tests',
             name: 'tests',
             builder: (context, state) {
-              print('🏗️ Building TestListScreen');
+              print('Building TestListScreen');
               return const TestListScreen();
             },
             routes: [
@@ -216,74 +221,74 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 name: 'test-detail',
                 builder: (context, state) {
-                  // ✅ Safe ID parsing with detailed error handling
+                  // Safe ID parsing with detailed error handling
                   final idParam = state.pathParameters['id'];
-                  print('📖 Test detail route - Raw ID param: "$idParam"');
+                  print('Test detail route - Raw ID param: "$idParam"');
 
                   if (idParam == null || idParam.isEmpty) {
-                    print('❌ Missing test ID parameter');
+                    print('Missing test ID parameter');
                     return _buildErrorScreen('Missing test ID');
                   }
 
-                  // ✅ Check if it looks like an object string representation
+                  // Check if it looks like an object string representation
                   if (idParam.contains('(') || idParam.contains('TestAttempt') || idParam.contains('Test(')) {
-                    print('❌ Invalid ID parameter - looks like object: $idParam');
+                    print('Invalid ID parameter - looks like object: $idParam');
                     return _buildErrorScreen('Invalid test ID format: ${idParam.substring(0, 50)}...');
                   }
 
                   final id = int.tryParse(idParam);
                   if (id == null) {
-                    print('❌ Invalid test ID - cannot parse: "$idParam"');
+                    print('Invalid test ID - cannot parse: "$idParam"');
                     return _buildErrorScreen('Invalid test ID: $idParam');
                   }
 
-                  print('🏗️ Building TestDetailScreen for test: $id');
+                  print('Building TestDetailScreen for test: $id');
                   return TestDetailScreen(testId: id);
                 },
               ),
-              // Test Results
+              // Test Results (Deep link - requires auth)
               GoRoute(
                 path: 'result/:attemptId',
                 name: 'test-result',
                 builder: (context, state) {
-                  // ✅ Safe parsing for test results
+                  // Safe parsing for test results
                   final attemptIdParam = state.pathParameters['attemptId'];
-                  print('📊 Test result route - Attempt ID: "$attemptIdParam"');
+                  print('Test result route - Attempt ID: "$attemptIdParam"');
 
                   if (attemptIdParam == null || attemptIdParam.isEmpty) {
-                    print('❌ Missing attempt ID for results');
+                    print('Missing attempt ID for results');
                     return _buildErrorScreen('Missing attempt ID');
                   }
 
-                  // ✅ Check for object strings
+                  // Check for object strings
                   if (attemptIdParam.contains('(') ||
                       attemptIdParam.contains('TestAttempt') ||
                       attemptIdParam.contains('Object') ||
                       attemptIdParam.length > 20) {
-                    print('❌ Invalid attempt ID - looks like object representation:');
+                    print('Invalid attempt ID - looks like object representation:');
                     print('   Full string: $attemptIdParam');
                     return _buildErrorScreen('Invalid attempt ID format. Expected number, got object.');
                   }
 
                   final attemptId = int.tryParse(attemptIdParam);
                   if (attemptId == null) {
-                    print('❌ Invalid attempt ID - cannot parse: "$attemptIdParam"');
+                    print('Invalid attempt ID - cannot parse: "$attemptIdParam"');
                     return _buildErrorScreen('Invalid attempt ID: $attemptIdParam');
                   }
 
-                  print('🏗️ Building TestResultScreen for attempt: $attemptId');
+                  print('Building TestResultScreen for attempt: $attemptId');
                   return TestResultScreen(attemptId: attemptId);
                 },
               ),
             ],
           ),
 
-          // Chapters
+          // Chapters (Public - no auth required)
           GoRoute(
             path: '/chapters',
             name: 'chapters',
             builder: (context, state) {
-              print('🏗️ Building ChapterListScreen');
+              print('Building ChapterListScreen');
               return const ChapterListScreen();
             },
             routes: [
@@ -291,9 +296,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 name: 'chapter-detail',
                 builder: (context, state) {
-                  // ✅ Safe parsing for chapter detail
+                  // Safe parsing for chapter detail
                   final idParam = state.pathParameters['id'];
-                  print('📖 Chapter detail route - ID: "$idParam"');
+                  print('Chapter detail route - ID: "$idParam"');
 
                   if (idParam == null || idParam.isEmpty) {
                     return _buildErrorScreen('Missing chapter ID');
@@ -308,7 +313,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     return _buildErrorScreen('Invalid chapter ID: $idParam');
                   }
 
-                  print('🏗️ Building ChapterDetailScreen for chapter: $id');
+                  print('Building ChapterDetailScreen for chapter: $id');
                   return ChapterDetailScreen(chapterId: id);
                 },
                 routes: [
@@ -327,7 +332,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         return _buildErrorScreen('Invalid chapter ID: $idParam');
                       }
 
-                      print('🏗️ Building ChapterReadingScreen for chapter: $id');
+                      print('Building ChapterReadingScreen for chapter: $id');
                       return ChapterReadingScreen(chapterId: id);
                     },
                   ),
@@ -336,22 +341,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Progress
-          GoRoute(
-            path: '/progress',
-            name: 'progress',
-            builder: (context, state) {
-              print('🏗️ Building ProgressScreen');
-              return const ProgressScreen();
-            },
-          ),
-
-          // Settings
+          // Settings (Mixed - main page public, profile requires auth via deep link redirect)
           GoRoute(
             path: '/settings',
             name: 'settings',
             builder: (context, state) {
-              print('🏗️ Building SettingsScreen');
+              print('Building SettingsScreen');
               return const SettingsScreen();
             },
             routes: [
@@ -359,7 +354,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'profile',
                 name: 'profile',
                 builder: (context, state) {
-                  print('🏗️ Building ProfileScreen');
+                  print('Building ProfileScreen');
                   return const ProfileScreen();
                 },
               ),
@@ -368,10 +363,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-    // ✅ Enhanced error handling
+    // Enhanced error handling
     errorBuilder: (context, state) {
-      print('❌ Router Error: ${state.error}');
-      print('❌ Error Location: ${state.fullPath}');
+      print('Router Error: ${state.error}');
+      print('Error Location: ${state.fullPath}');
 
       return Scaffold(
         appBar: AppBar(
@@ -430,7 +425,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// ✅ Helper function to build error screens
+// Helper function to build error screens
 Widget _buildErrorScreen(String message) => Builder(
   builder: (context) => Scaffold(
     appBar: AppBar(

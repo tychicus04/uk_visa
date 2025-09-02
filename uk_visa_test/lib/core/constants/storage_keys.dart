@@ -29,4 +29,10 @@ class StorageKeys {
   static const String testTimerEnabled = 'test_timer_enabled';
   static const String testAutoSubmit = 'test_auto_submit';
   static const String testShowProgress = 'test_show_progress';
+
+  static const String selectedLanguagePreference = 'selected_language_preference';
+
+  // 🆕 NEW: Language preferences
+  static const String lastUsedSecondaryLanguage = 'last_used_secondary_language';
+  static const String availableLanguages = 'available_languages';
 }

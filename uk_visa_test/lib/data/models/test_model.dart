@@ -25,6 +25,7 @@ class Test extends Equatable {
     this.bestScore,
     this.questions,
     this.hasVietnameseTranslations,
+    this.timeLimitMinutes, // NEW: Time limit for exam mode
   });
 
   factory Test.fromJson(Map<String, dynamic> json) {
@@ -43,7 +44,6 @@ class Test extends Equatable {
         createdAt: json['created_at']?.toString() ?? '',
         chapterName: json['chapter_name']?.toString(),
         questionCount: json['question_count']?.toString(),
-        // ✅ Handle missing can_access field - calculate based on is_free/is_premium
         canAccess: _calculateCanAccess(json),
         attemptCount: json['attempt_count']?.toString(),
         bestScore: _parseDouble(json['best_score']),
@@ -51,12 +51,13 @@ class Test extends Equatable {
             ? (json['questions'] as List).map((e) => Question.fromJson(e)).toList()
             : null,
         hasVietnameseTranslations: _parseBool(json['has_vietnamese_translations']),
+        timeLimitMinutes: _parseInt(json['time_limit_minutes']), // NEW: Parse time limit
       );
 
       print('✅ Successfully parsed test: ${test.id} - ${test.displayTitle}');
       return test;
     } catch (e, stackTrace) {
-      print('❌ Error parsing test JSON: $e');
+      print('⚠ Error parsing test JSON: $e');
       print('📋 JSON data: $json');
       print('📚 Stack trace: $stackTrace');
       rethrow;
@@ -79,10 +80,11 @@ class Test extends Equatable {
   final double? bestScore;
   final List<Question>? questions;
   final bool? hasVietnameseTranslations;
+  final int? timeLimitMinutes; // NEW: Time limit in minutes
 
   Map<String, dynamic> toJson() => _$TestToJson(this);
 
-  // ✅ Helper function to safely parse boolean
+  // Helper functions
   static bool? _parseBool(dynamic value) {
     if (value == null) return null;
     if (value is bool) return value;
@@ -94,7 +96,6 @@ class Test extends Equatable {
     return null;
   }
 
-  // ✅ Helper function to safely parse double
   static double? _parseDouble(dynamic value) {
     if (value == null) return null;
     if (value is double) return value;
@@ -103,31 +104,52 @@ class Test extends Equatable {
     return null;
   }
 
-  // ✅ Calculate can_access based on available data
+  // NEW: Helper to parse int values
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
   static bool? _calculateCanAccess(Map<String, dynamic> json) {
-    // If explicit can_access field exists, use it
     if (json.containsKey('can_access')) {
       return _parseBool(json['can_access']);
     }
-
-    // Otherwise, calculate based on is_free
-    // For now, assume all tests are accessible
-    // In real app, this would depend on user's premium status
     final isFree = _parseBool(json['is_free']) ?? false;
     if (isFree) return true;
-
-    // For premium tests, assume accessible for now
-    // TODO: This should check user's premium status
     return true;
   }
 
-  // ✅ Convenience getters for int values
+  // Convenience getters
   int get idInt => int.tryParse(id) ?? 0;
   int? get chapterIdInt => chapterId != null ? int.tryParse(chapterId!) : null;
   int get questionCountInt => int.tryParse(questionCount ?? '24') ?? 24;
   int get attemptCountInt => int.tryParse(attemptCount ?? '0') ?? 0;
 
-  // ✅ Helper properties
+  // NEW: Get time limit as Duration for exam mode
+  Duration? get timeLimit => timeLimitMinutes != null
+      ? Duration(minutes: timeLimitMinutes!)
+      : null;
+
+  // NEW: Get default time limit based on test type
+  Duration get defaultTimeLimit {
+    switch (testType.toLowerCase()) {
+      case 'exam':
+        return const Duration(minutes: 45); // Official exam time
+      case 'comprehensive':
+        return const Duration(minutes: 30); // Comprehensive test
+      case 'chapter':
+        return const Duration(minutes: 20); // Chapter test
+      default:
+        return const Duration(minutes: 45);
+    }
+  }
+
+  // NEW: Get effective time limit (from DB or default)
+  Duration get effectiveTimeLimit => timeLimit ?? defaultTimeLimit;
+
+  // Helper properties
   bool get isChapterTest => testType.toLowerCase() == 'chapter';
   bool get isComprehensiveTest => testType.toLowerCase() == 'comprehensive';
   bool get isExamTest => testType.toLowerCase() == 'exam';
@@ -135,13 +157,11 @@ class Test extends Equatable {
   bool get hasAttempts => attemptCountInt > 0;
   bool get hasQuestions => questions != null && questions!.isNotEmpty;
 
-  // ✅ Get display title with fallback
   String get displayTitle {
     if (title != null && title!.isNotEmpty) {
       return title!;
     }
 
-    // Generate title based on test type and number
     switch (testType.toLowerCase()) {
       case 'chapter':
         return 'Chapter Test $testNumber';
@@ -154,7 +174,6 @@ class Test extends Equatable {
     }
   }
 
-  // ✅ Get test difficulty based on type and best score
   String get difficulty {
     if (bestScore == null) return 'Not attempted';
     if (bestScore! >= 90) return 'Mastered';
@@ -163,16 +182,8 @@ class Test extends Equatable {
     return 'Needs improvement';
   }
 
-  // ✅ Check if user can access this test
-  bool get isAvailable {
-    // For now, return true for all tests
-    // In production, this would check:
-    // - Free tests: always available
-    // - Premium tests: check user's subscription status
-    return true;
-  }
+  bool get isAvailable => true;
 
-  // ✅ Get test type display name
   String get typeDisplayName {
     switch (testType.toLowerCase()) {
       case 'chapter':
@@ -186,16 +197,13 @@ class Test extends Equatable {
     }
   }
 
-  // ✅ Get chapter display name
   String get chapterDisplayName {
     if (chapterName != null) {
-      // Remove "Chapter X: " prefix for cleaner display
       return chapterName!.replaceFirst(RegExp(r'^Chapter \d+:\s*'), '');
     }
     return 'Unknown Chapter';
   }
 
-  // ✅ Check if this test has Vietnamese translations
   bool get supportsVietnamese => hasVietnameseTranslations == true;
 
   @override
@@ -216,5 +224,6 @@ class Test extends Equatable {
     bestScore,
     questions,
     hasVietnameseTranslations,
+    timeLimitMinutes,
   ];
 }

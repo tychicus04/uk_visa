@@ -68,14 +68,6 @@ function getBearerToken() {
     return null;
 }
 
-function logError($message, $context = []) {
-    $logFile = __DIR__ . '/../logs/error.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $contextStr = !empty($context) ? json_encode($context) : '';
-    $logMessage = "[$timestamp] $message $contextStr" . PHP_EOL;
-    file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
-}
-
 function validateRequired($data, $fields) {
     $missing = [];
     foreach ($fields as $field) {

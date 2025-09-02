@@ -19,7 +19,6 @@ class AuthService {
   Future<ApiResponse<Map<String, dynamic>>> register({
     required String email,
     required String password,
-    required String fullName,
     String languageCode = 'en',
   }) async {
     try {
@@ -28,7 +27,6 @@ class AuthService {
         data: {
           'email': email,
           'password': password,
-          'full_name': fullName,
           'language_code': languageCode,
         },
       );

@@ -1,8 +1,8 @@
 <?php
 /**
- * UK Visa Test API Router - Clean Version v1.0
- * Professional routing system with auto-loading
- * 🆕 UPDATED: Added Vietnamese language support
+ * UK Visa Test API Router - Enhanced Multi-Language Support v2.0
+ * Professional routing system with dynamic language support
+ * ✅ UPDATED: Added comprehensive multi-language support
  */
 
 error_reporting(E_ALL);
@@ -54,7 +54,6 @@ corsHeaders();
 // Error handling
 set_error_handler(function($severity, $message, $file, $line) {
     if (error_reporting() & $severity) {
-        logError("PHP Error: $message in $file:$line");
         if ($_ENV['APP_DEBUG'] ?? false) {
             jsonResponse(['error' => 'Internal server error', 'debug' => $message], 500);
         } else {
@@ -115,7 +114,7 @@ if ($_ENV['APP_DEBUG'] ?? false) {
 
 /**
  * =============================================================================
- * ROUTES - UK VISA TEST API ENDPOINTS
+ * ROUTES - UK VISA TEST API ENDPOINTS WITH MULTI-LANGUAGE SUPPORT
  * =============================================================================
  */
 
@@ -127,7 +126,7 @@ $routes = [
     'GET /' => function() {
         jsonResponse([
             'name' => 'UK Visa Test API',
-            'version' => '1.0.0',
+            'version' => '2.0.0',
             'status' => 'active',
             'timestamp' => time(),
             'server_time' => date('Y-m-d H:i:s'),
@@ -138,10 +137,21 @@ $routes = [
                 'chapters' => '/chapters',
                 'subscriptions' => '/subscriptions/{plans|subscribe|status}',
                 'questions' => '/questions/{id}',
+                'languages' => '/languages/{supported|stats}',
                 'stats' => '/stats/translations'
             ],
-            'vietnamese_support' => true,
-            'supported_languages' => ['en', 'vi'],
+            'multi_language_support' => true,
+            'supported_languages' => ['en', 'vi', 'pl', 'pa', 'ur', 'ro', 'es', 'pt', 'ar'],
+            'language_parameters' => [
+                'include_language' => 'Specify language code (vi, es, fr, etc.)',
+                'include_vietnamese' => 'Legacy parameter - use include_language=vi instead'
+            ],
+            'examples' => [
+                'vietnamese_test' => '/tests/1?include_language=vi',
+                'spanish_test' => '/tests/1?include_language=es',
+                'legacy_vietnamese' => '/tests/1?include_vietnamese=true',
+                'supported_languages' => '/languages/supported'
+            ],
             'documentation' => 'Add ?debug=1 for debug info',
             'test_endpoint' => '/test'
         ]);
@@ -172,14 +182,15 @@ $routes = [
         
         jsonResponse([
             'status' => 'healthy',
-            'api_version' => '1.0.0',
+            'api_version' => '2.0.0',
             'database' => $dbStatus,
             'database_info' => $dbInfo,
             'server_time' => date('Y-m-d H:i:s'),
             'timestamp' => time(),
             'php_version' => PHP_VERSION,
             'environment' => $_ENV['APP_ENV'] ?? 'unknown',
-            'vietnamese_support' => true
+            'multi_language_support' => true,
+            'supported_languages' => 9 // 8 + English
         ]);
     },
 
@@ -194,24 +205,27 @@ $routes = [
     'POST /auth/change-password' => 'AuthController@changePassword',
     'POST /auth/logout' => 'AuthController@logout',
     
-    // 🆕 NEW: Language preference endpoint
+    // ✅ ENHANCED: Language preference endpoints
     'POST /auth/language' => 'TestController@updateLanguagePreference',
     'PUT /auth/language' => 'TestController@updateLanguagePreference',
     
     // ==========================================================================
-    // TEST ROUTES (UPDATED with Vietnamese support)
+    // TEST ROUTES (ENHANCED with dynamic multi-language support)
     // ==========================================================================
     'GET /tests/available' => 'TestController@getAvailableTests',
     'GET /tests/free' => 'TestController@getFreeTests',
-    'GET /tests/search' => 'TestController@searchTests',
     'GET /tests/type/([a-zA-Z]+)' => 'TestController@getTestsByType',
     'GET /tests/chapter/(\d+)' => 'TestController@getTestsByChapter',
     'GET /tests/(\d+)' => 'TestController@getTest',
     
-    // 🆕 NEW: Single question endpoint
+    // ✅ ENHANCED: Single question endpoint with multi-language
     'GET /questions/(\d+)' => 'TestController@getQuestion',
     
-    // 🆕 NEW: Translation statistics endpoint
+    // ✅ NEW: Language management endpoints
+    'GET /languages/supported' => 'TestController@getSupportedLanguages',
+    'GET /languages/stats' => 'TestController@getTranslationStats',
+    
+    // ✅ ENHANCED: Translation statistics (now supports all languages)
     'GET /stats/translations' => 'TestController@getTranslationStats',
     
     // ==========================================================================
@@ -238,7 +252,86 @@ $routes = [
     'GET /subscriptions/status' => 'SubscriptionController@getStatus',
     'POST /subscriptions/cancel' => 'SubscriptionController@cancel',
     
-    // 🆕 NEW: Debug endpoint for routes (development only)
+    // ✅ NEW: Language testing and demonstration endpoints
+    'GET /demo/multilang' => function() {
+        if (!($_ENV['APP_DEBUG'] ?? false)) {
+            jsonResponse(['error' => 'Demo endpoints only available in debug mode'], 403);
+            return;
+        }
+        
+        $supportedLanguages = [
+            'vi' => 'Vietnamese',
+            'pl' => 'Polish', 
+            'pa' => 'Punjabi',
+            'ur' => 'Urdu',
+            'ro' => 'Romanian',
+            'es' => 'Spanish',
+            'pt' => 'Portuguese',
+            'ar' => 'Arabic'
+        ];
+        
+        $examples = [];
+        foreach ($supportedLanguages as $code => $name) {
+            $examples[] = [
+                'language_code' => $code,
+                'language_name' => $name,
+                'test_endpoint' => "/tests/1?include_language={$code}",
+                'question_endpoint' => "/questions/1?include_language={$code}",
+                'available_tests' => "/tests/available?include_language={$code}"
+            ];
+        }
+        
+        jsonResponse([
+            'demo' => 'Multi-Language API Endpoints',
+            'description' => 'These endpoints demonstrate how to request content in different languages',
+            'parameter_info' => [
+                'include_language' => 'Use this parameter to get translated content',
+                'supported_values' => array_keys($supportedLanguages),
+                'default_behavior' => 'Without parameter, returns English content only',
+                'backward_compatibility' => 'include_vietnamese=true still works (maps to include_language=vi)'
+            ],
+            'examples' => $examples,
+            'note' => 'Language availability depends on translation coverage in database'
+        ]);
+    },
+    
+    // ✅ NEW: Language parameter validation endpoint
+    'GET /validate/language/([a-zA-Z]{2})' => function($languageCode) {
+        if (!($_ENV['APP_DEBUG'] ?? false)) {
+            jsonResponse(['error' => 'Validation endpoints only available in debug mode'], 403);
+            return;
+        }
+        
+        $supportedLanguages = [
+            'en' => 'English (Default)',
+            'vi' => 'Vietnamese',
+            'pl' => 'Polish', 
+            'pa' => 'Punjabi',
+            'ur' => 'Urdu',
+            'ro' => 'Romanian',
+            'es' => 'Spanish',
+            'pt' => 'Portuguese',
+            'ar' => 'Arabic'
+        ];
+        
+        $isSupported = array_key_exists($languageCode, $supportedLanguages);
+        $isDefault = $languageCode === 'en';
+        
+        jsonResponse([
+            'language_code' => $languageCode,
+            'is_supported' => $isSupported,
+            'is_default' => $isDefault,
+            'language_name' => $supportedLanguages[$languageCode] ?? 'Unknown',
+            'requires_translation_columns' => $isSupported && !$isDefault,
+            'example_usage' => $isSupported ? "/tests/1?include_language={$languageCode}" : null,
+            'message' => $isSupported ? 
+                ($isDefault ? 'Default language - no additional columns needed' : 'Supported language with translation columns') : 
+                'Unsupported language code',
+            'all_supported' => $supportedLanguages
+        ]);
+    },
+    
+    // ✅ NEW: Debug endpoint for routes (development only)
     'GET /debug/routes' => function() {
         if (!($_ENV['APP_DEBUG'] ?? false)) {
             jsonResponse(['error' => 'Debug mode disabled'], 403);
@@ -251,24 +344,45 @@ $routes = [
             $routeList[] = [
                 'pattern' => $pattern,
                 'handler' => is_callable($handler) ? 'function' : $handler,
-                'vietnamese_support' => strpos($pattern, 'tests') !== false || 
-                                      strpos($pattern, 'language') !== false ||
-                                      strpos($pattern, 'questions') !== false ||
-                                      strpos($pattern, 'stats') !== false
+                'supports_multi_language' => strpos($pattern, 'tests') !== false || 
+                                           strpos($pattern, 'language') !== false ||
+                                           strpos($pattern, 'questions') !== false ||
+                                           strpos($pattern, 'stats') !== false ||
+                                           strpos($pattern, 'demo') !== false,
+                'new_in_v2' => strpos($pattern, 'languages') !== false ||
+                              strpos($pattern, 'demo') !== false ||
+                              strpos($pattern, 'validate') !== false
             ];
         }
         
+        $multiLangRoutes = array_filter($routeList, function($r) { return $r['supports_multi_language']; });
+        $newRoutes = array_filter($routeList, function($r) { return $r['new_in_v2']; });
+        
         jsonResponse([
             'total_routes' => count($routeList),
-            'vietnamese_routes' => array_filter($routeList, function($r) { return $r['vietnamese_support']; }),
-            'all_routes' => $routeList
+            'multi_language_routes' => count($multiLangRoutes),
+            'new_routes_v2' => count($newRoutes),
+            'supported_languages' => 9,
+            'backward_compatible' => true,
+            'routes_by_category' => [
+                'multi_language_supported' => array_values($multiLangRoutes),
+                'new_in_v2' => array_values($newRoutes),
+                'all_routes' => $routeList
+            ],
+            'usage_examples' => [
+                'vietnamese_test' => 'GET /tests/1?include_language=vi',
+                'spanish_question' => 'GET /questions/1?include_language=es',
+                'legacy_vietnamese' => 'GET /tests/1?include_vietnamese=true',
+                'language_stats' => 'GET /languages/stats',
+                'supported_langs' => 'GET /languages/supported'
+            ]
         ]);
     },
 ];
 
 /**
  * =============================================================================
- * ROUTE PROCESSING
+ * ROUTE PROCESSING WITH ENHANCED ERROR HANDLING
  * =============================================================================
  */
 
@@ -284,14 +398,14 @@ try {
         }
         
         // Convert route pattern to regex
-        $regex = '#^' . str_replace(['(\d+)', '([a-zA-Z]+)'], ['(\d+)', '([a-zA-Z]+)'], $routePath) . '$#';
+        $regex = '#^' . str_replace(['(\d+)', '([a-zA-Z]+)', '([a-zA-Z]{2})'], ['(\d+)', '([a-zA-Z]+)', '([a-zA-Z]{2})'], $routePath) . '$#';
         
         if (preg_match($regex, $uri, $matches)) {
             array_shift($matches); // Remove full match
             
             if (is_callable($handler)) {
                 // Direct function call
-                call_user_func($handler);
+                call_user_func_array($handler, $matches);
                 $matched = true;
                 break;
             } else {
@@ -306,8 +420,13 @@ try {
                         'message' => "Controller $controller is not yet implemented or file missing",
                         'endpoint' => $routeMethod . ' ' . $routePath,
                         'suggestion' => "Create app/Controllers/$controller.php",
-                        'vietnamese_note' => strpos($routePath, 'language') !== false ? 
-                            'This endpoint is required for Vietnamese language support' : null,
+                        'multi_language_note' => strpos($routePath, 'language') !== false ? 
+                            'This endpoint supports multi-language functionality' : null,
+                        'v2_features' => [
+                            'dynamic_language_support' => true,
+                            'backward_compatibility' => true,
+                            'supported_languages' => 9
+                        ],
                         'debug_info' => [
                             'file_path' => "app/Controllers/$controller.php",
                             'exists' => file_exists("app/Controllers/$controller.php")
@@ -326,8 +445,10 @@ try {
                         'method' => $method,
                         'message' => "Method $method not found in $controller",
                         'available_methods' => get_class_methods($instance),
-                        'vietnamese_note' => strpos($method, 'Language') !== false ? 
-                            'This method is required for Vietnamese language support' : null
+                        'multi_language_note' => strpos($method, 'Language') !== false ? 
+                            'This method handles multi-language functionality' : null,
+                        'v2_enhancement' => strpos($method, 'Supported') !== false ||
+                                          strpos($method, 'Multi') !== false
                     ], 501);
                     $matched = true;
                     break;
@@ -342,20 +463,21 @@ try {
     }
     
     if (!$matched) {
-        // Show helpful 404 with suggestions
+        // Enhanced 404 with multi-language suggestions
         $suggestions = [];
-        $vietnameseSuggestions = [];
+        $multiLangSuggestions = [];
         
         foreach ($routes as $pattern => $handler) {
             list($routeMethod, $routePath) = explode(' ', $pattern, 2);
             if ($routeMethod === $requestMethod) {
                 $suggestions[] = $routePath;
                 
-                // Highlight Vietnamese-related endpoints
+                // Highlight multi-language endpoints
                 if (strpos($routePath, 'language') !== false || 
                     strpos($routePath, 'stats') !== false ||
-                    strpos($routePath, 'questions') !== false) {
-                    $vietnameseSuggestions[] = $routePath . ' (Vietnamese support)';
+                    strpos($routePath, 'questions') !== false ||
+                    strpos($routePath, 'tests') !== false) {
+                    $multiLangSuggestions[] = $routePath . ' (Multi-language support)';
                 }
             }
         }
@@ -365,6 +487,8 @@ try {
             'method' => $requestMethod,
             'uri' => $uri,
             'message' => 'The requested endpoint does not exist',
+            'api_version' => '2.0.0',
+            'multi_language_support' => true,
             'debug_info' => [
                 'original_uri' => $requestUri,
                 'processed_uri' => $uri,
@@ -372,27 +496,33 @@ try {
                 'base_path' => '/UK_Visa/Backend/'
             ],
             'suggestions' => array_slice($suggestions, 0, 5),
-            'vietnamese_endpoints' => $vietnameseSuggestions,
-            'help' => 'Visit / for API information or /test for testing'
+            'multi_language_endpoints' => $multiLangSuggestions,
+            'language_examples' => [
+                'vietnamese_test' => '/tests/1?include_language=vi',
+                'spanish_test' => '/tests/1?include_language=es',
+                'legacy_vietnamese' => '/tests/1?include_vietnamese=true',
+                'supported_languages' => '/languages/supported'
+            ],
+            'help' => 'Visit / for API information, /test for testing, or /demo/multilang for language examples'
         ], 404);
     }
     
 } catch (Exception $e) {
-    // Enhanced error logging
+    // Enhanced error logging with multi-language context
     $errorDetails = [
         'message' => $e->getMessage(),
         'file' => $e->getFile(),
         'line' => $e->getLine(),
         'uri' => $uri,
-        'method' => $requestMethod
+        'method' => $requestMethod,
+        'language_param' => $_GET['include_language'] ?? $_GET['include_vietnamese'] ?? null
     ];
-    
-    logError("UK_Visa_API_Error: " . json_encode($errorDetails));
     
     $response = [
         'error' => 'Internal server error',
         'message' => 'An error occurred while processing your request',
-        'timestamp' => time()
+        'timestamp' => time(),
+        'api_version' => '2.0.0'
     ];
     
     if ($_ENV['APP_DEBUG'] ?? false) {
@@ -400,7 +530,8 @@ try {
             'error' => $e->getMessage(),
             'file' => basename($e->getFile()),
             'line' => $e->getLine(),
-            'trace' => explode("\n", $e->getTraceAsString())
+            'trace' => explode("\n", $e->getTraceAsString()),
+            'context' => $errorDetails
         ];
     }
     

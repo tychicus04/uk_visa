@@ -2,112 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../widgets/quick_actions_card.dart';
-import '../widgets/study_schedule_card.dart';
-import '../widgets/test_exemptions_card.dart';
+import '../widgets/authenticated_home_content.dart';
+import '../widgets/guest_home_content.dart';
+import '../widgets/home_header.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 120,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            flexibleSpace: FlexibleSpaceBar(
-              background: DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: AppColors.backgroundGradient,
-                  ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  'assets/images/uk_flag.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.flag, color: AppColors.ukBlue),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.appTitle,
-                                    style: theme.textTheme.headlineMedium?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    l10n.britishCitizenshipTest,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withValues(alpha:0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // Common Header for all users
+          HomeHeader(),
+
+          // Content based on auth state
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: 24),
-                const StudyScheduleCard(),
-                const SizedBox(height: 24),
-                const QuickActionsCard(),
-                const SizedBox(height: 24),
-                const TestExemptionsCard(),
-                const SizedBox(height: 100),
+                const SizedBox(height: 8),
+
+                // Show different content based on authentication
+                if (authState.isLoading)
+                  _buildLoadingState(context)
+                else if (authState.isAuthenticated && authState.user != null)
+                  AuthenticatedHomeContent()
+                else
+                  GuestHomeContent(),
+
+                const SizedBox(height: 100), // Bottom padding for navigation
               ]),
             ),
           ),
@@ -115,6 +48,31 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildLoadingState(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: Column(
+          children: [
+            CircularProgressIndicator(
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading...',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
-
-

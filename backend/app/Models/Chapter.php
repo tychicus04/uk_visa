@@ -11,9 +11,7 @@ class Chapter extends BaseModel {
     
     public function getAllWithStats() {
         $sql = "SELECT c.*, 
-                       COUNT(t.id) as total_tests,
-                       COUNT(CASE WHEN t.is_free = 1 THEN 1 END) as free_tests,
-                       COUNT(CASE WHEN t.is_premium = 1 THEN 1 END) as premium_tests
+                       COUNT(t.id) as total_tests
                 FROM {$this->table} c
                 LEFT JOIN tests t ON c.id = t.chapter_id
                 GROUP BY c.id

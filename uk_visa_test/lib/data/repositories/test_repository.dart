@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/utils/debug_helper.dart';
 import '../models/test_model.dart';
 import '../services/test_service.dart';
-import '../../core/utils/debug_helper.dart';
 
 final testRepositoryProvider = Provider<TestRepository>((ref) {
   final testService = ref.watch(testServiceProvider);
@@ -15,65 +15,53 @@ class TestRepository {
 
   /// Get available tests for current user
   Future<Map<String, List<Test>>> getAvailableTests({
-    bool includeVietnamese = false,
+    String? secondaryLanguage,
+    @deprecated bool includeVietnamese = false,
   }) async {
     try {
-      final response = await _testService.getAvailableTests(
-        includeVietnamese: includeVietnamese,
-      );
+      print('🌍 Repository: Loading tests with secondary language: $secondaryLanguage');
 
-      print('🔍 Repository received response: ${response.success}');
+      final response = await _testService.getAvailableTests(
+        secondaryLanguage: secondaryLanguage,
+        includeVietnamese: includeVietnamese, // Backward compatibility
+      );
 
       if (response.success && response.data != null) {
         final data = response.data!;
-        print('📊 Raw data keys: ${data.keys}');
 
-        // ✅ Handle the correct API structure: data.tests.{type}
         Map<String, dynamic> testsData;
-
         if (data.containsKey('tests')) {
-          // New API structure: { data: { tests: { chapter: [...], comprehensive: [...] } } }
           testsData = data['tests'] as Map<String, dynamic>;
-          print('✅ Using new API structure with tests wrapper');
         } else {
-          // Fallback: Direct structure { data: { chapter: [...], comprehensive: [...] } }
           testsData = data;
-          print('⚠️ Using fallback direct structure');
         }
-
-        print('📋 Tests data keys: ${testsData.keys}');
 
         final result = <String, List<Test>>{};
 
-        // Process each test type
         for (final testType in ['chapter', 'comprehensive', 'exam']) {
           final testList = testsData[testType];
-
           if (testList != null && testList is List) {
             try {
               final tests = testList.map((e) {
-                print('🔧 Parsing test: ${e['id']} - ${e['test_type']} - ${e['test_number']}');
                 return Test.fromJson(e as Map<String, dynamic>);
               }).toList();
 
               result[testType] = tests;
-              print('✅ Parsed ${tests.length} $testType tests');
+              print('✅ Repository: Parsed ${tests.length} $testType tests');
             } catch (e) {
-              print('❌ Error parsing $testType tests: $e');
+              print('❌ Repository: Error parsing $testType tests: $e');
               result[testType] = <Test>[];
             }
           } else {
-            print('⚠️ No $testType tests found or invalid format');
             result[testType] = <Test>[];
           }
         }
 
         final totalTests = result.values.fold<int>(0, (sum, list) => sum + list.length);
-        print('🎯 Final result: $totalTests total tests across ${result.keys.length} types');
+        print('🎯 Repository: Loaded $totalTests total tests with language: ${secondaryLanguage ?? 'none'}');
 
         return result;
       } else {
-        print('❌ API response failed: ${response.message}');
         throw Exception(response.message ?? 'Failed to load tests');
       }
     } catch (e) {
@@ -84,10 +72,12 @@ class TestRepository {
 
   /// Get free tests (no authentication required)
   Future<List<Test>> getFreeTests({
-    bool includeVietnamese = false,
+    String? secondaryLanguage,
+    @deprecated bool includeVietnamese = false,
   }) async {
     try {
       final response = await _testService.getFreeTests(
+          secondaryLanguage: secondaryLanguage,
           includeVietnamese: includeVietnamese
       );
 
@@ -107,12 +97,14 @@ class TestRepository {
   /// Get specific test with questions
   Future<Test> getTest(
       int testId, {
-        bool includeVietnamese = false,
+        String? secondaryLanguage,
+        @deprecated bool includeVietnamese = false,
         bool includeCorrectAnswers = false,
       }) async {
     try {
       final response = await _testService.getTest(
           testId,
+          secondaryLanguage: secondaryLanguage,
           includeVietnamese: includeVietnamese,
           includeCorrectAnswers: includeCorrectAnswers);
 
@@ -157,13 +149,15 @@ class TestRepository {
 
   /// Search tests
   Future<List<Test>> searchTests({
+    String? secondaryLanguage,
     String? query,
     String? type,
     int? chapterId,
-    bool includeVietnamese = false,
+    @deprecated bool includeVietnamese = false,
   }) async {
     try {
       final response = await _testService.searchTests(
+          secondaryLanguage: secondaryLanguage,
           query: query,
           type: type,
           chapterId: chapterId,
@@ -185,12 +179,15 @@ class TestRepository {
 
   /// Get tests by type
   Future<List<Test>> getTestsByType(
-      String type, {
-        bool includeVietnamese = false,
+      String type,
+      {
+        String? secondaryLanguage,
+        @deprecated bool includeVietnamese = false,
       }) async {
     try {
       final response = await _testService.getTestsByType(
           type,
+          secondaryLanguage: secondaryLanguage,
           includeVietnamese: includeVietnamese);
 
       if (response.success && response.data != null) {
@@ -209,11 +206,13 @@ class TestRepository {
   /// Get tests by chapter
   Future<List<Test>> getTestsByChapter(
       int chapterId, {
-        bool includeVietnamese = false,
+        String? secondaryLanguage,
+        @deprecated bool includeVietnamese = false,
       }) async {
     try {
       final response = await _testService.getTestsByChapter(
           chapterId,
+          secondaryLanguage: secondaryLanguage,
           includeVietnamese: includeVietnamese);
 
       if (response.success && response.data != null) {

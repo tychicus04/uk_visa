@@ -10,6 +10,18 @@ class AttemptController extends BaseController {
     private $attemptModel;
     private $userModel;
     private $testModel;
+
+    // Enhanced multi-language support (matches TestController)
+    private const SUPPORTED_LANGUAGES = [
+        'vi' => 'Vietnamese',
+        'pl' => 'Polish', 
+        'pa' => 'Punjabi',
+        'ur' => 'Urdu',
+        'ro' => 'Romanian',
+        'es' => 'Spanish',
+        'pt' => 'Portuguese',
+        'ar' => 'Arabic'
+    ];
     
     public function __construct() {
         $this->attemptModel = new TestAttempt();
@@ -27,11 +39,6 @@ class AttemptController extends BaseController {
         }
         
         try {
-            // Check if user can access this test
-            if (!$this->userModel->canAccessTest($user['user_id'], $data->test_id)) {
-                $this->error('Access denied. Premium subscription required or free test limit reached.', 403);
-            }
-            
             // Check if test exists
             $test = $this->testModel->find($data->test_id);
             if (!$test) {
@@ -41,11 +48,6 @@ class AttemptController extends BaseController {
             $attemptId = $this->attemptModel->startAttempt($user['user_id'], $data->test_id);
             
             if ($attemptId) {
-                // Increment free test usage if it's a free test
-                if ($test['is_free']) {
-                    $this->userModel->incrementFreeTestUsage($user['user_id']);
-                }
-                
                 $this->success([
                     'attempt_id' => $attemptId,
                     'test' => $test,
@@ -56,10 +58,6 @@ class AttemptController extends BaseController {
             }
             
         } catch (Exception $e) {
-            logError('Start attempt error: ' . $e->getMessage(), [
-                'user_id' => $user['user_id'], 
-                'test_id' => $data->test_id
-            ]);
             $this->error('Failed to start test attempt', 500);
         }
     }
@@ -82,7 +80,6 @@ class AttemptController extends BaseController {
                 $this->error('Test attempt not found or access denied', 404);
             }
             $attempt = $attempt[0];
-            
             
             // Check if already completed
             if ($attempt['completed_at']) {
@@ -117,24 +114,24 @@ class AttemptController extends BaseController {
             ], 'Test submitted successfully');
             
         } catch (Exception $e) {
-            logError('Submit attempt error: ' . $e->getMessage(), [
-                'user_id' => $user['user_id'], 
-                'attempt_id' => $data->attempt_id ?? 'unknown'
-            ]);
             $this->error($e->getMessage(), 500);
         }
     }
     
+    // ✅ ENHANCED: Multi-language support for user history
     public function getHistory() {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::authenticate();
         $pagination = $this->getPaginationParams();
         
         try {
+            $includeLanguage = $this->getIncludeLanguage($user);
+            
             $history = $this->attemptModel->getUserHistory(
                 $user['user_id'], 
                 $pagination['limit'], 
-                $pagination['offset']
+                $pagination['offset'],
+                $includeLanguage
             );
             
             // Get total count for pagination
@@ -152,40 +149,55 @@ class AttemptController extends BaseController {
                 $pagination['limit']
             );
             
+            // Add language metadata
+            $response['language_info'] = [
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $user['language_code'] ?? 'en',
+                'supported_languages' => self::SUPPORTED_LANGUAGES
+            ];
+            
             $this->success($response);
             
         } catch (Exception $e) {
-            logError('Get history error: ' . $e->getMessage(), ['user_id' => $user['user_id']]);
             $this->error('Failed to retrieve test history', 500);
         }
     }
     
-    // ✅ UPDATED: getAttemptDetails with Vietnamese support
+    // ✅ ENHANCED: Full multi-language support for attempt details
     public function getAttemptDetails($attemptId) {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::authenticate();
         
         try {
-            // ✅ Check for Vietnamese support parameter
-            $includeVietnamese = isset($_GET['include_vietnamese']) && 
-                               (strtolower($_GET['include_vietnamese']) === 'true' || 
-                                $_GET['include_vietnamese'] === '1');
+            $includeLanguage = $this->getIncludeLanguage($user);
             
-            // ✅ Pass Vietnamese parameter to model
-            if ($includeVietnamese) {
-                $_GET['include_vietnamese'] = true; // Ensure it's set for model
-            }
-            
-            $attempt = $this->attemptModel->getAttemptDetails($attemptId, $user['user_id']);
+            $attempt = $this->attemptModel->getAttemptDetails($attemptId, $user['user_id'], $includeLanguage);
             
             if (!$attempt) {
                 $this->error('Test attempt not found', 404);
             }
             
-            // ✅ Add debug information in development
+            // Get fresh user language preference for response metadata
+            $userLanguageSql = "SELECT language_code FROM users WHERE id = :user_id";
+            $userLangResult = $this->userModel->query($userLanguageSql, [':user_id' => $user['user_id']]);
+            $currentUserLanguage = !empty($userLangResult) ? $userLangResult[0]['language_code'] : 'en';
+            
+            // Add enhanced metadata
+            $attempt['language_info'] = [
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $currentUserLanguage,
+                'supported_languages' => self::SUPPORTED_LANGUAGES,
+                'total_answers' => count($attempt['answers'] ?? []),
+                'language_name' => $includeLanguage ? (self::SUPPORTED_LANGUAGES[$includeLanguage] ?? 'Unknown') : 'English'
+            ];
+            
+            // Add debug information in development
             if ($_ENV['APP_DEBUG'] ?? false) {
                 $attempt['debug_info'] = [
-                    'vietnamese_requested' => $includeVietnamese,
+                    'language_requested' => $includeLanguage,
+                    'backward_compatibility' => isset($_GET['include_vietnamese']),
                     'query_params' => $_GET,
                     'request_time' => date('Y-m-d H:i:s')
                 ];
@@ -194,15 +206,11 @@ class AttemptController extends BaseController {
             $this->success($attempt);
             
         } catch (Exception $e) {
-            logError('Get attempt details error: ' . $e->getMessage(), [
-                'user_id' => $user['user_id'], 
-                'attempt_id' => $attemptId,
-                'include_vietnamese' => $includeVietnamese ?? false
-            ]);
             $this->error('Failed to retrieve attempt details', 500);
         }
     }
     
+    // ✅ ENHANCED: Multi-language support for leaderboard
     public function getLeaderboard() {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::optionalAuth();
@@ -211,8 +219,21 @@ class AttemptController extends BaseController {
         $limit = min(50, max(5, intval($_GET['limit'] ?? 10)));
         
         try {
-            $leaderboard = $this->attemptModel->getLeaderboard($testId, $limit);
-            $this->success($leaderboard);
+            $includeLanguage = $user ? $this->getIncludeLanguage($user) : null;
+            
+            $leaderboard = $this->attemptModel->getLeaderboard($testId, $limit, $includeLanguage);
+            
+            $response = [
+                'leaderboard' => $leaderboard,
+                'language_info' => [
+                    'language_enabled' => $includeLanguage !== null,
+                    'include_language' => $includeLanguage,
+                    'user_language' => $user['language_code'] ?? 'en',
+                    'supported_languages' => self::SUPPORTED_LANGUAGES
+                ]
+            ];
+            
+            $this->success($response);
             
         } catch (Exception $e) {
             $this->error('Failed to retrieve leaderboard', 500);
@@ -259,11 +280,87 @@ class AttemptController extends BaseController {
             }
             
         } catch (Exception $e) {
-            logError('Retake test error: ' . $e->getMessage(), [
-                'user_id' => $user['user_id'], 
-                'test_id' => $data->test_id
-            ]);
             $this->error('Failed to start test retake', 500);
         }
     }
+
+    // ✅ ENHANCED: Dynamic multi-language detection (same as TestController)
+    private function getIncludeLanguage($user) {
+        // Priority 1: URL parameter override (always takes precedence)
+        if (isset($_GET['include_language'])) {
+            $requestedLang = $_GET['include_language'];
+            
+            // Validate requested language
+            if ($requestedLang === 'en' || $requestedLang === '') {
+                return null; // English doesn't need additional columns
+            }
+            
+            if (array_key_exists($requestedLang, self::SUPPORTED_LANGUAGES)) {
+                return $requestedLang;
+            }
+            
+            // Invalid language requested, log and fallback
+            error_log("Invalid language requested: $requestedLang");
+            return null;
+        }
+        
+        // Priority 2: Backward compatibility with include_vietnamese
+        if (isset($_GET['include_vietnamese'])) {
+            return $_GET['include_vietnamese'] === 'true' ? 'vi' : null;
+        }
+        
+        // Priority 3: Get FRESH language preference from database
+        try {
+            $sql = "SELECT language_code FROM users WHERE id = :user_id LIMIT 1";
+            $result = $this->userModel->query($sql, [':user_id' => $user['user_id']]);
+            
+            if (!empty($result)) {
+                $userLang = $result[0]['language_code'];
+                
+                // English doesn't need additional columns
+                if ($userLang === 'en') {
+                    return null;
+                }
+                
+                // Check if it's a supported language
+                if (array_key_exists($userLang, self::SUPPORTED_LANGUAGES)) {
+                    return $userLang;
+                }
+                
+                // Unsupported language, fallback to English
+                return null;
+            }
+        } catch (Exception $e) {
+            // Log error but don't break the flow
+            error_log("Error getting user language: " . $e->getMessage());
+        }
+        
+        // Priority 4: Fallback to JWT token data (if database query fails)
+        if (isset($user['language_code'])) {
+            $jwtLang = $user['language_code'];
+            
+            if ($jwtLang === 'en') {
+                return null;
+            }
+            
+            if (array_key_exists($jwtLang, self::SUPPORTED_LANGUAGES)) {
+                return $jwtLang;
+            }
+        }
+        
+        // Priority 5: Check Accept-Language header for supported languages
+        if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+            $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+            
+            foreach (self::SUPPORTED_LANGUAGES as $langCode => $langName) {
+                if (strpos($acceptLanguage, $langCode) !== false) {
+                    return $langCode;
+                }
+            }
+        }
+        
+        // Default: No additional language (English only)
+        return null;
+    }
 }
+?>

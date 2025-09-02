@@ -1,10 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
 import '../constants/storage_keys.dart';
 
 class SharedPrefsService {
+  SharedPrefsService._internal();
   static final SharedPrefsService _instance = SharedPrefsService._internal();
   static SharedPrefsService get instance => _instance;
-  SharedPrefsService._internal();
 
   late SharedPreferences _prefs;
 
@@ -17,9 +18,7 @@ class SharedPrefsService {
     await _prefs.setString(StorageKeys.themeMode, mode);
   }
 
-  String? getThemeMode() {
-    return _prefs.getString(StorageKeys.themeMode);
-  }
+  String? getThemeMode() => _prefs.getString(StorageKeys.themeMode);
 
   // Language
   Future<void> setLanguageCode(String code) async {
@@ -40,28 +39,32 @@ class SharedPrefsService {
   }
 
   Future<void> setPrimaryLanguage(String language) async {
-    await _prefs.setString(StorageKeys.primaryLanguage, language);
+    // Primary is always English in this app
+    await _prefs.setString(StorageKeys.primaryLanguage, 'en');
   }
 
-  String getPrimaryLanguage() {
-    return _prefs.getString(StorageKeys.primaryLanguage) ?? 'en';
-  }
+  String getPrimaryLanguage() => 'en';
 
   Future<void> setSecondaryLanguage(String language) async {
-    await _prefs.setString(StorageKeys.secondaryLanguage, language);
+    if (ApiConstants.supportedSecondaryLanguages.contains(language)) {
+      await _prefs.setString(StorageKeys.secondaryLanguage, language);
+      await _prefs.setString(StorageKeys.lastUsedSecondaryLanguage, language);
+    }
   }
 
   String getSecondaryLanguage() {
-    return _prefs.getString(StorageKeys.secondaryLanguage) ?? 'vi';
+    final stored = _prefs.getString(StorageKeys.secondaryLanguage);
+    if (stored != null && ApiConstants.supportedSecondaryLanguages.contains(stored)) {
+      return stored;
+    }
+    return 'vi'; // Default to Vietnamese
   }
 
   Future<void> setShowBothLanguages(bool show) async {
     await _prefs.setBool(StorageKeys.showBothLanguages, show);
   }
 
-  bool getShowBothLanguages() {
-    return _prefs.getBool(StorageKeys.showBothLanguages) ?? true;
-  }
+  bool getShowBothLanguages() => _prefs.getBool(StorageKeys.showBothLanguages) ?? true;
 
   Future<void> setAutoTranslate(bool auto) async {
     await _prefs.setBool(StorageKeys.autoTranslate, auto);
@@ -97,28 +100,40 @@ class SharedPrefsService {
     return _prefs.getBool(StorageKeys.isFirstLaunch) ?? true;
   }
 
-  // 🆕 NEW: Get all bilingual preferences at once
-  Map<String, dynamic> getBilingualPreferences() {
-    return {
+  // Clear all data
+  Future<void> clearAll() async {
+    await _prefs.clear();
+  }
+
+  // 🆕 NEW: Get last used secondary language
+  String getLastUsedSecondaryLanguage() => _prefs.getString(StorageKeys.lastUsedSecondaryLanguage) ?? 'vi';
+
+  // 🆕 NEW: Language preference helpers
+  Future<void> setLanguagePreference(String primaryLang, String secondaryLang) async {
+    await setPrimaryLanguage(primaryLang);
+    await setSecondaryLanguage(secondaryLang);
+  }
+
+  Map<String, String> getLanguagePreference() => {
+      'primary': getPrimaryLanguage(),
+      'secondary': getSecondaryLanguage(),
+    };
+
+  // 🔄 UPDATED: Enhanced bilingual preferences
+  Map<String, dynamic> getBilingualPreferences() => {
       'enabled': getBilingualEnabled(),
       'primary_language': getPrimaryLanguage(),
       'secondary_language': getSecondaryLanguage(),
       'show_both_languages': getShowBothLanguages(),
       'auto_translate': getAutoTranslate(),
+      'last_used_secondary': getLastUsedSecondaryLanguage(),
     };
-  }
 
-  // 🆕 NEW: Set all bilingual preferences at once
   Future<void> setBilingualPreferences(Map<String, dynamic> prefs) async {
     await setBilingualEnabled(prefs['enabled'] ?? false);
     await setPrimaryLanguage(prefs['primary_language'] ?? 'en');
     await setSecondaryLanguage(prefs['secondary_language'] ?? 'vi');
     await setShowBothLanguages(prefs['show_both_languages'] ?? true);
     await setAutoTranslate(prefs['auto_translate'] ?? false);
-  }
-
-  // Clear all data
-  Future<void> clearAll() async {
-    await _prefs.clear();
   }
 }

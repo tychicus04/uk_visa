@@ -43,7 +43,7 @@ class ApiConstants {
   static const String questionTypeCheckbox = 'checkbox';
 
   // Base URLs
-  static const String baseUrl = 'https://lightslategrey-gorilla-320579.hostingersite.com/backend';
+  static const String baseUrl = 'http://10.0.2.2/UKVisa/backend';
   static const String apiVersion = 'v1';
 
   // Auth Endpoints
@@ -136,6 +136,53 @@ class ApiConstants {
 
   static String getTestTypeDisplayName(String testType) {
     return testTypeDisplayNames[testType] ?? testType;
+  }
+
+  // 🆕 NEW: Multi-language support
+  static const List<String> supportedSecondaryLanguages = [
+    'vi', 'pl', 'pa', 'ur', 'ro', 'es', 'pt', 'ar'
+  ];
+
+  static const Map<String, String> languageNames = {
+    'en': 'English',
+    'vi': 'Vietnamese',
+    'pl': 'Polish',
+    'pa': 'Punjabi',
+    'ur': 'Urdu',
+    'ro': 'Romanian',
+    'es': 'Spanish',
+    'pt': 'Portuguese',
+    'ar': 'Arabic',
+  };
+
+  static const Map<String, String> languageFlags = {
+    'en': '🇬🇧',
+    'vi': '🇻🇳',
+    'pl': '🇵🇱',
+    'pa': '🇮🇳',
+    'ur': '🇵🇰',
+    'ro': '🇷🇴',
+    'es': '🇪🇸',
+    'pt': '🇵🇹',
+    'ar': '🇸🇦',
+  };
+
+  // 🆕 NEW: Replace old parameter names
+  static const String paramIncludeLanguage = 'include_language';
+  // Keep old param for backward compatibility
+  // static const String paramIncludeVietnamese = 'include_vietnamese'; // Deprecated
+
+  // 🆕 NEW: Helper methods
+  static bool isSupportedLanguage(String languageCode) {
+    return languageCode == 'en' || supportedSecondaryLanguages.contains(languageCode);
+  }
+
+  static String getLanguageName(String languageCode) {
+    return languageNames[languageCode] ?? 'Unknown';
+  }
+
+  static String getLanguageFlag(String languageCode) {
+    return languageFlags[languageCode] ?? '🌍';
   }
 }
 

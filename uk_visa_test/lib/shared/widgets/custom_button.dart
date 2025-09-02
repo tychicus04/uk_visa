@@ -1,23 +1,11 @@
-// lib/shared/widgets/custom_button.dart
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../data/enums/CustomButtonVariant.dart';
 
-class CustomButton extends StatelessWidget {
-  final String text;
-  final VoidCallback? onPressed;
-  final Color? backgroundColor;
-  final Color? textColor;
-  final double? width;
-  final double? height;
-  final bool isLoading;
-  final IconData? icon;
-  final bool isOutlined; // Keep for backward compatibility
-  final CustomButtonVariant? variant; // New parameter
+class CustomButton extends StatelessWidget { // New parameter
 
   const CustomButton({
-    super.key,
-    required this.text,
+    required this.text, super.key,
     this.onPressed,
     this.backgroundColor,
     this.textColor,
@@ -28,17 +16,25 @@ class CustomButton extends StatelessWidget {
     this.isOutlined = false,
     this.variant,
   });
+  final String text;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final double? width;
+  final double? height;
+  final bool isLoading;
+  final IconData? icon;
+  final bool isOutlined; // Keep for backward compatibility
+  final CustomButtonVariant? variant;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Determine button variant
-    final CustomButtonVariant effectiveVariant = variant ??
+    final effectiveVariant = variant ??
         (isOutlined ? CustomButtonVariant.outlined : CustomButtonVariant.primary);
 
-    // Common loading widget
-    Widget loadingWidget = SizedBox(
+    final Widget loadingWidget = SizedBox(
       width: 16,
       height: 16,
       child: CircularProgressIndicator(
@@ -50,7 +46,7 @@ class CustomButton extends StatelessWidget {
     );
 
     // Common icon or loading
-    Widget iconWidget = isLoading
+    final iconWidget = isLoading
         ? loadingWidget
         : icon != null
         ? Icon(icon)
@@ -99,8 +95,7 @@ class CustomButton extends StatelessWidget {
         );
 
       case CustomButtonVariant.primary:
-      default:
-        return SizedBox(
+      return SizedBox(
           width: width,
           height: height ?? 48,
           child: ElevatedButton.icon(

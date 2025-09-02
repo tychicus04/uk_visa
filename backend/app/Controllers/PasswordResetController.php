@@ -73,21 +73,12 @@ class PasswordResetController extends BaseController {
             );
             
             if ($emailSent) {
-                logError("Password reset email sent", [
-                    'email' => $email,
-                    'token_expires' => $expiresAt
-                ]);
-                
                 $this->success([], 'If an account with that email exists, we have sent a password reset link');
             } else {
-                logError("Failed to send password reset email", ['email' => $email]);
                 $this->error('Failed to send reset email. Please try again later.', 500);
             }
             
         } catch (Exception $e) {
-            logError('Forgot password error: ' . $e->getMessage(), [
-                'email' => $data->email ?? 'unknown'
-            ]);
             $this->error('An error occurred. Please try again later.', 500);
         }
     }
@@ -150,17 +141,9 @@ class PasswordResetController extends BaseController {
             // Clean up old tokens for this email
             $this->resetTokenModel->cleanupOldTokens($resetRecord['email']);
             
-            logError("Password successfully reset", [
-                'email' => $resetRecord['email'],
-                'user_id' => $user['id']
-            ]);
-            
             $this->success([], 'Password has been successfully reset');
             
         } catch (Exception $e) {
-            logError('Reset password error: ' . $e->getMessage(), [
-                'token' => $data->token ?? 'unknown'
-            ]);
             $this->error('An error occurred. Please try again later.', 500);
         }
     }
@@ -195,7 +178,6 @@ class PasswordResetController extends BaseController {
             }
             
         } catch (Exception $e) {
-            logError('Verify token error: ' . $e->getMessage());
             $this->error('An error occurred', 500);
         }
     }
@@ -209,12 +191,10 @@ class PasswordResetController extends BaseController {
         try {
             $deletedCount = $this->resetTokenModel->cleanupExpiredTokens();
             
-            logError("Cleaned up expired reset tokens", ['deleted_count' => $deletedCount]);
             
             $this->success(['deleted_count' => $deletedCount], 'Cleanup completed');
             
         } catch (Exception $e) {
-            logError('Cleanup tokens error: ' . $e->getMessage());
             $this->error('Cleanup failed', 500);
         }
     }

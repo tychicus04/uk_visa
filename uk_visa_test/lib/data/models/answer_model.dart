@@ -1,97 +1,128 @@
+// lib/data/models/answer_model.dart - ENHANCED
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import '../../core/constants/api_constants.dart';
 
 part 'answer_model.g.dart';
 
 @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class Answer extends Equatable {
-
-  factory Answer.fromJson(Map<String, dynamic> json) => Answer(
-      id: json['id']?.toString() ?? '0',
-      questionId: json['question_id']?.toString() ?? '0',
-      answerId: json['answer_id']?.toString() ?? '',
-      answerText: json['answer_text']?.toString() ?? '',
-      answerTextVi: json['answer_text_vi']?.toString(),
-      isCorrect: _parseBool(json['is_correct']),
-      wasSelected: _parseBool(json['was_selected']),
-      createdAt: json['created_at']?.toString(),
-    );
-
   const Answer({
     required this.id,
     required this.questionId,
     required this.answerId,
     required this.answerText,
     this.answerTextVi,
+    this.answerTextPl,      // 🆕 Polish
+    this.answerTextPa,      // 🆕 Punjabi
+    this.answerTextUr,      // 🆕 Urdu
+    this.answerTextRo,      // 🆕 Romanian
+    this.answerTextEs,      // 🆕 Spanish
+    this.answerTextPt,      // 🆕 Portuguese
+    this.answerTextAr,      // 🆕 Arabic
     this.isCorrect,
     this.wasSelected,
     this.createdAt,
   });
-  final String id; // ✅ Changed to String
-  final String questionId; // ✅ Changed to String
+
+  final String id;
+  final String questionId;
   final String answerId;
   final String answerText;
+
+  // 🆕 Multi-language fields
   final String? answerTextVi;
+  final String? answerTextPl;
+  final String? answerTextPa;
+  final String? answerTextUr;
+  final String? answerTextRo;
+  final String? answerTextEs;
+  final String? answerTextPt;
+  final String? answerTextAr;
+
   final bool? isCorrect;
   final bool? wasSelected;
   final String? createdAt;
 
+  factory Answer.fromJson(Map<String, dynamic> json) => Answer(
+    id: json['id']?.toString() ?? '0',
+    questionId: json['question_id']?.toString() ?? '0',
+    answerId: json['answer_id']?.toString() ?? '',
+    answerText: json['answer_text']?.toString() ?? '',
+    answerTextVi: json['answer_text_vi']?.toString(),
+    answerTextPl: json['answer_text_pl']?.toString(),
+    answerTextPa: json['answer_text_pa']?.toString(),
+    answerTextUr: json['answer_text_ur']?.toString(),
+    answerTextRo: json['answer_text_ro']?.toString(),
+    answerTextEs: json['answer_text_es']?.toString(),
+    answerTextPt: json['answer_text_pt']?.toString(),
+    answerTextAr: json['answer_text_ar']?.toString(),
+    isCorrect: _parseBool(json['is_correct']),
+    wasSelected: _parseBool(json['was_selected']),
+    createdAt: json['created_at']?.toString(),
+  );
+
   Map<String, dynamic> toJson() => _$AnswerToJson(this);
 
   static bool? _parseBool(value) {
-    if (value == null) {
-      return null;
-    }
-    if (value is bool) {
-      return value;
-    }
-    if (value is int) {
-      return value == 1;
-    }
-    if (value is String) {
-      return value.toLowerCase() == 'true' || value == '1';
-    }
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
     return null;
   }
 
-  String getAnswerText({bool useVietnamese = false}) {
-    if (useVietnamese && answerTextVi != null && answerTextVi!.isNotEmpty) {
-      return answerTextVi!;
+  // 🆕 ENHANCED: Dynamic language support
+  String getAnswerText({String? languageCode}) {
+    if (languageCode == null || languageCode == 'en') {
+      return answerText;
     }
-    return answerText;
+
+    switch (languageCode) {
+      case 'vi': return answerTextVi?.isNotEmpty == true ? answerTextVi! : answerText;
+      case 'pl': return answerTextPl?.isNotEmpty == true ? answerTextPl! : answerText;
+      case 'pa': return answerTextPa?.isNotEmpty == true ? answerTextPa! : answerText;
+      case 'ur': return answerTextUr?.isNotEmpty == true ? answerTextUr! : answerText;
+      case 'ro': return answerTextRo?.isNotEmpty == true ? answerTextRo! : answerText;
+      case 'es': return answerTextEs?.isNotEmpty == true ? answerTextEs! : answerText;
+      case 'pt': return answerTextPt?.isNotEmpty == true ? answerTextPt! : answerText;
+      case 'ar': return answerTextAr?.isNotEmpty == true ? answerTextAr! : answerText;
+      default: return answerText;
+    }
   }
 
-  bool get hasVietnameseTranslation => answerTextVi != null && answerTextVi!.isNotEmpty;
+  // 🆕 NEW: Check if translation exists for language
+  bool hasTranslation(String languageCode) {
+    switch (languageCode) {
+      case 'en': return true; // Always have English
+      case 'vi': return answerTextVi?.isNotEmpty == true;
+      case 'pl': return answerTextPl?.isNotEmpty == true;
+      case 'pa': return answerTextPa?.isNotEmpty == true;
+      case 'ur': return answerTextUr?.isNotEmpty == true;
+      case 'ro': return answerTextRo?.isNotEmpty == true;
+      case 'es': return answerTextEs?.isNotEmpty == true;
+      case 'pt': return answerTextPt?.isNotEmpty == true;
+      case 'ar': return answerTextAr?.isNotEmpty == true;
+      default: return false;
+    }
+  }
 
-  // ✅ Convenience getters for int values
-  int get idInt => int.tryParse(id) ?? 0;
-  int get questionIdInt => int.tryParse(questionId) ?? 0;
+  // 🔄 UPDATED: Deprecated method for backward compatibility
+  @deprecated
+  String getAnswerText_Old({bool useVietnamese = false}) {
+    return getAnswerText(languageCode: useVietnamese ? 'vi' : 'en');
+  }
 
-  // ✅ Helper properties
-  bool get isCorrectAnswer => isCorrect == true;
-  bool get wasSelectedByUser => wasSelected == true;
+  @deprecated
+  bool get hasVietnameseTranslation => hasTranslation('vi');
 
-  // ✅ Create a copy with selection state
-  Answer copyWithSelection(bool selected) => Answer(
-      id: id,
-      questionId: questionId,
-      answerId: answerId,
-      answerText: answerText,
-      answerTextVi: answerTextVi,
-      isCorrect: isCorrect,
-      wasSelected: selected,
-      createdAt: createdAt,
-    );
+  // ... rest of existing code ...
 
   @override
   List<Object?> get props => [
-    id,
-    questionId,
-    answerId,
-    answerText,
-    answerTextVi,
-    isCorrect,
-    wasSelected,
-    createdAt,
+    id, questionId, answerId, answerText,
+    answerTextVi, answerTextPl, answerTextPa, answerTextUr,
+    answerTextRo, answerTextEs, answerTextPt, answerTextAr,
+    isCorrect, wasSelected, createdAt,
   ];
 }

@@ -8,6 +8,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
+import '../../../core/constants/api_constants.dart';
 import '../providers/test_provider.dart';
 import '../widgets/enhanced_review_question_widget.dart';
 import '../widgets/language_settings_bottom_sheet.dart';
@@ -46,8 +47,10 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // 🆕 ENHANCED: Use dynamic bilingual state instead of deprecated Vietnamese provider
+    final bilingualState = ref.watch(bilingualProvider);
     final attemptDetailState = ref.watch(attemptDetailProvider(widget.attemptId));
-    final showVietnamese = ref.watch(shouldShowVietnameseProvider);
 
     return attemptDetailState.when(
       data: (attempt) {
@@ -68,7 +71,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: CustomScrollView(
             slivers: [
-              _buildSliverAppBar(context, attempt, answers, theme, isDark, l10n),
+              _buildSliverAppBar(context, attempt, answers, bilingualState, theme, isDark, l10n),
 
               // 🔥 QUESTION CONTENT
               SliverFillRemaining(
@@ -86,7 +89,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       answer: answer,
                       questionNumber: index + 1,
                       totalQuestions: answers.length,
-                      showVietnamese: showVietnamese,
+                      showVietnamese: false, // Deprecated - now handled by bilingualState
                     );
                   },
                 ),
@@ -111,8 +114,9 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
       ),
     );
   }
-  
-  Widget _buildSliverAppBar(BuildContext context, TestAttempt attempt, List<AttemptAnswer> answers, ThemeData theme, bool isDark, AppLocalizations l10n) {
+
+  // 🔥 ENHANCED: Sliver App Bar with Dynamic Language Support
+  Widget _buildSliverAppBar(BuildContext context, TestAttempt attempt, List<AttemptAnswer> answers, bilingualState, ThemeData theme, bool isDark, AppLocalizations l10n) {
     final totalQuestions = answers.length;
     final progress = totalQuestions > 0 ? (_currentQuestionIndex + 1) / totalQuestions : 0.0;
     final correctCount = answers.where((a) => a.isCorrect).length;
@@ -124,7 +128,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
     const progressValue = Colors.white;
 
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 180, // Increased height for language info
       pinned: true,
       backgroundColor: appBarBackground,
       foregroundColor: appBarForeground,
@@ -144,7 +148,26 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
         // Language Settings
         IconButton(
           onPressed: () => _showLanguageSettings(context),
-          icon: const Icon(Icons.language, color: appBarForeground),
+          icon: Stack(
+            children: [
+              const Icon(Icons.language, color: appBarForeground),
+              // Language indicator badge
+              if (bilingualState.isEnabled)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: AppColors.warning,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: appBarForeground, width: 1),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           tooltip: 'Language Settings',
         ),
 
@@ -154,9 +177,9 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           icon: const Icon(Icons.list, color: appBarForeground),
           tooltip: 'Question List',
         ),
-
       ],
       flexibleSpace: FlexibleSpaceBar(
+
         background: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -169,7 +192,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -236,7 +259,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
 
                   const SizedBox(height: 8),
 
-                  // Score Summary
+                  // Score and Language Info Row
                   Row(
                     children: [
                       Text(
@@ -271,7 +294,6 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
     final totalQuestions = answers.length;
     final isFirstQuestion = _currentQuestionIndex == 0;
     final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
-    final currentAnswer = answers[_currentQuestionIndex];
 
     return DecoratedBox(
       decoration: BoxDecoration(

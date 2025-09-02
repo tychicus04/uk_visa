@@ -1,9 +1,7 @@
-// lib/shared/widgets/empty_state_widget.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
-import '../../features/chapters/providers/chapter_provider.dart';
 import 'custom_button.dart';
 
 class EmptyStateWidget extends StatelessWidget {

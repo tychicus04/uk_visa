@@ -88,20 +88,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 32),
 
                 CustomTextField(
-                  controller: _nameController,
-                  labelText: l10n.auth_fullName,
-                  prefixIcon: Icons.person_outlined,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return l10n.validation_nameRequired;
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                CustomTextField(
                   controller: _emailController,
                   labelText: l10n.auth_email,
                   keyboardType: TextInputType.emailAddress,

@@ -9,25 +9,37 @@ class TestController extends BaseController {
     private $testModel;
     private $userModel;
     
+    // Supported language mappings
+    private const SUPPORTED_LANGUAGES = [
+        'vi' => 'Vietnamese',
+        'pl' => 'Polish', 
+        'pa' => 'Punjabi',
+        'ur' => 'Urdu',
+        'ro' => 'Romanian',
+        'es' => 'Spanish',
+        'pt' => 'Portuguese',
+        'ar' => 'Arabic'
+    ];
+    
     public function __construct() {
         $this->testModel = new Test();
         $this->userModel = new User();
     }
     
-    // 🆕 UPDATED: Add Vietnamese support
+    // ✅ UPDATED: Dynamic multi-language support
     public function getAvailableTests() {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::authenticate();
         
         try {
-            // 🔧 FIX: Get fresh Vietnamese preference
-            $includeVietnamese = $this->shouldIncludeVietnamese($user);
+            // Get language preference - supports both old and new parameters
+            $includeLanguage = $this->getIncludeLanguage($user);
             
-            // 🔧 FIX: Better cache key with user ID
+            // Generate cache key with language support
             $cacheKey = $this->generateCacheKey(
                 "available_tests",
                 $user['user_id'],
-                $includeVietnamese
+                $includeLanguage
             );
             
             $cachedTests = CacheMiddleware::get($cacheKey, 300); // 5 minutes cache
@@ -50,16 +62,18 @@ class TestController extends BaseController {
                 $groupedTests[$test['test_type']][] = $test;
             }
             
-            // 🔧 FIX: Get fresh user language from database
+            // Get fresh user language from database
             $userLanguageSql = "SELECT language_code FROM users WHERE id = :user_id";
             $userLangResult = $this->userModel->query($userLanguageSql, [':user_id' => $user['user_id']]);
             $currentUserLanguage = !empty($userLangResult) ? $userLangResult[0]['language_code'] : 'en';
             
             $response = [
                 'tests' => $groupedTests,
-                'vietnamese_enabled' => $includeVietnamese,
-                'user_language' => $currentUserLanguage, // Fresh from database
-                'cache_key' => $cacheKey, // For debugging
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $currentUserLanguage,
+                'supported_languages' => self::SUPPORTED_LANGUAGES,
+                'cache_key' => $cacheKey,
                 'fresh_language_check' => true
             ];
             
@@ -69,12 +83,11 @@ class TestController extends BaseController {
             $this->success($response);
             
         } catch (Exception $e) {
-            logError('Get available tests error: ' . $e->getMessage(), ['user_id' => $user['user_id']]);
             $this->error('Failed to retrieve tests', 500);
         }
     }
     
-    // 🆕 UPDATED: Add Vietnamese parameter support
+    // ✅ UPDATED: Dynamic language support for single test
     public function getTest($testId) {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::authenticate();
@@ -85,52 +98,52 @@ class TestController extends BaseController {
                 $this->error('Access denied. Premium subscription required or free test limit reached.', 403);
             }
             
-            // 🔧 FIX: Get fresh Vietnamese preference (not from JWT)
-            $includeVietnamese = $this->shouldIncludeVietnamese($user);
+            $includeLanguage = $this->getIncludeLanguage($user);
             $includeCorrectAnswers = isset($_GET['include_answers']) && $_GET['include_answers'] === 'true';
             
-            // 🔧 FIX: Better cache key that includes user ID
+            // Generate cache key with language support
             $cacheKey = $this->generateCacheKey(
                 "test_content_{$testId}",
                 $user['user_id'],
-                $includeVietnamese,
+                $includeLanguage,
                 ['answers' => $includeCorrectAnswers ? '1' : '0']
             );
             
             $test = CacheMiddleware::get($cacheKey, 1800); // 30 minutes cache
             
             if ($test === null) {
-                // Get fresh data with current Vietnamese preference
-                $test = $this->testModel->getTestWithQuestions($testId, $includeCorrectAnswers, $includeVietnamese);
+                // Get fresh data with current language preference
+                $test = $this->testModel->getTestWithQuestions($testId, $includeCorrectAnswers, $includeLanguage);
                 if (!$test) {
                     $this->error('Test not found', 404);
                 }
                 CacheMiddleware::set($cacheKey, $test, 1800);
             }
             
-            // 🔧 FIX: Get fresh user language from database for response
+            // Get fresh user language from database for response
             $userLanguageSql = "SELECT language_code FROM users WHERE id = :user_id";
             $userLangResult = $this->userModel->query($userLanguageSql, [':user_id' => $user['user_id']]);
             $currentUserLanguage = !empty($userLangResult) ? $userLangResult[0]['language_code'] : 'en';
             
             $response = [
                 'test' => $test,
-                'vietnamese_enabled' => $includeVietnamese,
-                'user_language' => $currentUserLanguage, // Fresh from database
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $currentUserLanguage,
                 'include_correct_answers' => $includeCorrectAnswers,
-                'cache_key' => $cacheKey, // For debugging
-                'fresh_language_check' => true // Indicates we checked database
+                'supported_languages' => self::SUPPORTED_LANGUAGES,
+                'cache_key' => $cacheKey,
+                'fresh_language_check' => true
             ];
             
             $this->success($response);
             
         } catch (Exception $e) {
-            logError('Get test error: ' . $e->getMessage(), ['user_id' => $user['user_id'], 'test_id' => $testId]);
             $this->error('Failed to retrieve test', 500);
         }
     }
     
-    // 🆕 UPDATED: Add Vietnamese support
+    // ✅ UPDATED: Dynamic language support for test types
     public function getTestsByType($type) {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::optionalAuth();
@@ -141,15 +154,16 @@ class TestController extends BaseController {
         }
         
         try {
-            // 🆕 VIETNAMESE SUPPORT
-            $includeVietnamese = $user ? $this->shouldIncludeVietnamese($user) : false;
+            $includeLanguage = $user ? $this->getIncludeLanguage($user) : null;
             $tests = $this->testModel->getTestsByType($type);
             
             $response = [
                 'tests' => $tests,
                 'test_type' => $type,
-                'vietnamese_enabled' => $includeVietnamese,
-                'user_language' => $user['language_code'] ?? 'en'
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $user['language_code'] ?? 'en',
+                'supported_languages' => self::SUPPORTED_LANGUAGES
             ];
             
             $this->success($response);
@@ -159,21 +173,22 @@ class TestController extends BaseController {
         }
     }
     
-    // 🆕 UPDATED: Add Vietnamese support
+    // ✅ UPDATED: Dynamic language support for chapter tests
     public function getTestsByChapter($chapterId) {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::optionalAuth();
         
         try {
-            // 🆕 VIETNAMESE SUPPORT
-            $includeVietnamese = $user ? $this->shouldIncludeVietnamese($user) : false;
+            $includeLanguage = $user ? $this->getIncludeLanguage($user) : null;
             $tests = $this->testModel->getTestsByChapter($chapterId);
             
             $response = [
                 'tests' => $tests,
                 'chapter_id' => $chapterId,
-                'vietnamese_enabled' => $includeVietnamese,
-                'user_language' => $user['language_code'] ?? 'en'
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $user['language_code'] ?? 'en',
+                'supported_languages' => self::SUPPORTED_LANGUAGES
             ];
             
             $this->success($response);
@@ -183,20 +198,21 @@ class TestController extends BaseController {
         }
     }
     
-    // 🆕 UPDATED: Add Vietnamese support
+    // ✅ UPDATED: Dynamic language support for free tests
     public function getFreeTests() {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::optionalAuth();
         
         try {
-            // 🆕 VIETNAMESE SUPPORT
-            $includeVietnamese = $user ? $this->shouldIncludeVietnamese($user) : false;
+            $includeLanguage = $user ? $this->getIncludeLanguage($user) : null;
             $tests = $this->testModel->getFreeTests();
             
             $response = [
                 'tests' => $tests,
-                'vietnamese_enabled' => $includeVietnamese,
-                'user_language' => $user['language_code'] ?? 'en'
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
+                'user_language' => $user['language_code'] ?? 'en',
+                'supported_languages' => self::SUPPORTED_LANGUAGES
             ];
             
             $this->success($response);
@@ -206,58 +222,16 @@ class TestController extends BaseController {
         }
     }
     
-    // 🆕 ENHANCED: Use new search method with Vietnamese support
-    public function searchTests() {
-        $this->validateMethod(['GET']);
-        $user = SimpleAuthMiddleware::optionalAuth();
-        
-        $query = $_GET['q'] ?? '';
-        $type = $_GET['type'] ?? '';
-        $chapter = $_GET['chapter'] ?? '';
-        $query = trim($query);
-        
-        if (empty($query)) {
-            $this->error('Search query is required', 400);
-        }
-        
-        try {
-            // 🆕 VIETNAMESE SEARCH SUPPORT
-            $includeVietnamese = $user ? $this->shouldIncludeVietnamese($user) : false;
-            $tests = $this->testModel->searchTests($query, $type, $chapter, $includeVietnamese);
-            
-            $response = [
-                'tests' => $tests,
-                'search_query' => $query,
-                'search_type' => $type,
-                'search_chapter' => $chapter,
-                'vietnamese_enabled' => $includeVietnamese,
-                'user_language' => $user['language_code'] ?? 'en',
-                'results_count' => count($tests)
-            ];
-            
-            $this->success($response);
-            
-        } catch (Exception $e) {
-            logError('Search tests error: ' . $e->getMessage(), [
-                'query' => $query, 
-                'type' => $type, 
-                'chapter' => $chapter,
-                'user_id' => $user['user_id'] ?? null
-            ]);
-            $this->error('Search failed', 500);
-        }
-    }
-    
-    // 🆕 NEW ENDPOINT: Get single question with Vietnamese
+    // ✅ UPDATED: Dynamic language support for single question
     public function getQuestion($questionId) {
         $this->validateMethod(['GET']);
         $user = SimpleAuthMiddleware::authenticate();
         
         try {
-            $includeVietnamese = $this->shouldIncludeVietnamese($user);
+            $includeLanguage = $this->getIncludeLanguage($user);
             $includeCorrectAnswers = isset($_GET['include_answers']) && $_GET['include_answers'] === 'true';
             
-            $question = $this->testModel->getQuestionWithAnswers($questionId, $includeCorrectAnswers, $includeVietnamese);
+            $question = $this->testModel->getQuestionWithAnswers($questionId, $includeCorrectAnswers, $includeLanguage);
             
             if (!$question) {
                 $this->error('Question not found', 404);
@@ -265,20 +239,64 @@ class TestController extends BaseController {
             
             $response = [
                 'question' => $question,
-                'vietnamese_enabled' => $includeVietnamese,
+                'language_enabled' => $includeLanguage !== null,
+                'include_language' => $includeLanguage,
                 'user_language' => $user['language_code'] ?? 'en',
-                'include_correct_answers' => $includeCorrectAnswers
+                'include_correct_answers' => $includeCorrectAnswers,
+                'supported_languages' => self::SUPPORTED_LANGUAGES
             ];
             
             $this->success($response);
             
         } catch (Exception $e) {
-            logError('Get question error: ' . $e->getMessage(), ['question_id' => $questionId, 'user_id' => $user['user_id']]);
             $this->error('Failed to retrieve question', 500);
         }
     }
     
-    // 🆕 NEW ENDPOINT: Update language preference
+    // ✅ NEW: Get supported languages endpoint
+    public function getSupportedLanguages() {
+        $this->validateMethod(['GET']);
+        
+        try {
+            $stats = $this->testModel->getMultiLanguageStats();
+            
+            $response = [
+                'supported_languages' => self::SUPPORTED_LANGUAGES,
+                'default_language' => 'en',
+                'translation_stats' => $stats,
+                'total_languages' => count(self::SUPPORTED_LANGUAGES) + 1 // +1 for English
+            ];
+            
+            $this->success($response);
+            
+        } catch (Exception $e) {
+            $this->error('Failed to retrieve supported languages', 500);
+        }
+    }
+    
+    // ✅ UPDATED: Enhanced translation statistics
+    public function getTranslationStats() {
+        $this->validateMethod(['GET']);
+        $user = SimpleAuthMiddleware::optionalAuth(); // Optional auth for admin stats
+        
+        try {
+            $stats = $this->testModel->getMultiLanguageStats();
+            
+            $response = [
+                'translation_stats' => $stats,
+                'supported_languages' => self::SUPPORTED_LANGUAGES,
+                'default_language' => 'en',
+                'total_languages' => count(self::SUPPORTED_LANGUAGES) + 1
+            ];
+            
+            $this->success($response);
+            
+        } catch (Exception $e) {
+            $this->error('Failed to retrieve translation statistics', 500);
+        }
+    }
+    
+    // ✅ UPDATED: Enhanced language preference update
     public function updateLanguagePreference() {
         $this->validateMethod(['POST', 'PUT']);
         $user = SimpleAuthMiddleware::authenticate();
@@ -290,7 +308,7 @@ class TestController extends BaseController {
                 $this->error('Language code is required', 400);
             }
             
-            $allowedLanguages = ['en', 'vi'];
+            $allowedLanguages = array_merge(['en'], array_keys(self::SUPPORTED_LANGUAGES));
             if (!in_array($data['language_code'], $allowedLanguages)) {
                 $this->error('Invalid language code. Allowed: ' . implode(', ', $allowedLanguages), 400);
             }
@@ -310,127 +328,163 @@ class TestController extends BaseController {
                 ]);
                 
                 // Clear ALL related caches immediately
-                $this->clearUserTestCaches($user['user_id']);
-                
-                // Also clear any general caches that might be affected
-                CacheMiddleware::delete("user_profile_{$user['user_id']}");
-                
-                logError("Language preference updated successfully", [
-                    'user_id' => $user['user_id'],
-                    'old_language' => $currentLanguage,
-                    'new_language' => $data['language_code']
-                ]);
+                $this->clearUserCaches($user['user_id']);
             }
             
             $response = [
                 'language_code' => $data['language_code'],
-                'vietnamese_enabled' => $data['language_code'] === 'vi',
+                'language_enabled' => $data['language_code'] !== 'en',
+                'language_name' => self::SUPPORTED_LANGUAGES[$data['language_code']] ?? 'English',
                 'previous_language' => $currentLanguage,
                 'cache_cleared' => $currentLanguage !== $data['language_code'],
+                'supported_languages' => self::SUPPORTED_LANGUAGES,
                 'message' => 'Language preference updated successfully'
             ];
             
             $this->success($response);
             
         } catch (Exception $e) {
-            logError('Update language preference error: ' . $e->getMessage(), ['user_id' => $user['user_id']]);
             $this->error('Failed to update language preference', 500);
         }
     }
     
-    // 🆕 NEW ENDPOINT: Get translation statistics
-    public function getTranslationStats() {
-        $this->validateMethod(['GET']);
-        $user = SimpleAuthMiddleware::optionalAuth(); // Optional auth for admin stats
-        
-        try {
-            $stats = $this->testModel->getTranslationStats();
-            
-            $response = [
-                'translation_stats' => $stats,
-                'supported_languages' => ['en', 'vi'],
-                'default_language' => 'en'
-            ];
-            
-            $this->success($response);
-            
-        } catch (Exception $e) {
-            logError('Get translation stats error: ' . $e->getMessage());
-            $this->error('Failed to retrieve translation statistics', 500);
-        }
-    }
-    
-    // 🆕 HELPER METHODS
-    private function shouldIncludeVietnamese($user) {
+    // ✅ NEW: Core method to determine include language dynamically
+    private function getIncludeLanguage($user) {
         // Priority 1: URL parameter override (always takes precedence)
-        if (isset($_GET['include_vietnamese'])) {
-            return $_GET['include_vietnamese'] === 'true';
+        if (isset($_GET['include_language'])) {
+            $requestedLang = $_GET['include_language'];
+            
+            // Validate requested language
+            if ($requestedLang === 'en' || $requestedLang === '') {
+                return null; // English doesn't need additional columns
+            }
+            
+            if (array_key_exists($requestedLang, self::SUPPORTED_LANGUAGES)) {
+                return $requestedLang;
+            }
+            
+            // Invalid language requested, log and fallback
+            error_log("Invalid language requested: $requestedLang");
+            return null;
         }
         
-        // Priority 2: Get FRESH language preference from database
+        // Priority 2: Backward compatibility with include_vietnamese
+        if (isset($_GET['include_vietnamese'])) {
+            return $_GET['include_vietnamese'] === 'true' ? 'vi' : null;
+        }
+        
+        // Priority 3: Get FRESH language preference from database
         try {
             $sql = "SELECT language_code FROM users WHERE id = :user_id LIMIT 1";
             $result = $this->userModel->query($sql, [':user_id' => $user['user_id']]);
             
             if (!empty($result)) {
-                $latestUser = $result[0];
-                return $latestUser['language_code'] === 'vi';
+                $userLang = $result[0]['language_code'];
+                
+                // English doesn't need additional columns
+                if ($userLang === 'en') {
+                    return null;
+                }
+                
+                // Check if it's a supported language
+                if (array_key_exists($userLang, self::SUPPORTED_LANGUAGES)) {
+                    return $userLang;
+                }
+                
+                // Unsupported language, fallback to English
+                return null;
             }
         } catch (Exception $e) {
             // Log error but don't break the flow
-            logError('Failed to get user language preference: ' . $e->getMessage(), ['user_id' => $user['user_id']]);
+            error_log("Error getting user language: " . $e->getMessage());
         }
         
-        // Priority 3: Fallback to JWT token data (if database query fails)
+        // Priority 4: Fallback to JWT token data (if database query fails)
         if (isset($user['language_code'])) {
-            return $user['language_code'] === 'vi';
+            $jwtLang = $user['language_code'];
+            
+            if ($jwtLang === 'en') {
+                return null;
+            }
+            
+            if (array_key_exists($jwtLang, self::SUPPORTED_LANGUAGES)) {
+                return $jwtLang;
+            }
         }
         
-        // Priority 4: Check Accept-Language header
-        if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && 
-            strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'], 'vi') !== false) {
-            return true;
+        // Priority 5: Check Accept-Language header for supported languages
+        if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+            $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+            
+            foreach (self::SUPPORTED_LANGUAGES as $langCode => $langName) {
+                if (strpos($acceptLanguage, $langCode) !== false) {
+                    return $langCode;
+                }
+            }
         }
         
-        // Default: No Vietnamese
-        return false;
+        // Default: No additional language (English only)
+        return null;
     }
     
-    private function clearUserTestCaches($userId) {
+    // ✅ UPDATED: Enhanced cache clearing for multiple languages
+    private function clearUserCaches($userId) {
         // Clear all possible cache combinations for this user
         $cachePatterns = [
-            "available_tests_user_{$userId}_vi_0",
-            "available_tests_user_{$userId}_vi_1",
             "user_language_preference_{$userId}",
         ];
         
-        // Also clear test content caches that might include user-specific language
+        // Generate cache patterns for all supported languages
+        foreach (self::SUPPORTED_LANGUAGES as $langCode => $langName) {
+            $cachePatterns[] = "available_tests_user_{$userId}_{$langCode}";
+        }
+        
+        // Add English (null language) patterns
+        $cachePatterns[] = "available_tests_user_{$userId}_null";
+        
+        // Also clear test content caches for all languages
         try {
             // Get all test IDs to clear their caches
             $tests = $this->testModel->query("SELECT id FROM tests");
             foreach ($tests as $test) {
                 $testId = $test['id'];
-                $cachePatterns[] = "test_content_{$testId}_vi_0_answers_false";
-                $cachePatterns[] = "test_content_{$testId}_vi_1_answers_false";
-                $cachePatterns[] = "test_content_{$testId}_vi_0_answers_true";
-                $cachePatterns[] = "test_content_{$testId}_vi_1_answers_true";
+                
+                // Clear for all supported languages
+                foreach (self::SUPPORTED_LANGUAGES as $langCode => $langName) {
+                    $cachePatterns[] = "test_content_{$testId}_{$langCode}_answers_false";
+                    $cachePatterns[] = "test_content_{$testId}_{$langCode}_answers_true";
+                }
+                
+                // Clear for English (null language)
+                $cachePatterns[] = "test_content_{$testId}_null_answers_false";
+                $cachePatterns[] = "test_content_{$testId}_null_answers_true";
             }
         } catch (Exception $e) {
-            logError('Failed to clear test caches: ' . $e->getMessage());
+            error_log("Error generating cache patterns: " . $e->getMessage());
         }
         
         // Clear all patterns
         foreach ($cachePatterns as $pattern) {
             CacheMiddleware::delete($pattern);
         }
-        
-        // Log cache clearing for debugging
-        logError("Cleared caches for user language update", [
-            'user_id' => $userId,
-            'cleared_patterns' => count($cachePatterns)
-        ]);
     }
     
+    // ✅ UPDATED: Enhanced cache key generation
+    private function generateCacheKey($baseKey, $userId, $includeLanguage, $additionalParams = []) {
+        $keyParts = [
+            $baseKey,
+            "user_{$userId}",
+            "lang_" . ($includeLanguage ?? 'en')
+        ];
+        
+        foreach ($additionalParams as $key => $value) {
+            $keyParts[] = "{$key}_{$value}";
+        }
+        
+        return implode('_', $keyParts);
+    }
+    
+    // ✅ Helper method to get JSON input
     private function getJsonInput() {
         $input = file_get_contents('php://input');
         $data = json_decode($input, true);
@@ -440,19 +494,5 @@ class TestController extends BaseController {
         }
         
         return $data;
-    }
-
-    private function generateCacheKey($baseKey, $userId, $includeVietnamese, $additionalParams = []) {
-        $keyParts = [
-            $baseKey,
-            "user_{$userId}",
-            "vi_" . ($includeVietnamese ? '1' : '0')
-        ];
-        
-        foreach ($additionalParams as $key => $value) {
-            $keyParts[] = "{$key}_{$value}";
-        }
-        
-        return implode('_', $keyParts);
     }
 }

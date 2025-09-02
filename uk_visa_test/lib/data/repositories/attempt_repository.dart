@@ -16,7 +16,7 @@ class AttemptRepository {
   /// Start a new test attempt
   Future<String> startAttempt(int testId) async {
     try {
-      print('📄 Repository: Starting attempt for test $testId');
+      print('🔄 Repository: Starting attempt for test $testId');
 
       final response = await _attemptService.startAttempt(testId);
 
@@ -50,7 +50,7 @@ class AttemptRepository {
     required int timeTaken,
   }) async {
     try {
-      print('📄 Repository: Submitting attempt $attemptId with ${answers.length} answers');
+      print('🔄 Repository: Submitting attempt $attemptId with ${answers.length} answers');
 
       final response = await _attemptService.submitAttempt(
         attemptId: attemptId,
@@ -88,21 +88,32 @@ class AttemptRepository {
     }
   }
 
-  /// Get attempt history with pagination
-  Future<Map<String, dynamic>> getAttemptHistory({int page = 1, int limit = 20}) async {
+  /// ✅ ENHANCED: Get attempt history with dynamic multi-language support
+  Future<Map<String, dynamic>> getAttemptHistory({
+    int page = 1,
+    int limit = 20,
+    String? secondaryLanguage,
+    bool includeVietnamese = false, // Backward compatibility
+  }) async {
     try {
-      print('📄 Repository: Loading attempt history page $page, limit $limit');
+      print('🔄 Repository: Loading attempt history page $page, limit $limit (Language: ${secondaryLanguage ?? 'none'})');
 
-      final response = await _attemptService.getAttemptHistory(page: page, limit: limit);
+      final response = await _attemptService.getAttemptHistory(
+        page: page,
+        limit: limit,
+        secondaryLanguage: secondaryLanguage,
+        includeVietnamese: includeVietnamese,
+      );
 
       if (response.success && response.data != null) {
         final data = response.data!;
         final items = (data['items'] as List).map((e) => TestAttempt.fromJson(e)).toList();
 
-        print('✅ Repository: Loaded ${items.length} attempts from history');
+        print('✅ Repository: Loaded ${items.length} attempts from history with language: ${secondaryLanguage ?? 'none'}');
         return {
           'items': items,
           'pagination': data['pagination'] ?? {},
+          'language_info': data['language_info'] ?? {},
         };
       } else {
         throw Exception(response.message ?? 'Failed to load test history');
@@ -113,16 +124,18 @@ class AttemptRepository {
     }
   }
 
-  /// ✅ UPDATED: Get specific attempt details with Vietnamese support
+  /// ✅ COMPLETELY REWRITTEN: Get specific attempt details with dynamic multi-language support
   Future<TestAttempt> getAttemptDetail(
       int attemptId, {
-        bool includeVietnamese = false,
+        String? secondaryLanguage,
+        bool includeVietnamese = false, // Backward compatibility
       }) async {
     try {
-      print('📄 Repository: Loading attempt detail for $attemptId (Vietnamese: $includeVietnamese)');
+      print('🔄 Repository: Loading attempt detail for $attemptId (Language: ${secondaryLanguage ?? 'none'})');
 
       final response = await _attemptService.getAttemptDetail(
         attemptId,
+        secondaryLanguage: secondaryLanguage,
         includeVietnamese: includeVietnamese,
       );
 
@@ -130,8 +143,31 @@ class AttemptRepository {
         final attempt = TestAttempt.fromJson(response.data!);
 
         print('✅ Repository: Loaded attempt detail: ${attempt.id}');
-        if (includeVietnamese) {
-          print('🇻🇳 Repository: Vietnamese support enabled for attempt review');
+
+        // Enhanced logging for language support
+        if (secondaryLanguage != null) {
+          print('🌍 Repository: Dynamic language support enabled: $secondaryLanguage');
+
+          // Count translated content for debugging
+          final answers = attempt.answers ?? [];
+          var translatedQuestions = 0;
+          var translatedAnswers = 0;
+
+          for (final answer in answers) {
+            if (answer.hasQuestionTranslation(secondaryLanguage)) {
+              translatedQuestions++;
+            }
+            final answerDetails = answer.answerDetails ?? [];
+            for (final detail in answerDetails) {
+              if (detail.hasAnswerTranslation(secondaryLanguage)) {
+                translatedAnswers++;
+              }
+            }
+          }
+
+          print('📊 Repository: Translation coverage - Questions: $translatedQuestions/${answers.length}, Answers: $translatedAnswers');
+        } else if (includeVietnamese) {
+          print('🇻🇳 Repository: Legacy Vietnamese support enabled for backward compatibility');
         }
 
         return attempt;
@@ -148,7 +184,7 @@ class AttemptRepository {
   /// Retake a test
   Future<int> retakeTest(int testId) async {
     try {
-      print('📄 Repository: Retaking test $testId');
+      print('🔄 Repository: Retaking test $testId');
 
       final response = await _attemptService.retakeTest(testId);
 
@@ -169,22 +205,93 @@ class AttemptRepository {
     }
   }
 
-  /// Get leaderboard
-  Future<List<Map<String, dynamic>>> getLeaderboard() async {
+  /// ✅ ENHANCED: Get leaderboard with dynamic multi-language support
+  Future<List<Map<String, dynamic>>> getLeaderboard({
+    String? secondaryLanguage,
+    bool includeVietnamese = false, // Backward compatibility
+  }) async {
     try {
-      print('📄 Repository: Loading leaderboard');
+      print('🔄 Repository: Loading leaderboard (Language: ${secondaryLanguage ?? 'none'})');
 
-      final response = await _attemptService.getLeaderboard();
+      final response = await _attemptService.getLeaderboard(
+        secondaryLanguage: secondaryLanguage,
+        includeVietnamese: includeVietnamese,
+      );
 
       if (response.success && response.data != null) {
         final leaderboard = (response.data! as List).cast<Map<String, dynamic>>();
-        print('✅ Repository: Loaded leaderboard with ${leaderboard.length} entries');
+        print('✅ Repository: Loaded leaderboard with ${leaderboard.length} entries (Language: ${secondaryLanguage ?? 'none'})');
         return leaderboard;
       } else {
         throw Exception(response.message ?? 'Failed to load leaderboard');
       }
     } catch (e) {
       print('❌ Repository error in getLeaderboard: $e');
+      rethrow;
+    }
+  }
+
+  /// 🆕 NEW: Get user statistics with language support
+  Future<Map<String, dynamic>> getUserStats({
+    String? secondaryLanguage,
+    bool includeVietnamese = false,
+  }) async {
+    try {
+      print('🔄 Repository: Loading user statistics (Language: ${secondaryLanguage ?? 'none'})');
+
+      // Get recent attempts with language support
+      final historyData = await getAttemptHistory(
+        page: 1,
+        limit: 100, // Get more data for better statistics
+        secondaryLanguage: secondaryLanguage,
+        includeVietnamese: includeVietnamese,
+      );
+
+      final attempts = historyData['items'] as List<TestAttempt>? ?? [];
+
+      if (attempts.isEmpty) {
+        return {
+          'total_attempts': 0,
+          'passed_attempts': 0,
+          'average_score': 0.0,
+          'best_score': 0.0,
+          'total_time_spent': 0,
+          'pass_rate': 0.0,
+          'language_info': historyData['language_info'],
+        };
+      }
+
+      final totalAttempts = attempts.length;
+      final passedAttempts = attempts.where((a) => a.isPassed).length;
+      final validAttempts = attempts.where((a) => a.percentage != null).toList();
+
+      final averageScore = validAttempts.isNotEmpty
+          ? validAttempts.map((a) => a.percentage!).reduce((a, b) => a + b) / validAttempts.length
+          : 0.0;
+
+      final bestScore = validAttempts.isNotEmpty
+          ? validAttempts.map((a) => a.percentage!).reduce((a, b) => a > b ? a : b)
+          : 0.0;
+
+      final totalTimeSpent = attempts
+          .map((a) => a.timeTakenInt)
+          .reduce((a, b) => a + b);
+
+      final stats = {
+        'total_attempts': totalAttempts,
+        'passed_attempts': passedAttempts,
+        'average_score': averageScore,
+        'best_score': bestScore,
+        'total_time_spent': totalTimeSpent,
+        'pass_rate': totalAttempts > 0 ? (passedAttempts / totalAttempts * 100) : 0.0,
+        'recent_attempts': attempts.take(5).toList(),
+        'language_info': historyData['language_info'],
+      };
+
+      print('✅ Repository: User stats calculated with language support: ${stats.keys}');
+      return stats;
+    } catch (e) {
+      print('❌ Repository error in getUserStats: $e');
       rethrow;
     }
   }

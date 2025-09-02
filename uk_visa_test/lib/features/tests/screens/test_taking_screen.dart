@@ -12,6 +12,7 @@ import '../widgets/circular_timer_widget.dart';
 import '../widgets/enhanced_question_widget.dart';
 import '../widgets/language_settings_bottom_sheet.dart';
 import '../widgets/question_navigation_sheet.dart';
+import '../widgets/time_up_dialog_widget.dart';
 
 class TestTakingScreen extends ConsumerStatefulWidget {
   const TestTakingScreen({
@@ -47,7 +48,11 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     super.dispose();
   }
 
-  // 🔥 NEW: Check if all questions are answered
+  // Check if test type is timed (exam) or not (chapter/comprehensive)
+  bool _isTimedTest(String testType) {
+    return testType.toLowerCase() == 'exam';
+  }
+
   bool _areAllQuestionsAnswered(List<Question> questions) {
     for (final question in questions) {
       final answers = _answers[question.id];
@@ -58,7 +63,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     return true;
   }
 
-  // 🔥 NEW: Get list of unanswered questions
   List<int> _getUnansweredQuestions(List<Question> questions) {
     final unanswered = <int>[];
     for (int i = 0; i < questions.length; i++) {
@@ -71,7 +75,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     return unanswered;
   }
 
-  // 🔥 NEW: Jump to first unanswered question
   void _jumpToFirstUnansweredQuestion(List<Question> questions) {
     final unanswered = _getUnansweredQuestions(questions);
     if (unanswered.isNotEmpty) {
@@ -91,42 +94,45 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final testState = ref.watch(testDetailProvider(widget.testId));
 
     return testState.when(
-      data: (test) => Scaffold(
-        backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-        body: CustomScrollView(
-          slivers: [
-            _buildSliverAppBar(context, test, theme, isDark, l10n),
-            SliverFillRemaining(
-              child: test.questions != null
-                  ? PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentQuestionIndex = index;
-                  });
-                },
-                itemCount: test.questions!.length,
-                itemBuilder: (context, index) {
-                  final question = test.questions![index];
-                  return EnhancedQuestionWidget(
-                    question: question,
-                    questionNumber: index + 1,
-                    totalQuestions: test.questions!.length,
-                    selectedAnswers: _answers[question.id] ?? [],
-                    onAnswerSelected: (answerId, isSelected) {
-                      _handleAnswerSelection(question, answerId, isSelected);
-                    },
-                  );
-                },
-              )
-                  : const Center(child: LoadingWidget()),
-            ),
-          ],
-        ),
+      data: (test) {
+        final isTimedTest = _isTimedTest(test.testType);
+        print('Test taking started - Type: ${test.testType}, Timed: $isTimedTest');
 
-        // 🔥 UPDATED BOTTOM ACTION BAR with answer validation
-        bottomNavigationBar: _buildBottomActionBar(context, test, theme, isDark, l10n),
-      ),
+        return Scaffold(
+          backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+          body: CustomScrollView(
+            slivers: [
+              _buildSliverAppBar(context, test, theme, isDark, l10n, isTimedTest),
+              SliverFillRemaining(
+                child: test.questions != null
+                    ? PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentQuestionIndex = index;
+                    });
+                  },
+                  itemCount: test.questions!.length,
+                  itemBuilder: (context, index) {
+                    final question = test.questions![index];
+                    return EnhancedQuestionWidget(
+                      question: question,
+                      questionNumber: index + 1,
+                      totalQuestions: test.questions!.length,
+                      selectedAnswers: _answers[question.id] ?? [],
+                      onAnswerSelected: (answerId, isSelected) {
+                        _handleAnswerSelection(question, answerId, isSelected);
+                      },
+                    );
+                  },
+                )
+                    : const Center(child: LoadingWidget()),
+              ),
+            ],
+          ),
+          bottomNavigationBar: _buildBottomActionBar(context, test, theme, isDark, l10n, isTimedTest),
+        );
+      },
       loading: () => Scaffold(
         backgroundColor: isDark ? AppColors.backgroundDark : AppColors.primary,
         body: const Center(child: LoadingWidget()),
@@ -141,13 +147,14 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
-  // 🔥 SLIVER APP BAR WITH PROGRESS AND TIMER
-  Widget _buildSliverAppBar(BuildContext context, dynamic test, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildSliverAppBar(BuildContext context, dynamic test, ThemeData theme, bool isDark, AppLocalizations l10n, bool isTimedTest) {
     final totalQuestions = test.questions?.length ?? 24;
     final progress = totalQuestions > 0 ? (_currentQuestionIndex + 1) / totalQuestions : 0.0;
 
-    // Theme-aware colors
-    final appBarBackground = isDark ? AppColors.surfaceDark : AppColors.primary;
+    // Theme-aware colors based on test type
+    final appBarBackground = isDark
+        ? AppColors.surfaceDark
+        : (isTimedTest ? AppColors.warning : AppColors.info);
     final appBarForeground = isDark ? AppColors.textPrimaryDark : Colors.white;
     final progressBackground = isDark
         ? AppColors.borderDark
@@ -161,16 +168,28 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
       backgroundColor: appBarBackground,
       foregroundColor: appBarForeground,
       leading: IconButton(
-        onPressed: () => _showExitDialog(context, l10n),
+        onPressed: () => _showExitDialog(context, l10n, isTimedTest),
         icon: Icon(Icons.close, color: appBarForeground),
       ),
-      title: Text(
-        test.displayTitle,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: appBarForeground,
-        ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            test.displayTitle,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: appBarForeground,
+            ),
+          ),
+          Text(
+            isTimedTest ? l10n.test_timedTest : l10n.test_practiceMode,
+            style: TextStyle(
+              fontSize: 12,
+              color: appBarForeground.withOpacity(0.8),
+            ),
+          ),
+        ],
       ),
       actions: [
         // Language Settings
@@ -195,7 +214,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
               end: Alignment.bottomCenter,
               colors: isDark
                   ? [AppColors.surfaceDark, AppColors.cardDark]
-                  : [AppColors.primary, AppColors.primaryDark],
+                  : isTimedTest
+                  ? [AppColors.warning, AppColors.warning.withOpacity(0.8)]
+                  : [AppColors.info, AppColors.info.withOpacity(0.8)],
             ),
           ),
           child: SafeArea(
@@ -241,12 +262,38 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
                   const SizedBox(width: 16),
 
-                  // Circular Timer
-                  CircularTimerWidget(
-                    totalDuration: const Duration(minutes: 45),
-                    onTimeUp: () => _submitTest(context, ref, l10n),
-                    isDarkMode: isDark,
-                  ),
+                  // Conditional Timer based on test type
+                  if (isTimedTest) ...[
+                    CircularTimerWidget(
+                      totalDuration: test.effectiveTimeLimit,
+                      onTimeUp: () => _handleTimeUp(context, ref, l10n),
+                      isDarkMode: isDark,
+                    ),
+                  ] else ...[
+                    // Practice mode indicator
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: appBarForeground.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: appBarForeground.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.all_inclusive,
+                            color: appBarForeground,
+                            size: 30,
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -256,8 +303,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
-  // 🔥 UPDATED BOTTOM ACTION BAR with enhanced answer validation display
-  Widget _buildBottomActionBar(BuildContext context, dynamic test, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildBottomActionBar(BuildContext context, dynamic test, ThemeData theme, bool isDark, AppLocalizations l10n, bool isTimedTest) {
     final totalQuestions = test.questions?.length ?? 24;
     final isFirstQuestion = _currentQuestionIndex == 0;
     final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
@@ -310,7 +356,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                     flex: 2,
                     child: ElevatedButton.icon(
                       onPressed: isLastQuestion
-                          ? () => _submitTest(context, ref, l10n)
+                          ? () => _submitTest(context, ref, l10n, isTimedTest)
                           : _nextQuestion,
                       icon: Icon(
                         isLastQuestion ? Icons.check : Icons.arrow_forward,
@@ -318,9 +364,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                       ),
                       label: Text(isLastQuestion ? l10n.common_submit : l10n.common_next),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isLastQuestion && !allAnswered
-                            ? AppColors.warning
-                            : AppColors.primary,
+                        backgroundColor: isTimedTest
+                            ? (isLastQuestion && !allAnswered ? AppColors.warning : AppColors.warning)
+                            : (isLastQuestion && !allAnswered ? AppColors.warning : AppColors.info),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 2,
@@ -399,13 +445,42 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
-  // 🔥 UPDATED: Submit test with complete answer validation
-  Future<void> _submitTest(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+  // Handle time up for timed tests (exam)
+  void _handleTimeUp(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    print('Time is up! Auto-submitting exam...');
+    context.showTimeUpDialog(
+      onSubmit: () {
+        Navigator.of(context).pop(); // Close dialog
+        _submitTestDirectly(context, ref, l10n);
+      },
+    );
+  }
+
+  // Direct submit without validation (for time up)
+  Future<void> _submitTestDirectly(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+    try {
+      final timeTaken = DateTime.now().difference(_startTime).inSeconds;
+      final attemptId = await ref.read(testProvider.notifier).submitAttempt(
+        attemptIdParam: widget.attemptId!,
+        answers: _answers,
+        timeTaken: timeTaken,
+      );
+
+      if (context.mounted) {
+        context.go('/tests/result/$attemptId');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorSnackBar(context, l10n.test_testSubmissionError, l10n);
+      }
+    }
+  }
+
+  Future<void> _submitTest(BuildContext context, WidgetRef ref, AppLocalizations l10n, bool isTimedTest) async {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final testState = ref.read(testDetailProvider(widget.testId));
 
-    // Get questions from current test state
     final test = testState.value;
     if (test?.questions == null) {
       _showErrorSnackBar(context, l10n.test_testDataError, l10n);
@@ -415,11 +490,26 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final questions = test!.questions!;
     final allAnswered = _areAllQuestionsAnswered(questions);
 
-    // 🔥 NEW: Check if all questions are answered
-    if (!allAnswered) {
+    // Different validation for Practice vs Timed tests
+    if (!isTimedTest && !allAnswered) {
+      // For practice tests, require all questions to be answered
       final unansweredQuestions = _getUnansweredQuestions(questions);
       _showIncompleteAnswersDialog(context, l10n, unansweredQuestions, questions);
       return;
+    }
+
+    // For timed tests, allow submission even if not all answered (realistic exam scenario)
+    final unansweredCount = _getUnansweredQuestions(questions).length;
+    String confirmationMessage;
+
+    if (!isTimedTest) {
+      confirmationMessage = l10n.test_confirmSubmit;
+    } else if (allAnswered) {
+      confirmationMessage = l10n.test_confirmSubmit;
+    } else {
+      // Create a localized message for incomplete exam submission
+      confirmationMessage = l10n.test_submitExam + '\n' +
+          l10n.test_incompleteAnswersMessage(unansweredCount);
     }
 
     final confirmed = await showDialog<bool>(
@@ -428,18 +518,17 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          l10n.test_submitConfirmationTitle,
+          isTimedTest ? l10n.test_submitExam : l10n.test_submitPractice,
           style: TextStyle(
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
           ),
         ),
-
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.test_confirmSubmit,
+              confirmationMessage,
               style: TextStyle(
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
               ),
@@ -448,19 +537,25 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: (allAnswered ? AppColors.success : AppColors.warning).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                border: Border.all(color: (allAnswered ? AppColors.success : AppColors.warning).withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                  Icon(
+                    allAnswered ? Icons.check_circle : Icons.warning_amber,
+                    color: allAnswered ? AppColors.success : AppColors.warning,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      l10n.test_allQuestionsAnsweredReady,
-                      style: const TextStyle(
-                        color: AppColors.success,
+                      allAnswered
+                          ? l10n.test_allQuestionsAnsweredReady
+                          : l10n.test_questionsAnswered(_answers.values.where((answers) => answers.isNotEmpty).length, questions.length),
+                      style: TextStyle(
+                        color: allAnswered ? AppColors.success : AppColors.warning,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -472,9 +567,15 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
           ElevatedButton(
             onPressed: () => context.pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isTimedTest ? AppColors.warning : AppColors.info,
+            ),
             child: Text(l10n.common_submit),
           ),
         ],
@@ -528,7 +629,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     }
   }
 
-  // 🔥 NEW: Show dialog when not all questions are answered
   void _showIncompleteAnswersDialog(BuildContext context, AppLocalizations l10n, List<int> unansweredQuestions, List<Question> allQuestions) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -546,17 +646,19 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
               size: 24,
             ),
             const SizedBox(width: 8),
-            Text(
-              l10n.test_incompleteAnswersTitle,
-              style: TextStyle(
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                fontSize: 18,
+            Expanded(
+              child: Text(
+                l10n.test_incompleteAnswersTitle,
+                style: TextStyle(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  fontSize: 18,
+                ),
               ),
             ),
             IconButton(
-              icon: Icon(Icons.close), // The 'X' icon
+              icon: const Icon(Icons.close),
               onPressed: () {
-                Navigator.of(context).pop(); // Dismiss the dialog
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -592,7 +694,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    unansweredQuestions.take(5).map((index) => '${l10n.test_questionNumber(index + 1)}').join(', ') +
+                    unansweredQuestions.take(5).map((index) => l10n.test_questionNumber(index + 1)).join(', ') +
                         (unansweredQuestions.length > 5 ? l10n.test_andMore(unansweredQuestions.length - 5) : ''),
                     style: TextStyle(
                       color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -622,7 +724,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
-  // 🔥 NEW: Helper method to show error snackbar
   void _showErrorSnackBar(BuildContext context, String message, AppLocalizations l10n) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -633,13 +734,13 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         action: SnackBarAction(
           label: l10n.common_retry,
           textColor: Colors.white,
-          onPressed: () => _submitTest(context, ref, l10n),
+          onPressed: () => _submitTest(context, ref, l10n, _isTimedTest(ref.read(testDetailProvider(widget.testId)).value?.testType ?? 'chapter')),
         ),
       ),
     );
   }
 
-  Future<void> _showExitDialog(BuildContext context, AppLocalizations l10n) async {
+  Future<void> _showExitDialog(BuildContext context, AppLocalizations l10n, bool isTimedTest) async {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -654,11 +755,43 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
           ),
         ),
-        content: Text(
-          l10n.test_confirmExit,
-          style: TextStyle(
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.test_confirmExit,
+              style: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
+            if (isTimedTest) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, color: AppColors.error, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.test_timedTestProgress,
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(

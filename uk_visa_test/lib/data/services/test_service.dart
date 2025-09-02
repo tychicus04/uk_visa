@@ -17,17 +17,26 @@ class TestService {
 
   /// Get available tests for user
   Future<ApiResponse<Map<String, dynamic>>> getAvailableTests({
-    bool includeVietnamese = false,
+    String? secondaryLanguage, // 🆕 NEW: Dynamic language
+    @deprecated bool includeVietnamese = false, // Keep for backward compatibility
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+
+      // 🆕 NEW: Use dynamic language parameter
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        // Backward compatibility
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
 
+      print('🌍 Requesting tests with language: ${queryParams[ApiConstants.paramIncludeLanguage] ?? 'none'}');
+
       final response = await _dio.get(
-          ApiConstants.testsAvailable,
-          queryParameters: queryParams.isNotEmpty ? queryParams : null);
+        ApiConstants.testsAvailable,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       return ApiResponse.fromJson(
         response.data,
@@ -39,16 +48,21 @@ class TestService {
   }
 
   Future<ApiResponse<List<dynamic>>> getFreeTests({
-    bool includeVietnamese = false,
+    String? secondaryLanguage,
+    @deprecated bool includeVietnamese = false,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
+
       final response = await _dio.get(
-          ApiConstants.testsFree,
-          queryParameters: queryParams.isNotEmpty ? queryParams : null);
+        ApiConstants.testsFree,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       return ApiResponse.fromJson(
         response.data,
@@ -62,20 +76,31 @@ class TestService {
   /// Get specific test with questions
   Future<ApiResponse<Map<String, dynamic>>> getTest(
       int testId,
-      { bool includeVietnamese = false,
-        bool includeCorrectAnswers = false}) async {
+      {
+        String? secondaryLanguage,
+        bool includeCorrectAnswers = false,
+        @deprecated bool includeVietnamese = false,
+      }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
+
       if (includeCorrectAnswers) {
-        queryParams['include_answers'] = 'true';
+        queryParams[ApiConstants.paramIncludeAnswers] = 'true';
       }
+
+      print('🌍 Requesting test $testId with language: ${queryParams[ApiConstants.paramIncludeLanguage] ?? 'none'}');
+
       final response = await _dio.get(
         '${ApiConstants.testDetail}/$testId',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
+
       return ApiResponse.fromJson(
         response.data,
             (json) => json! as Map<String, dynamic>,
@@ -87,10 +112,11 @@ class TestService {
 
   /// Search tests
   Future<ApiResponse<List<dynamic>>> searchTests({
+    String? secondaryLanguage,
     String? query,
     String? type,
     int? chapterId,
-    bool includeVietnamese = false,
+    @deprecated bool includeVietnamese = false,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -103,8 +129,10 @@ class TestService {
       if (chapterId != null) {
         queryParams['chapter_id'] = chapterId;
       }
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
 
       final response = await _dio.get(
@@ -124,11 +152,16 @@ class TestService {
   /// Get tests by type
   Future<ApiResponse<List<dynamic>>> getTestsByType(
       String type,
-      { bool includeVietnamese = false}) async {
+      {
+        String? secondaryLanguage,
+        @deprecated bool includeVietnamese = false
+      }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
 
       final response = await _dio.get(
@@ -146,11 +179,16 @@ class TestService {
   /// Get tests by chapter
   Future<ApiResponse<List<dynamic>>> getTestsByChapter(
       int chapterId,
-      {bool includeVietnamese = false}) async {
+      {
+        String? secondaryLanguage,
+        @deprecated bool includeVietnamese = false
+      }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
       final response = await _dio.get(
           '${ApiConstants.testByChapter}/$chapterId',
@@ -165,14 +203,18 @@ class TestService {
   }
 
   Future<ApiResponse<Map<String, dynamic>>> getQuestion(
-      int questionId, {
-        bool includeVietnamese = false,
+      int questionId,
+      {
+        String? secondaryLanguage,
+        @deprecated bool includeVietnamese = false,
         bool includeCorrectAnswers = false,
       }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+      if (secondaryLanguage != null) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeLanguage] = 'vi';
       }
       if (includeCorrectAnswers) {
         queryParams['include_answers'] = 'true';
@@ -212,20 +254,6 @@ class TestService {
     }
   }
 
-  /// 🆕 NEW: Get translation statistics
-  Future<ApiResponse<Map<String, dynamic>>> getTranslationStats() async {
-    try {
-      final response = await _dio.get('/stats/translations');
-
-      return ApiResponse.fromJson(
-        response.data,
-            (json) => json! as Map<String, dynamic>,
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
   String _handleError(DioException error) {
     if (error.response != null) {
       final data = error.response!.data;
@@ -239,6 +267,34 @@ class TestService {
       return 'Request timeout. Please try again.';
     } else {
       return 'Network error. Please check your connection.';
+    }
+  }
+
+  // 🆕 NEW: Get supported languages from backend
+  Future<ApiResponse<Map<String, dynamic>>> getSupportedLanguages() async {
+    try {
+      final response = await _dio.get('/languages/supported');
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // 🆕 NEW: Get translation statistics
+  Future<ApiResponse<Map<String, dynamic>>> getTranslationStats() async {
+    try {
+      final response = await _dio.get('/languages/stats');
+
+      return ApiResponse.fromJson(
+        response.data,
+            (json) => json! as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
     }
   }
 }

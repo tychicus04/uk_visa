@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/providers/locale_provider.dart';
@@ -20,10 +21,13 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final bilingualState = ref.watch(bilingualProvider);
+    final authState = ref.watch(authProvider);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings_settings),
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -33,19 +37,22 @@ class SettingsScreen extends ConsumerWidget {
           _buildSettingTile(
             icon: Icons.person_outline,
             title: l10n.profile_editProfile,
-            subtitle: l10n.profile_accountInformation,
-            onTap: () => context.go('/settings/profile'),
+            subtitle: authState.isAuthenticated
+                ? l10n.profile_accountInformation
+                : 'Sign in to manage your account',
+            onTap: () => _handleProfileAccess(context, ref, authState.isAuthenticated, l10n),
             theme: theme,
+            trailing: authState.isAuthenticated
+                ? Icon(Icons.chevron_right, color: isDark ? AppColors.iconDark : AppColors.iconLight)
+                : Icon(Icons.lock_outline, color: AppColors.primary, size: 20),
           ),
+
           const SizedBox(height: 24),
-          _buildSectionHeader(l10n.settings_appearance, theme), // ✅ Localized
-          _buildSettingTile(
-            icon: Icons.language,
-            title: l10n.settings_language,
-            subtitle: locale.languageCode == 'en' ? l10n.settings_english : l10n.settings_vietnamese, // ✅ Localized
-            onTap: () => _showLanguageDialog(context, ref, l10n),
-            theme: theme,
-          ),
+
+          // Language & Localization Section
+          _buildSectionHeader(l10n.settings_appearance, theme),
+
+          // Theme Setting
           _buildSettingTile(
             icon: Icons.dark_mode_outlined,
             title: l10n.settings_theme,
@@ -54,22 +61,161 @@ class SettingsScreen extends ConsumerWidget {
             theme: theme,
           ),
 
+          const SizedBox(height: 16),
+
+          // Test Content Language Section
+          _buildSectionHeader('Test Content Language', theme),
+
+          // Bilingual Mode Toggle
           _buildSettingTile(
             icon: Icons.translate,
-            title: l10n.vietnamese_languageSupport,
+            title: 'Bilingual Mode',
             subtitle: bilingualState.isEnabled
-                ? l10n.vietnamese_translationsEnabled
-                : l10n.vietnamese_showTranslations,
+                ? 'Show translations during tests'
+                : 'English only',
             onTap: () => ref.read(bilingualProvider.notifier).toggleBilingual(),
             theme: theme,
             trailing: Switch.adaptive(
               value: bilingualState.isEnabled,
               onChanged: (value) => ref.read(bilingualProvider.notifier).setBilingualMode(value),
-              activeColor: AppColors.info,
+              activeColor: AppColors.primary,
             ),
           ),
 
+          // Secondary Language Selection (only shown when bilingual is enabled)
+          if (bilingualState.isEnabled) ...[
+            _buildSettingTile(
+              icon: Icons.public,
+              title: 'Secondary Language',
+              subtitle: '${ApiConstants.getLanguageFlag(bilingualState.secondaryLanguage)} ${ApiConstants.getLanguageName(bilingualState.secondaryLanguage)}',
+              onTap: () => _showSecondaryLanguageDialog(context, ref, l10n),
+              theme: theme,
+            ),
+
+            // Language Info Card
+            Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.info.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.info.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: AppColors.info,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bilingual Test Experience',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: AppColors.info,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Questions and answers will be shown in English with ${ApiConstants.getLanguageName(bilingualState.secondaryLanguage)} translations below.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.info.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Language Availability Info (when bilingual is disabled)
+          if (!bilingualState.isEnabled) ...[
+            Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.cardDark : Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? AppColors.borderDark : Colors.grey[200]!,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.translate,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Available Languages',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: ApiConstants.supportedSecondaryLanguages.map((code) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              ApiConstants.getLanguageFlag(code),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              ApiConstants.getLanguageName(code),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Enable bilingual mode to access translations in your preferred language.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 24),
+
+          // About Section
           _buildSectionHeader(l10n.settings_about, theme),
           _buildSettingTile(
             icon: Icons.info_outline,
@@ -96,13 +242,214 @@ class SettingsScreen extends ConsumerWidget {
             },
             theme: theme,
           ),
+
           const SizedBox(height: 24),
-          _buildSettingTile(
-            icon: Icons.logout,
-            title: l10n.auth_logout,
-            onTap: () => _showLogoutDialog(context, ref, l10n, theme),
-            theme: theme,
-            textColor: AppColors.error,
+
+          // Logout Section - Only show when authenticated
+          if (authState.isAuthenticated) ...[
+            _buildSettingTile(
+              icon: Icons.logout,
+              title: l10n.auth_logout,
+              onTap: () => _showLogoutDialog(context, ref, l10n, theme),
+              theme: theme,
+              textColor: AppColors.error,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _handleProfileAccess(BuildContext context, WidgetRef ref, bool isAuthenticated, AppLocalizations l10n) {
+    if (isAuthenticated) {
+      // Direct access for authenticated users
+      context.go('/settings/profile');
+    } else {
+      // Show auth confirmation dialog for guests
+      _showProfileAuthDialog(context, l10n);
+    }
+  }
+
+  void _showProfileAuthDialog(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.person_outline,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Profile Access',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sign in to access and manage your personal profile settings, account information, and preferences.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Profile features info
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.settings_outlined,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Profile Features:',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...['Edit personal information', 'Change password', 'Account security settings', 'Notification preferences'].map((feature) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: AppColors.success,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            feature,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    side: BorderSide(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(l10n.common_cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    // Navigate to login with profile redirect
+                    context.go('/login?redirect=${Uri.encodeComponent('/settings/profile')}');
+                  },
+                  icon: const Icon(Icons.login, size: 18),
+                  label: Text('Sign In'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.go('/register?redirect=${Uri.encodeComponent('/settings/profile')}');
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don't have an account? ",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                  Text(
+                    'Sign Up Free',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -110,15 +457,15 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildSectionHeader(String title, ThemeData theme) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
-        ),
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      title,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AppColors.primary,
       ),
-    );
+    ),
+  );
 
   Widget _buildSettingTile({
     required IconData icon,
@@ -198,28 +545,201 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  void _showLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+  // App Interface Language Dialog
+  void _showAppLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.settings_language),
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'App Language',
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: Text(l10n.settings_english), // ✅ Localized
+            Text(
+              'Choose the language for app interface and menus',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildLanguageOption(
+              context: context,
+              title: l10n.settings_english,
+              subtitle: 'English',
+              flag: '🇬🇧',
               onTap: () {
                 ref.read(localeProvider.notifier).setLocale(const Locale('en'));
                 Navigator.of(context).pop();
               },
+              theme: theme,
             ),
-            ListTile(
-              title: Text(l10n.settings_vietnamese), // ✅ Localized
+            const SizedBox(height: 8),
+            _buildLanguageOption(
+              context: context,
+              title: l10n.settings_vietnamese,
+              subtitle: 'Tiếng Việt',
+              flag: '🇻🇳',
               onTap: () {
                 ref.read(localeProvider.notifier).setLocale(const Locale('vi'));
                 Navigator.of(context).pop();
               },
+              theme: theme,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Secondary Language Dialog (for test content)
+  void _showSecondaryLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final availableLanguages = ref.read(availableSecondaryLanguagesProvider);
+    final currentLanguage = ref.read(currentSecondaryLanguageProvider);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Secondary Language',
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select a language for test translations',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 300),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: availableLanguages.map((language) {
+                      final code = language['code']!;
+                      final name = language['name']!;
+                      final flag = language['flag']!;
+                      final isSelected = currentLanguage == code;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: _buildLanguageOption(
+                          context: context,
+                          title: name,
+                          subtitle: code.toUpperCase(),
+                          flag: flag,
+                          isSelected: isSelected,
+                          onTap: () {
+                            ref.read(bilingualProvider.notifier).setSecondaryLanguage(code);
+                            Navigator.of(context).pop();
+                          },
+                          theme: theme,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required String flag,
+    required VoidCallback onTap,
+    required ThemeData theme,
+    bool isSelected = false,
+  }) {
+    final isDark = theme.brightness == Brightness.dark;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.1)
+              : (isDark ? AppColors.cardDark : Colors.grey[50]),
+          borderRadius: BorderRadius.circular(8),
+          border: isSelected
+              ? Border.all(color: AppColors.primary, width: 2)
+              : Border.all(color: isDark ? AppColors.borderDark : Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(flag, style: const TextStyle(fontSize: 20)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected
+                          ? AppColors.primary
+                          : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 20,
+              ),
           ],
         ),
       ),
@@ -271,13 +791,13 @@ class SettingsScreen extends ConsumerWidget {
       children: [
         const SizedBox(height: 16),
         Text(
-          l10n.appAbout,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontStyle: FontStyle.italic,
-            color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
-          )
+            l10n.appAbout,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
+            )
         )
       ],
     );
@@ -307,7 +827,7 @@ class SettingsScreen extends ConsumerWidget {
                   Navigator.of(context).pop();
                   ref.read(authProvider.notifier).logout();
                 },
-                text: l10n.auth_logout, // ✅ Localized
+                text: l10n.auth_logout,
                 backgroundColor: AppColors.error,
                 textColor: Colors.white,
               ),

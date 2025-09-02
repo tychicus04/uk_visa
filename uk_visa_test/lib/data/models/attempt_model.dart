@@ -1,6 +1,7 @@
-// lib/data/models/attempt_model.dart - UPDATED WITH REVIEW SUPPORT
+// lib/data/models/attempt_model.dart - UPDATED WITH COMPLETE MULTI-LANGUAGE SUPPORT
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import '../../core/constants/api_constants.dart';
 
 part 'attempt_model.g.dart';
 
@@ -20,6 +21,8 @@ class TestAttempt extends Equatable {
   final String? testNumber;
   final String? testType;
   final String? chapterName;
+
+  // 🔄 DEPRECATED: Keep for backward compatibility
   final String? questionTextVi;
   final String? explanationVi;
 
@@ -154,15 +157,35 @@ class TestAttempt extends Equatable {
   ];
 }
 
-// ✅ NEW: Model for individual answer in review
+// ✅ ENHANCED: Model for individual answer in review with COMPLETE multi-language support
 @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class AttemptAnswer extends Equatable {
   final String questionId;
   final String? questionText;
+
+  // 🆕 ENHANCED: Complete multi-language support for questions
   final String? questionTextVi;
+  final String? questionTextPl;
+  final String? questionTextPa;
+  final String? questionTextUr;
+  final String? questionTextRo;
+  final String? questionTextEs;
+  final String? questionTextPt;
+  final String? questionTextAr;
+
   final String? questionType;
   final String? explanation;
+
+  // 🆕 ENHANCED: Complete multi-language support for explanations
   final String? explanationVi;
+  final String? explanationPl;
+  final String? explanationPa;
+  final String? explanationUr;
+  final String? explanationRo;
+  final String? explanationEs;
+  final String? explanationPt;
+  final String? explanationAr;
+
   final List<String>? selectedAnswerIds;
   final bool isCorrect;
   final List<AnswerOption>? answerDetails;
@@ -171,9 +194,23 @@ class AttemptAnswer extends Equatable {
     required this.questionId,
     this.questionText,
     this.questionTextVi,
+    this.questionTextPl,
+    this.questionTextPa,
+    this.questionTextUr,
+    this.questionTextRo,
+    this.questionTextEs,
+    this.questionTextPt,
+    this.questionTextAr,
     this.questionType,
     this.explanation,
     this.explanationVi,
+    this.explanationPl,
+    this.explanationPa,
+    this.explanationUr,
+    this.explanationRo,
+    this.explanationEs,
+    this.explanationPt,
+    this.explanationAr,
     this.selectedAnswerIds,
     required this.isCorrect,
     this.answerDetails,
@@ -184,9 +221,23 @@ class AttemptAnswer extends Equatable {
       questionId: json['question_id']?.toString() ?? '0',
       questionText: json['question_text'] as String?,
       questionTextVi: json['question_text_vi'] as String?,
+      questionTextPl: json['question_text_pl'] as String?,
+      questionTextPa: json['question_text_pa'] as String?,
+      questionTextUr: json['question_text_ur'] as String?,
+      questionTextRo: json['question_text_ro'] as String?,
+      questionTextEs: json['question_text_es'] as String?,
+      questionTextPt: json['question_text_pt'] as String?,
+      questionTextAr: json['question_text_ar'] as String?,
       questionType: json['question_type'] as String?,
       explanation: json['explanation'] as String?,
       explanationVi: json['explanation_vi'] as String?,
+      explanationPl: json['explanation_pl'] as String?,
+      explanationPa: json['explanation_pa'] as String?,
+      explanationUr: json['explanation_ur'] as String?,
+      explanationRo: json['explanation_ro'] as String?,
+      explanationEs: json['explanation_es'] as String?,
+      explanationPt: json['explanation_pt'] as String?,
+      explanationAr: json['explanation_ar'] as String?,
       selectedAnswerIds: json['selected_answer_ids'] != null
           ? List<String>.from(json['selected_answer_ids'])
           : null,
@@ -199,19 +250,99 @@ class AttemptAnswer extends Equatable {
 
   Map<String, dynamic> toJson() => _$AttemptAnswerToJson(this);
 
+  // 🆕 NEW: Dynamic language support methods
+  String getQuestionText({String? languageCode}) {
+    if (languageCode == null || languageCode == 'en') {
+      return questionText ?? '';
+    }
+
+    switch (languageCode) {
+      case 'vi': return questionTextVi?.isNotEmpty == true ? questionTextVi! : (questionText ?? '');
+      case 'pl': return questionTextPl?.isNotEmpty == true ? questionTextPl! : (questionText ?? '');
+      case 'pa': return questionTextPa?.isNotEmpty == true ? questionTextPa! : (questionText ?? '');
+      case 'ur': return questionTextUr?.isNotEmpty == true ? questionTextUr! : (questionText ?? '');
+      case 'ro': return questionTextRo?.isNotEmpty == true ? questionTextRo! : (questionText ?? '');
+      case 'es': return questionTextEs?.isNotEmpty == true ? questionTextEs! : (questionText ?? '');
+      case 'pt': return questionTextPt?.isNotEmpty == true ? questionTextPt! : (questionText ?? '');
+      case 'ar': return questionTextAr?.isNotEmpty == true ? questionTextAr! : (questionText ?? '');
+      default: return questionText ?? '';
+    }
+  }
+
+  String getExplanation({String? languageCode}) {
+    if (languageCode == null || languageCode == 'en') {
+      return explanation ?? '';
+    }
+
+    switch (languageCode) {
+      case 'vi': return explanationVi?.isNotEmpty == true ? explanationVi! : (explanation ?? '');
+      case 'pl': return explanationPl?.isNotEmpty == true ? explanationPl! : (explanation ?? '');
+      case 'pa': return explanationPa?.isNotEmpty == true ? explanationPa! : (explanation ?? '');
+      case 'ur': return explanationUr?.isNotEmpty == true ? explanationUr! : (explanation ?? '');
+      case 'ro': return explanationRo?.isNotEmpty == true ? explanationRo! : (explanation ?? '');
+      case 'es': return explanationEs?.isNotEmpty == true ? explanationEs! : (explanation ?? '');
+      case 'pt': return explanationPt?.isNotEmpty == true ? explanationPt! : (explanation ?? '');
+      case 'ar': return explanationAr?.isNotEmpty == true ? explanationAr! : (explanation ?? '');
+      default: return explanation ?? '';
+    }
+  }
+
+  bool hasQuestionTranslation(String languageCode) {
+    switch (languageCode) {
+      case 'en': return questionText?.isNotEmpty == true;
+      case 'vi': return questionTextVi?.isNotEmpty == true;
+      case 'pl': return questionTextPl?.isNotEmpty == true;
+      case 'pa': return questionTextPa?.isNotEmpty == true;
+      case 'ur': return questionTextUr?.isNotEmpty == true;
+      case 'ro': return questionTextRo?.isNotEmpty == true;
+      case 'es': return questionTextEs?.isNotEmpty == true;
+      case 'pt': return questionTextPt?.isNotEmpty == true;
+      case 'ar': return questionTextAr?.isNotEmpty == true;
+      default: return false;
+    }
+  }
+
+  bool hasExplanationTranslation(String languageCode) {
+    switch (languageCode) {
+      case 'en': return explanation?.isNotEmpty == true;
+      case 'vi': return explanationVi?.isNotEmpty == true;
+      case 'pl': return explanationPl?.isNotEmpty == true;
+      case 'pa': return explanationPa?.isNotEmpty == true;
+      case 'ur': return explanationUr?.isNotEmpty == true;
+      case 'ro': return explanationRo?.isNotEmpty == true;
+      case 'es': return explanationEs?.isNotEmpty == true;
+      case 'pt': return explanationPt?.isNotEmpty == true;
+      case 'ar': return explanationAr?.isNotEmpty == true;
+      default: return false;
+    }
+  }
+
   @override
   List<Object?> get props => [
-    questionId, questionText, questionTextVi, questionType,
-    explanation, explanationVi, selectedAnswerIds, isCorrect, answerDetails,
+    questionId, questionText, questionTextVi, questionTextPl, questionTextPa,
+    questionTextUr, questionTextRo, questionTextEs, questionTextPt, questionTextAr,
+    questionType, explanation, explanationVi, explanationPl, explanationPa,
+    explanationUr, explanationRo, explanationEs, explanationPt, explanationAr,
+    selectedAnswerIds, isCorrect, answerDetails,
   ];
 }
 
-// ✅ NEW: Model for answer options in review
+// ✅ ENHANCED: Model for answer options in review with COMPLETE multi-language support
 @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class AnswerOption extends Equatable {
   final String answerId;
   final String? answerText;
+
+  // 🆕 ENHANCED: Complete multi-language support for answers
   final String? answerTextVi;
+  final String? answerTextPl;
+  final String? answerTextPa;
+  final String? answerTextUr;
+  final String? answerTextRo;
+  final String? answerTextEs;
+  final String? answerTextPt;
+  final String? answerTextAr;
+
   final bool isCorrect;
   final bool wasSelected;
 
@@ -219,6 +350,13 @@ class AnswerOption extends Equatable {
     required this.answerId,
     this.answerText,
     this.answerTextVi,
+    this.answerTextPl,
+    this.answerTextPa,
+    this.answerTextUr,
+    this.answerTextRo,
+    this.answerTextEs,
+    this.answerTextPt,
+    this.answerTextAr,
     required this.isCorrect,
     required this.wasSelected,
   });
@@ -228,6 +366,13 @@ class AnswerOption extends Equatable {
       answerId: json['answer_id']?.toString() ?? '0',
       answerText: json['answer_text'] as String?,
       answerTextVi: json['answer_text_vi'] as String?,
+      answerTextPl: json['answer_text_pl'] as String?,
+      answerTextPa: json['answer_text_pa'] as String?,
+      answerTextUr: json['answer_text_ur'] as String?,
+      answerTextRo: json['answer_text_ro'] as String?,
+      answerTextEs: json['answer_text_es'] as String?,
+      answerTextPt: json['answer_text_pt'] as String?,
+      answerTextAr: json['answer_text_ar'] as String?,
       isCorrect: json['is_correct'] == 1 || json['is_correct'] == true,
       wasSelected: json['was_selected'] == 1 || json['was_selected'] == true,
     );
@@ -235,6 +380,44 @@ class AnswerOption extends Equatable {
 
   Map<String, dynamic> toJson() => _$AnswerOptionToJson(this);
 
+  // 🆕 NEW: Dynamic language support methods
+  String getAnswerText({String? languageCode}) {
+    if (languageCode == null || languageCode == 'en') {
+      return answerText ?? '';
+    }
+
+    switch (languageCode) {
+      case 'vi': return answerTextVi?.isNotEmpty == true ? answerTextVi! : (answerText ?? '');
+      case 'pl': return answerTextPl?.isNotEmpty == true ? answerTextPl! : (answerText ?? '');
+      case 'pa': return answerTextPa?.isNotEmpty == true ? answerTextPa! : (answerText ?? '');
+      case 'ur': return answerTextUr?.isNotEmpty == true ? answerTextUr! : (answerText ?? '');
+      case 'ro': return answerTextRo?.isNotEmpty == true ? answerTextRo! : (answerText ?? '');
+      case 'es': return answerTextEs?.isNotEmpty == true ? answerTextEs! : (answerText ?? '');
+      case 'pt': return answerTextPt?.isNotEmpty == true ? answerTextPt! : (answerText ?? '');
+      case 'ar': return answerTextAr?.isNotEmpty == true ? answerTextAr! : (answerText ?? '');
+      default: return answerText ?? '';
+    }
+  }
+
+  bool hasAnswerTranslation(String languageCode) {
+    switch (languageCode) {
+      case 'en': return answerText?.isNotEmpty == true;
+      case 'vi': return answerTextVi?.isNotEmpty == true;
+      case 'pl': return answerTextPl?.isNotEmpty == true;
+      case 'pa': return answerTextPa?.isNotEmpty == true;
+      case 'ur': return answerTextUr?.isNotEmpty == true;
+      case 'ro': return answerTextRo?.isNotEmpty == true;
+      case 'es': return answerTextEs?.isNotEmpty == true;
+      case 'pt': return answerTextPt?.isNotEmpty == true;
+      case 'ar': return answerTextAr?.isNotEmpty == true;
+      default: return false;
+    }
+  }
+
   @override
-  List<Object?> get props => [answerId, answerText, answerTextVi, isCorrect, wasSelected];
+  List<Object?> get props => [
+    answerId, answerText, answerTextVi, answerTextPl, answerTextPa,
+    answerTextUr, answerTextRo, answerTextEs, answerTextPt, answerTextAr,
+    isCorrect, wasSelected,
+  ];
 }

@@ -379,20 +379,59 @@
   "test_testDataError": "Unable to load test data. Please try again.",
   "test_languageSettings": "Language Settings",
   "test_questionList": "Question List",
-  "test_questionOf": "Question {current} of {total}",
-  "test_percentageComplete": "{percentage}% Complete",
-  "test_submitConfirmationTitle": "Submit Test",
-  "test_confirmSubmit": "Are you sure you want to submit your test? This action cannot be undone.",
-  "test_submittingTest": "Submitting test...",
-  "test_testSubmissionError": "Failed to submit test. Please try again.",
-  "test_exitConfirmationTitle": "Exit Test",
-  "test_confirmExit": "Are you sure you want to exit? Your progress will be lost.",
-  "common_previous": "Previous",
-  "common_next": "Next",
-  "common_submit": "Submit",
-  "common_cancel": "Cancel",
-  "common_retry": "Retry",
-  "common_exit": "Exit",
   "of_": "of",
-  "time": "Time"
+  "time": "Time",
+
+  "test_practiceMode": "Practice Mode",
+  "test_examMode": "Timed Test",
+  "test_practiceDescription": "No time limit - study at your own pace",
+  "test_examDescription": "Timed exam simulation with automatic submission",
+  "test_unlimited": "Unlimited",
+
+  "test_practiceFeatures": "Practice Features",
+  "test_examFeatures": "Timed Test Features",
+  "test_noTimePressure": "No time pressure - study at your own pace",
+  "test_reviewAnswersImmediate": "Review answers immediately after submission",
+  "test_focusLearning": "Focus on learning and understanding",
+  "test_timeLimitMinutes": "{minutes} minutes time limit",
+  "@test_timeLimitMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "test_autoSubmitWhenExpires": "Automatic submission when time expires",
+  "test_realExamSimulation": "Real exam simulation experience",
+
+  "test_timedTest": "Timed Test",
+  "test_practiceTest": "Practice Test",
+  "test_startPractice": "Start Practice",
+  "test_startTimedTest": "Start Timed Test",
+  "test_submitPractice": "Submit Practice?",
+  "test_submitExam": "Submit Exam?",
+  "test_timedTestProgress": "Timed test progress will be lost!",
+
+  "test_wrongTabExamTitle": "This is an exam test",
+  "test_wrongTabExamMessage": "Switch to the Exam tab to take this test with timer",
+  "test_wrongTabPracticeTitle": "This is a practice test",
+  "test_wrongTabPracticeMessage": "Switch to the Practice tab to take this test without timer",
+
+  "test_timeUpAutoSubmit": "Time is up! Auto-submitting exam...",
+  "test_noTimeLimit": "NO LIMIT",
+  "test_timedTestFeatures": "Timed Test Features",
+  "test_practiceTestFeatures": "Practice Features",
+  "test_questionsAnswered": "Answered {answeredCount} of {totalQuestions} questions",
+  "@test_questionsAnswered": {
+    "placeholders": {
+      "answeredCount": {
+        "type": "int"
+      },
+      "totalQuestions": {
+        "type": "int"
+      }
+    }
+  },
+  "languageSettings_selectSecondaryLanguage": "Select Secondary Language",
+  "languageSettings_bilingualMode": "Bilingual Mode"
 }

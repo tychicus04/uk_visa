@@ -1,5 +1,7 @@
-// lib/features/auth/providers/auth_provider.dart - FIXED VERSION
+// lib/features/auth/providers/auth_provider.dart - UPDATED: Handle redirect after login
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -34,6 +36,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
     required String fullName,
     String languageCode = 'en',
+    BuildContext? context,
+    String? redirectPath,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -42,7 +46,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final result = await authRepository.register(
         email: email,
         password: password,
-        fullName: fullName,
         languageCode: languageCode,
       );
 
@@ -61,6 +64,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       print('✅ Registration completed successfully');
+
+      // ✅ Handle redirect after successful registration
+      if (context != null) {
+        _handlePostAuthRedirect(context, redirectPath);
+      }
     } catch (e) {
       print('❌ Registration failed: $e');
       state = state.copyWith(
@@ -74,9 +82,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login({
     required String email,
     required String password,
+    BuildContext? context,
+    String? redirectPath,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     print('🔐 Starting login for: $email');
+    if (redirectPath != null) {
+      print('🔄 Redirect path: $redirectPath');
+    }
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
@@ -105,6 +118,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       // ✅ Add small delay to ensure state is propagated
       await Future.delayed(const Duration(milliseconds: 100));
+
+      // ✅ Handle redirect after successful login
+      if (context != null) {
+        _handlePostAuthRedirect(context, redirectPath);
+      }
 
     } catch (e) {
       print('❌ Login failed: $e');
@@ -200,6 +218,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await SecureStorageService.instance.clearAll();
       state = const AuthState();
       print('✅ Logout completed');
+    }
+  }
+
+  // ✅ NEW: Handle post-authentication redirect
+  void _handlePostAuthRedirect(BuildContext context, String? redirectPath) {
+    if (redirectPath != null && redirectPath.isNotEmpty && redirectPath != '/') {
+      print('🔄 Redirecting to: $redirectPath');
+      context.go(redirectPath);
+    } else {
+      print('🔄 Redirecting to home');
+      context.go('/');
     }
   }
 

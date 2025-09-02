@@ -1,26 +1,30 @@
-// lib/features/tests/widgets/enhanced_review_question_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../data/models/attempt_model.dart';
+import '../../../data/states/BilingualState.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/providers/bilingual_provider.dart';
 
-class EnhancedReviewQuestionWidget extends StatelessWidget {
+class EnhancedReviewQuestionWidget extends ConsumerWidget {
   final AttemptAnswer answer;
   final int questionNumber;
   final int totalQuestions;
-  final bool showVietnamese;
+  @deprecated final bool showVietnamese; // Keep for backward compatibility
 
   const EnhancedReviewQuestionWidget({
     super.key,
     required this.answer,
     required this.questionNumber,
     required this.totalQuestions,
-    required this.showVietnamese,
+    this.showVietnamese = false, // Deprecated parameter
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 🆕 NEW: Use dynamic bilingual state instead of showVietnamese
+    final bilingualState = ref.watch(bilingualProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
@@ -33,187 +37,16 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Question Header Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: answer.isCorrect
-                      ? [AppColors.success.withOpacity(0.1), AppColors.success.withOpacity(0.05)]
-                      : [AppColors.error.withOpacity(0.1), AppColors.error.withOpacity(0.05)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: answer.isCorrect ? AppColors.success : AppColors.error,
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Status Row
-                  Row(
-                    children: [
-                      // Status Icon
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: answer.isCorrect ? AppColors.success : AppColors.error,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          answer.isCorrect ? Icons.check_circle : Icons.cancel,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      // Question Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${l10n.question ?? 'Question'} $questionNumber',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: answer.isCorrect ? AppColors.success : AppColors.error,
-                              ),
-                            ),
-                            Text(
-                              answer.isCorrect
-                                  ? (l10n.correct_answer ?? 'Correct Answer!')
-                                  : (l10n.incorrect_answer ?? 'Incorrect Answer'),
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: answer.isCorrect ? AppColors.success : AppColors.error,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Question Number Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: (answer.isCorrect ? AppColors.success : AppColors.error).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          '$questionNumber/$totalQuestions',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: answer.isCorrect ? AppColors.success : AppColors.error,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            _buildQuestionHeaderCard(context, l10n, theme, isDark),
 
             const SizedBox(height: 24),
 
-            // Question Text Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Question Label
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.help_outline,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.question ?? 'Question',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // English Question
-                  Text(
-                    answer.questionText ?? '',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                    ),
-                  ),
-
-                  // Vietnamese Question
-                  if (showVietnamese && answer.questionTextVi != null && answer.questionTextVi!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.info.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.info.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.translate,
-                                color: AppColors.info,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Tiếng Việt',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppColors.info,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            answer.questionTextVi!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.info,
-                              fontStyle: FontStyle.italic,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
+            // Question Text Card with Dynamic Multi-Language Support
+            _buildQuestionTextCard(context, bilingualState, theme, isDark, l10n),
 
             const SizedBox(height: 24),
 
-            // Answer Options
+            // Answer Options Label
             Text(
               l10n.answer_options ?? 'Answer Options',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -223,7 +56,7 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Answer Options List
+            // Answer Options List with Dynamic Multi-Language Support
             ...((answer.answerDetails ?? []).asMap().entries.map((entry) {
               final index = entry.key;
               final option = entry.value;
@@ -231,115 +64,18 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
                 context,
                 option,
                 index,
+                bilingualState,
                 theme,
                 isDark,
-                showVietnamese,
                 l10n,
               );
             }).toList()),
 
             const SizedBox(height: 24),
 
-            // Explanation Section
-            if (answer.explanation != null && answer.explanation!.isNotEmpty) ...[
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.info.withOpacity(0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Explanation Header
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.info,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.lightbulb,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          l10n.explanation ?? 'Explanation',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: AppColors.info,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // English Explanation
-                    Text(
-                      answer.explanation!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        height: 1.5,
-                      ),
-                    ),
-
-                    // Vietnamese Explanation
-                    if (showVietnamese && answer.explanationVi != null && answer.explanationVi!.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.info.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.info.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.translate,
-                                  color: AppColors.info,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Giải thích (Tiếng Việt)',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.info,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              answer.explanationVi!,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.info,
-                                fontStyle: FontStyle.italic,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+            // Explanation Section with Dynamic Multi-Language Support
+            if (answer.explanation != null && answer.explanation!.isNotEmpty)
+              _buildExplanationSection(context, bilingualState, theme, isDark, l10n),
 
             // Extra spacing at bottom
             const SizedBox(height: 100),
@@ -349,13 +85,170 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildQuestionHeaderCard(BuildContext context, AppLocalizations l10n, ThemeData theme, bool isDark) => Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: answer.isCorrect
+              ? [AppColors.success.withValues(alpha: 0.1), AppColors.success.withValues(alpha: 0.05)]
+              : [AppColors.error.withValues(alpha: 0.1), AppColors.error.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: answer.isCorrect ? AppColors.success : AppColors.error,
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Status Icon
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: answer.isCorrect ? AppColors.success : AppColors.error,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              answer.isCorrect ? Icons.check_circle : Icons.cancel,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Question Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${l10n.question ?? 'Question'} $questionNumber',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: answer.isCorrect ? AppColors.success : AppColors.error,
+                  ),
+                ),
+                Text(
+                  answer.isCorrect
+                      ? (l10n.correct_answer ?? 'Correct Answer!')
+                      : (l10n.incorrect_answer ?? 'Incorrect Answer'),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: answer.isCorrect ? AppColors.success : AppColors.error,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Question Number Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: (answer.isCorrect ? AppColors.success : AppColors.error).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              '$questionNumber/$totalQuestions',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: answer.isCorrect ? AppColors.success : AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+  // Question Text Card with Dynamic Multi-Language Support
+  Widget _buildQuestionTextCard(BuildContext context, BilingualState bilingualState, ThemeData theme, bool isDark, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Question Label
+          Row(
+            children: [
+              Icon(
+                Icons.help_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.question ?? 'Question',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // English Question (Always shown)
+          Text(
+            answer.questionText ?? '',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+            ),
+          ),
+
+          // Dynamic secondary language translation
+          if (bilingualState.isEnabled && _hasQuestionTranslation(answer, bilingualState.secondaryLanguage)) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.info.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  Text(
+                    _getQuestionTranslation(answer, bilingualState.secondaryLanguage),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.info,
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Answer Option with Dynamic Multi-Language Support
   Widget _buildAnswerOption(
       BuildContext context,
       AnswerOption option,
       int index,
+      BilingualState bilingualState,
       ThemeData theme,
       bool isDark,
-      bool showVietnamese,
       AppLocalizations l10n,
       ) {
     final isCorrect = option.isCorrect;
@@ -368,13 +261,13 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
     String? statusLabel;
 
     if (isCorrect) {
-      backgroundColor = AppColors.success.withOpacity(0.15);
+      backgroundColor = AppColors.success.withValues(alpha: 0.15);
       borderColor = AppColors.success;
       textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
       statusIcon = Icons.check_circle;
       statusLabel = l10n.correct ?? 'Correct';
     } else if (wasSelected) {
-      backgroundColor = AppColors.error.withOpacity(0.15);
+      backgroundColor = AppColors.error.withValues(alpha: 0.15);
       borderColor = AppColors.error;
       textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
       statusIcon = Icons.cancel;
@@ -434,12 +327,12 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
 
           const SizedBox(width: 16),
 
-          // Option Content
+          // Option Content with Dynamic Multi-Language Support
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // English Answer
+                // English Answer (Always shown)
                 Text(
                   option.answerText ?? '',
                   style: theme.textTheme.bodyLarge?.copyWith(
@@ -449,16 +342,23 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
                   ),
                 ),
 
-                // Vietnamese Answer
-                if (showVietnamese && option.answerTextVi != null && option.answerTextVi!.isNotEmpty) ...[
+                // 🆕 ENHANCED: Dynamic secondary language translation
+                if (bilingualState.isEnabled && _hasAnswerTranslation(option, bilingualState.secondaryLanguage)) ...[
                   const SizedBox(height: 6),
-                  Text(
-                    option.answerTextVi!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.info,
-                      fontStyle: FontStyle.italic,
-                      height: 1.3,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _getAnswerTranslation(option, bilingualState.secondaryLanguage),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.info,
+                            fontStyle: FontStyle.italic,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -486,5 +386,111 @@ class EnhancedReviewQuestionWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Explanation Section with Dynamic Multi-Language Support
+  Widget _buildExplanationSection(BuildContext context, BilingualState bilingualState, ThemeData theme, bool isDark, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.info.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Explanation Header
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.info,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lightbulb,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                l10n.explanation ?? 'Explanation',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: AppColors.info,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // English Explanation (Always shown)
+          Text(
+            answer.explanation!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.5,
+            ),
+          ),
+
+          if (bilingualState.isEnabled && _hasExplanationTranslation(answer, bilingualState.secondaryLanguage)) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.info.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getExplanationTranslation(answer, bilingualState.secondaryLanguage),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.info,
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  bool _hasQuestionTranslation(AttemptAnswer answer, String languageCode) {
+    return answer.hasQuestionTranslation(languageCode);
+  }
+
+  bool _hasAnswerTranslation(AnswerOption option, String languageCode) {
+    return option.hasAnswerTranslation(languageCode);
+  }
+
+  bool _hasExplanationTranslation(AttemptAnswer answer, String languageCode) {
+    return answer.hasExplanationTranslation(languageCode);
+  }
+
+  String _getQuestionTranslation(AttemptAnswer answer, String languageCode) {
+    return answer.getQuestionText(languageCode: languageCode);
+  }
+
+  String _getAnswerTranslation(AnswerOption option, String languageCode) {
+    return option.getAnswerText(languageCode: languageCode);
+  }
+
+  String _getExplanationTranslation(AttemptAnswer answer, String languageCode) {
+    return answer.getExplanation(languageCode: languageCode);
   }
 }

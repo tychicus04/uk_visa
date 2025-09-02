@@ -1,8 +1,11 @@
+// lib/features/tests/widgets/enhanced_question_widget.dart - UPDATED with Multi-Language Support
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../data/states/BilingualState.dart';
 import '../../../shared/providers/bilingual_provider.dart';
+import '../../../core/constants/api_constants.dart';
 
 class EnhancedQuestionWidget extends ConsumerWidget {
   final dynamic question;
@@ -34,9 +37,8 @@ class EnhancedQuestionWidget extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // 🔥 QUESTION TEXT (BILINGUAL)
-            _buildQuestionText(question, bilingualState.isEnabled, theme, isDark),
+            // 🔥 QUESTION TEXT (MULTI-LANGUAGE)
+            _buildQuestionText(question, bilingualState, theme, isDark),
 
             const SizedBox(height: 20),
 
@@ -52,7 +54,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
                   return _buildAnswerOption(
                     answer: answer,
                     isSelected: isSelected,
-                    isVietnameseEnabled: bilingualState.isEnabled,
+                    bilingualState: bilingualState,
                     isMultiSelect: isMultiSelect,
                     onTap: () {
                       onAnswerSelected(answer.answerId, !isSelected);
@@ -69,11 +71,11 @@ class EnhancedQuestionWidget extends ConsumerWidget {
     );
   }
 
-  // 🔥 QUESTION TEXT (BILINGUAL)
-  Widget _buildQuestionText(dynamic question, bool isVietnameseEnabled, ThemeData theme, bool isDark) => Column(
+  // 🔥 QUESTION TEXT (MULTI-LANGUAGE)
+  Widget _buildQuestionText(dynamic question, BilingualState bilingualState, ThemeData theme, bool isDark) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      // English question
+      // English question (always shown)
       Text(
         question.questionText,
         style: theme.textTheme.headlineSmall?.copyWith(
@@ -83,10 +85,8 @@ class EnhancedQuestionWidget extends ConsumerWidget {
         ),
       ),
 
-      // Vietnamese translation (if enabled and available)
-      if (isVietnameseEnabled &&
-          question.questionTextVi != null &&
-          question.questionTextVi.isNotEmpty) ...[
+      // 🆕 ENHANCED: Secondary language translation (if enabled and available)
+      if (bilingualState.isEnabled && _hasQuestionTranslation(question, bilingualState.secondaryLanguage)) ...[
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
@@ -105,7 +105,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  question.questionTextVi,
+                  _getQuestionTranslation(question, bilingualState.secondaryLanguage),
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: AppColors.primary,
                     height: 1.3,
@@ -124,7 +124,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
   Widget _buildAnswerOption({
     required dynamic answer,
     required bool isSelected,
-    required bool isVietnameseEnabled,
+    required BilingualState bilingualState,
     required bool isMultiSelect,
     required VoidCallback onTap,
     required ThemeData theme,
@@ -155,7 +155,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
         ? AppColors.primary
         : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight);
 
-    final vietnameseTextColor = isSelected
+    final secondaryTextColor = isSelected
         ? AppColors.primary.withOpacity(0.8)
         : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
 
@@ -228,12 +228,12 @@ class EnhancedQuestionWidget extends ConsumerWidget {
 
               const SizedBox(width: 16),
 
-              // Answer text (bilingual)
+              // Answer text (multi-language)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // English answer
+                    // English answer (always shown)
                     Text(
                       answer.answerText,
                       style: theme.textTheme.bodyLarge?.copyWith(
@@ -243,19 +243,17 @@ class EnhancedQuestionWidget extends ConsumerWidget {
                       ),
                     ),
 
-                    // Vietnamese translation (if enabled and available)
-                    if (isVietnameseEnabled &&
-                        answer.answerTextVi != null &&
-                        answer.answerTextVi.isNotEmpty) ...[
+                    // 🆕 ENHANCED: Secondary language translation (if enabled and available)
+                    if (bilingualState.isEnabled && _hasAnswerTranslation(answer, bilingualState.secondaryLanguage)) ...[
                       const SizedBox(height: 6),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Text(
-                              answer.answerTextVi,
+                              _getAnswerTranslation(answer, bilingualState.secondaryLanguage),
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: vietnameseTextColor,
+                                color: secondaryTextColor,
                                 fontStyle: FontStyle.italic,
                                 height: 1.2,
                               ),
@@ -286,5 +284,22 @@ class EnhancedQuestionWidget extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  // 🆕 NEW: Helper methods for dynamic translation checking
+  bool _hasQuestionTranslation(dynamic question, String languageCode) {
+    return question.hasTranslation(languageCode);
+  }
+
+  bool _hasAnswerTranslation(dynamic answer, String languageCode) {
+    return answer.hasTranslation(languageCode);
+  }
+
+  String _getQuestionTranslation(dynamic question, String languageCode) {
+    return question.getQuestionText(languageCode: languageCode);
+  }
+
+  String _getAnswerTranslation(dynamic answer, String languageCode) {
+    return answer.getAnswerText(languageCode: languageCode);
   }
 }

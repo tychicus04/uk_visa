@@ -55,19 +55,38 @@ class AttemptService {
     }
   }
 
-  /// Get attempt history
+  /// Get attempt history with language support
   Future<ApiResponse<Map<String, dynamic>>> getAttemptHistory({
     int page = 1,
     int limit = 20,
+    String? secondaryLanguage,
+    bool includeVietnamese = false, // Backward compatibility
   }) async {
     try {
+      print('🔄 Service: Loading attempt history page $page, limit $limit (Language: ${secondaryLanguage ?? 'none'})');
+
+      // Build query parameters with dynamic language support
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+
+      // 🆕 NEW: Dynamic language support
+      if (secondaryLanguage != null && ApiConstants.isSupportedLanguage(secondaryLanguage)) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      }
+      // 🔄 DEPRECATED: Backward compatibility
+      else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeVietnamese] = 'true';
+      }
+
       final response = await _dio.get(
         ApiConstants.attemptsHistory,
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
+        queryParameters: queryParams,
       );
+
+      print('✅ Service: Attempt history API response received with language support');
+
       return ApiResponse.fromJson(
         response.data,
             (json) => json as Map<String, dynamic>,
@@ -77,18 +96,27 @@ class AttemptService {
     }
   }
 
-  /// ✅ UPDATED: Get specific attempt details with Vietnamese support
+  /// ✅ ENHANCED: Get specific attempt details with dynamic multi-language support
   Future<ApiResponse<Map<String, dynamic>>> getAttemptDetail(
       int attemptId, {
-        bool includeVietnamese = false,
+        String? secondaryLanguage,
+        bool includeVietnamese = false, // Backward compatibility
       }) async {
     try {
-      print('🔄 Service: Loading attempt detail $attemptId (Vietnamese: $includeVietnamese)');
+      print('🔄 Service: Loading attempt detail $attemptId (Language: ${secondaryLanguage ?? 'none'})');
 
-      // ✅ Build query parameters
+      // 🆕 ENHANCED: Build query parameters with dynamic language support
       final queryParams = <String, dynamic>{};
-      if (includeVietnamese) {
-        queryParams['include_vietnamese'] = 'true';
+
+      // Priority 1: New dynamic language parameter
+      if (secondaryLanguage != null && ApiConstants.isSupportedLanguage(secondaryLanguage)) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+        print('🌍 Service: Using dynamic language parameter: $secondaryLanguage');
+      }
+      // Priority 2: Backward compatibility with Vietnamese
+      else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeVietnamese] = 'true';
+        print('🇻🇳 Service: Using legacy Vietnamese parameter for backward compatibility');
       }
 
       final response = await _dio.get(
@@ -96,7 +124,7 @@ class AttemptService {
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
 
-      print('✅ Service: Attempt detail API response received');
+      print('✅ Service: Attempt detail API response received with language: ${secondaryLanguage ?? 'none'}');
 
       return ApiResponse.fromJson(
         response.data,
@@ -124,10 +152,30 @@ class AttemptService {
     }
   }
 
-  /// Get leaderboard
-  Future<ApiResponse<List<dynamic>>> getLeaderboard() async {
+  /// Get leaderboard with language support
+  Future<ApiResponse<List<dynamic>>> getLeaderboard({
+    String? secondaryLanguage,
+    bool includeVietnamese = false, // Backward compatibility
+  }) async {
     try {
-      final response = await _dio.get('/attempts/leaderboard');
+      print('🔄 Service: Loading leaderboard (Language: ${secondaryLanguage ?? 'none'})');
+
+      // Build query parameters with dynamic language support
+      final queryParams = <String, dynamic>{};
+
+      if (secondaryLanguage != null && ApiConstants.isSupportedLanguage(secondaryLanguage)) {
+        queryParams[ApiConstants.paramIncludeLanguage] = secondaryLanguage;
+      } else if (includeVietnamese) {
+        queryParams[ApiConstants.paramIncludeVietnamese] = 'true';
+      }
+
+      final response = await _dio.get(
+        '/attempts/leaderboard',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      print('✅ Service: Leaderboard API response received with language support');
+
       return ApiResponse.fromJson(
         response.data,
             (json) => json as List<dynamic>,

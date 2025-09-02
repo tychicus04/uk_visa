@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../core/error/error_handler.dart';
 import '../../../data/states/AuthState.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_widget.dart';
@@ -23,6 +23,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  String? _redirectPath;
+
+  @override
+  void initState() {
+    super.initState();
+    // Get redirect parameter from URL when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final uri = GoRouterState.of(context).uri;
+      _redirectPath = uri.queryParameters['redirect'];
+      print('LoginScreen - Redirect path: $_redirectPath');
+    });
+  }
 
   @override
   void dispose() {
@@ -38,17 +50,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authProvider);
     final isDark = theme.brightness == Brightness.dark;
 
-    ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.isAuthenticated && next.user != null && mounted) {
-        if (previous?.isAuthenticated != true) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              context.go('/');
-            }
-          });
-        }
-      }
-    });
+    // Remove the old auth listener since we'll handle redirect in the provider now
+    // The AuthNotifier will handle the redirect automatically
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -118,13 +121,59 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n.sign_in_to_continue_your_test, // ✅ Localized
+                      l10n.sign_in_to_continue_your_test,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
                             : AppColors.textSecondaryLight,
                       ),
                     ),
+
+                    // Show redirect notification if applicable
+                    if (_redirectPath != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.info.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: AppColors.info,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sign in required',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: AppColors.info,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'You need to sign in to access ${_getRedirectDescription()}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.info.withOpacity(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     const SizedBox(height: 32),
                     CustomTextField(
                       controller: _emailController,
@@ -198,7 +247,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: theme.textTheme.bodyMedium,
                         ),
                         TextButton(
-                          onPressed: authState.isLoading ? null : () => context.go('/register'),
+                          onPressed: authState.isLoading ? null : () {
+                            // Pass redirect to register screen too
+                            final registerPath = _redirectPath != null
+                                ? '/register?redirect=${Uri.encodeComponent(_redirectPath!)}'
+                                : '/register';
+                            context.go(registerPath);
+                          },
                           child: Text(l10n.auth_signUp),
                         ),
                       ],
@@ -213,12 +268,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Container(
               color: Colors.black.withOpacity(0.3),
               child: Center(
-                child: LoadingWidget(message: l10n.auth_signingIn), // ✅ Localized
+                child: LoadingWidget(message: l10n.auth_signingIn),
               ),
             ),
         ],
       ),
     );
+  }
+
+  String _getRedirectDescription() {
+    if (_redirectPath == null) return '';
+
+    if (_redirectPath!.startsWith('/tests')) {
+      return 'practice tests';
+    } else if (_redirectPath!.startsWith('/test-taking')) {
+      return 'the test session';
+    } else if (_redirectPath!.startsWith('/settings/profile')) {
+      return 'your profile settings';
+    } else if (_redirectPath!.contains('result')) {
+      return 'test results';
+    }
+
+    return 'this feature';
   }
 
   Future<void> _handleLogin() async {
@@ -227,10 +298,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     try {
+      // Pass context and redirectPath to the updated auth provider
       await ref.read(authProvider.notifier).login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        context: context,
+        redirectPath: _redirectPath,
       );
+
+      // Success - the AuthNotifier will handle the redirect automatically
+      print('Login successful - redirect will be handled by AuthNotifier');
+
     } catch (e) {
       if (mounted) {
         final errorMessage = ErrorHandler.getErrorMessage(e);

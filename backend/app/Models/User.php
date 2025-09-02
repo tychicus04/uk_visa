@@ -1,10 +1,9 @@
 <?php
 require_once __DIR__ . '/../Core/BaseModel.php';
-require_once __DIR__ . '/../../services/SimpleJWTService.php';
 
 class User extends BaseModel {
     protected $table = 'users';
-    protected $fillable = ['email', 'password_hash', 'full_name', 'language_code', 'is_premium', 'premium_expires_at'];
+    protected $fillable = ['email', 'password_hash', 'language_code'];
     protected $hidden = ['password_hash'];
 
     public function __construct() {
@@ -39,53 +38,13 @@ class User extends BaseModel {
         return false;
     }
     
-    public function canAccessTest($userId, $testId) {
-        // $sql = "SELECT t.is_free, t.is_premium, u.free_tests_used, u.free_tests_limit, 
-        //                u.is_premium, u.premium_expires_at
-        //         FROM tests t
-        //         CROSS JOIN users u 
-        //         WHERE t.id = :test_id AND u.id = :user_id";
-        
-        // $stmt = $this->db->prepare($sql);
-        // $stmt->bindParam(':test_id', $testId);
-        // $stmt->bindParam(':user_id', $userId);
-        // $stmt->execute();
-        
-        // $result = $stmt->fetch();
-        
-        // if (!$result) return false;
-        
-        // // Free test check
-        // if ($result['is_free']) {
-        //     return $result['free_tests_used'] < $result['free_tests_limit'];
-        // }
-        
-        // // Premium test check
-        // if ($result['is_premium']) {
-        //     return $result['is_premium'] && 
-        //            (is_null($result['premium_expires_at']) || 
-        //             strtotime($result['premium_expires_at']) > time());
-        // }
-        
-        return true;
-    }
-    
-    public function incrementFreeTestUsage($userId) {
-        $sql = "UPDATE {$this->table} SET free_tests_used = free_tests_used + 1 WHERE id = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $userId);
-        return $stmt->execute();
-    }
-    
     public function getUserStats($userId) {
         $sql = "SELECT 
                     COUNT(uta.id) as total_attempts,
                     COUNT(CASE WHEN uta.is_passed = 1 THEN 1 END) as passed_attempts,
-                    AVG(uta.percentage) as average_score,
-                    MAX(uta.percentage) as best_score,
-                    u.free_tests_used,
-                    u.free_tests_limit,
-                    u.is_premium
+                    COALESCE(AVG(uta.percentage), 0) as average_score,
+                    COALESCE(MAX(uta.percentage), 0) as best_score,
+                    COUNT(DISTINCT uta.test_id) as unique_tests_attempted
                 FROM users u
                 LEFT JOIN user_test_attempts uta ON u.id = uta.user_id AND uta.completed_at IS NOT NULL
                 WHERE u.id = :user_id
@@ -95,11 +54,20 @@ class User extends BaseModel {
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
         
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+        
+        // Return default values if no attempts found
+        return $result ?: [
+            'total_attempts' => 0,
+            'passed_attempts' => 0,
+            'average_score' => 0,
+            'best_score' => 0,
+            'unique_tests_attempted' => 0
+        ];
     }
     
     public function updateProfile($userId, $data) {
-        $allowedFields = ['full_name', 'language_code'];
+        $allowedFields = ['language_code'];
         $updateData = array_intersect_key($data, array_flip($allowedFields));
         
         if (empty($updateData)) {
@@ -118,5 +86,11 @@ class User extends BaseModel {
         
         $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
         return $this->update($userId, ['password_hash' => $newHash]);
+    }
+    
+    // Simplified method - all tests are now free
+    public function canAccessTest($userId, $testId) {
+        // All tests are free now
+        return true;
     }
 }

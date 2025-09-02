@@ -285,8 +285,8 @@
 
   "languageSettings_title": "Cài đặt ngôn ngữ",
   "languageSettings_vietnameseTranslation": "Hỗ trợ tiếng Việt",
-  "languageSettings_translationsEnabled": "🇻🇳 Bản dịch tiếng Việt hiện được hiển thị cùng với câu hỏi và đáp án tiếng Anh.",
-  "languageSettings_translationsDisabled": "🇬🇧 Chỉ hiển thị nội dung tiếng Anh. Bật tiếng Việt để xem bản dịch.",
+  "languageSettings_translationsEnabled": "Bản dịch tiếng Việt hiện được hiển thị cùng với câu hỏi và đáp án tiếng Anh.",
+  "languageSettings_translationsDisabled": "Chỉ hiển thị nội dung tiếng Anh. Bật tiếng Việt để xem bản dịch.",
   "languageSettings_translationQuality": "Chất lượng dịch thuật",
   "languageSettings_professionalTranslation": "Dịch thuật chuyên nghiệp",
   "languageSettings_qualityDescription": "Tất cả nội dung đã được dịch thuật chuyên nghiệp và kiểm tra độ chính xác.",
@@ -375,5 +375,63 @@
   "common_retry": "Thử lại",
   "common_exit": "Thoát",
   "of_": "trong",
-  "time" : "Thời gian"
+  "time": "Thời gian",
+
+  "// CÁC CHUỖI MỚI CHO CHẾ ĐỘ THI": "",
+  "test_practiceMode": "Chế độ luyện tập",
+  "test_examMode": "Thi có thời gian",
+  "test_practiceDescription": "Không giới hạn thời gian - học tập thoải mái theo tốc độ của bạn",
+  "test_examDescription": "Mô phỏng kỳ thi thực với tự động nộp bài khi hết giờ",
+  "test_unlimited": "Không giới hạn",
+
+  "// Tính năng các chế độ thi": "",
+  "test_practiceFeatures": "Tính năng luyện tập",
+  "test_examFeatures": "Tính năng thi có thời gian",
+  "test_noTimePressure": "Không áp lực thời gian - học tập thoải mái theo tốc độ riêng",
+  "test_reviewAnswersImmediate": "Xem lại đáp án ngay sau khi nộp bài",
+  "test_focusLearning": "Tập trung vào học tập và hiểu bài",
+  "test_timeLimitMinutes": "Giới hạn thời gian {minutes} phút",
+  "@test_timeLimitMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "test_autoSubmitWhenExpires": "Tự động nộp bài khi hết thời gian",
+  "test_realExamSimulation": "Trải nghiệm mô phỏng kỳ thi thật",
+
+  "// Văn bản UI theo chế độ": "",
+  "test_timedTest": "Thi có thời gian",
+  "test_practiceTest": "Luyện tập",
+  "test_startPractice": "Bắt đầu luyện tập",
+  "test_startTimedTest": "Bắt đầu thi có thời gian",
+  "test_submitPractice": "Nộp bài luyện tập?",
+  "test_submitExam": "Nộp bài thi?",
+  "test_timedTestProgress": "Tiến trình thi có thời gian sẽ bị mất!",
+
+  "// Thông báo tab sai": "",
+  "test_wrongTabExamTitle": "Đây là bài thi có thời gian",
+  "test_wrongTabExamMessage": "Chuyển sang tab Thi thử để làm bài với bộ đếm thời gian",
+  "test_wrongTabPracticeTitle": "Đây là bài luyện tập",
+  "test_wrongTabPracticeMessage": "Chuyển sang tab Luyện tập để làm bài không giới hạn thời gian",
+
+  "// Liên quan đến bộ đếm thời gian": "",
+  "test_timeUpAutoSubmit": "Hết thời gian! Đang tự động nộp bài thi...",
+  "test_noTimeLimit": "KHÔNG GIỚI HẠN",
+  "test_timedTestFeatures": "Tính năng thi có thời gian",
+  "test_practiceTestFeatures": "Tính năng luyện tập",
+  "test_questionsAnswered": "Đã trả lời {answeredCount}/{totalQuestions} câu hỏi",
+  "@test_questionsAnswered": {
+    "placeholders": {
+      "answeredCount": {
+        "type": "int"
+      },
+      "totalQuestions": {
+        "type": "int"
+      }
+    }
+  },
+  "languageSettings_selectSecondaryLanguage": "Chọn ngôn ngữ phụ",
+  "languageSettings_bilingualMode": "Chế độ song ngữ"
 }

@@ -16,12 +16,27 @@ class AuthController extends BaseController {
         $data = $this->getRequestData();
         
         try {
-            ValidationMiddleware::validateRegistration($data);
+            // Validation - chỉ cần email và password
+            $required = ['email', 'password'];
+            $missing = validateRequired($data, $required);
+            
+            if (!empty($missing)) {
+                $this->error('Missing required fields: ' . implode(', ', $missing), 400);
+            }
+            
+            // Validate email format
+            if (!filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
+                $this->error('Invalid email format', 400);
+            }
+            
+            // Validate password strength
+            if (strlen($data->password) < 6) {
+                $this->error('Password must be at least 6 characters', 400);
+            }
             
             $userData = [
                 'email' => sanitizeInput($data->email),
                 'password' => $data->password,
-                'full_name' => sanitizeInput($data->full_name),
                 'language_code' => isset($data->language_code) ? sanitizeInput($data->language_code) : 'en'
             ];
             
@@ -40,7 +55,6 @@ class AuthController extends BaseController {
             }
             
         } catch (Exception $e) {
-            logError('Registration error: ' . $e->getMessage(), ['email' => $data->email ?? 'unknown']);
             $this->error($e->getMessage(), 400);
         }
     }
@@ -50,7 +64,13 @@ class AuthController extends BaseController {
         $data = $this->getRequestData();
         
         try {
-            ValidationMiddleware::validateLogin($data);
+            // Validation
+            $required = ['email', 'password'];
+            $missing = validateRequired($data, $required);
+            
+            if (!empty($missing)) {
+                $this->error('Missing required fields: ' . implode(', ', $missing), 400);
+            }
             
             $user = $this->userModel->login($data->email, $data->password);
             
@@ -68,28 +88,7 @@ class AuthController extends BaseController {
             }
             
         } catch (Exception $e) {
-            logError('Login error: ' . $e->getMessage(), ['email' => $data->email ?? 'unknown']);
             $this->error('Login failed', 500);
-        }
-    }
-    
-    public function refresh() {
-        $this->validateMethod(['POST']);
-        
-        try {
-            $currentUser = SimpleAuthMiddleware::authenticate();
-            $token = getBearerToken();
-            $currentUser = SimpleJWTService::getUserFromToken($token);
-            $newToken = SimpleJWTService::generateForUser($currentUser);
-            
-            $this->success([
-                'token' => $newToken,
-                'token_type' => 'Bearer',
-                'expires_in' => JWTConfig::getExpiration()
-            ], 'Token refreshed');
-            
-        } catch (Exception $e) {
-            $this->error('Token refresh failed', 401);
         }
     }
     
@@ -98,8 +97,8 @@ class AuthController extends BaseController {
         $user = SimpleAuthMiddleware::authenticate();
         
         if ($method === 'GET') {
-            $userStats = $this->userModel->getUserStats($user['user_id']);
-            $userProfile = $this->userModel->find($user['user_id']);
+            $userStats = $this->userModel->getUserStats($user['id']);
+            $userProfile = $this->userModel->find($user['id']);
             
             $this->success([
                 'profile' => $userProfile,
@@ -112,18 +111,19 @@ class AuthController extends BaseController {
             
             try {
                 $updateData = [];
-                if (isset($data->full_name)) {
-                    $updateData['full_name'] = sanitizeInput($data->full_name);
-                }
                 if (isset($data->language_code)) {
                     $updateData['language_code'] = sanitizeInput($data->language_code);
                 }
                 
-                if ($this->userModel->updateProfile($user['user_id'], $updateData)) {
-                    $updatedUser = $this->userModel->find($user['user_id']);
-                    $this->success($updatedUser, 'Profile updated successfully');
+                if (!empty($updateData)) {
+                    if ($this->userModel->updateProfile($user['id'], $updateData)) {
+                        $updatedUser = $this->userModel->find($user['id']);
+                        $this->success($updatedUser, 'Profile updated successfully');
+                    } else {
+                        $this->error('Failed to update profile', 500);
+                    }
                 } else {
-                    $this->error('Failed to update profile', 500);
+                    $this->error('No valid fields to update', 400);
                 }
                 
             } catch (Exception $e) {
@@ -150,7 +150,7 @@ class AuthController extends BaseController {
         
         try {
             $this->userModel->changePassword(
-                $user['user_id'], 
+                $user['id'], 
                 $data->current_password, 
                 $data->new_password
             );
@@ -165,7 +165,6 @@ class AuthController extends BaseController {
     public function logout() {
         $this->validateMethod(['POST']);
         // For stateless JWT, logout is handled client-side
-        // In production, you might want to implement token blacklisting
         $this->success([], 'Logged out successfully');
     }
 }

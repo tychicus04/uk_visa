@@ -5,7 +5,7 @@ class ValidationMiddleware {
         $errors = [];
         
         // Required fields
-        $required = ['email', 'password', 'full_name'];
+        $required = ['email', 'password'];
         $missing = validateRequired($data, $required);
         if (!empty($missing)) {
             $errors['required'] = 'Missing required fields: ' . implode(', ', $missing);
@@ -21,11 +21,6 @@ class ValidationMiddleware {
             if (strlen($data->password) < 6) {
                 $errors['password'] = 'Password must be at least 6 characters';
             }
-        }
-        
-        // Name validation
-        if (isset($data->full_name) && strlen(trim($data->full_name)) < 2) {
-            $errors['full_name'] = 'Full name must be at least 2 characters';
         }
         
         if (!empty($errors)) {

@@ -15,13 +15,11 @@ class AuthRepository {
   Future<Map<String, dynamic>> register({
     required String email,
     required String password,
-    required String fullName,
     String languageCode = 'en',
   }) async {
     final response = await _authService.register(
       email: email,
       password: password,
-      fullName: fullName,
       languageCode: languageCode,
     );
 
