@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/attempt_model.dart';
 import '../services/attempt_service.dart';
+import '../services/offline_attempt_service.dart';
 
 final attemptRepositoryProvider = Provider<AttemptRepository>((ref) {
   final attemptService = ref.watch(attemptServiceProvider);
@@ -9,11 +10,10 @@ final attemptRepositoryProvider = Provider<AttemptRepository>((ref) {
 });
 
 class AttemptRepository {
-  final AttemptService _attemptService;
+  final OfflineAttemptService _attemptService;
 
   AttemptRepository(this._attemptService);
 
-  /// Start a new test attempt
   Future<String> startAttempt(int testId) async {
     try {
       print('🔄 Repository: Starting attempt for test $testId');
@@ -28,7 +28,6 @@ class AttemptRepository {
         return attemptId;
       } else {
         final errorMessage = response.message ?? 'Failed to start test';
-        // Handle specific error cases
         if (response.message?.contains('limit reached') == true) {
           throw Exception('Free test limit reached. Please upgrade to premium.');
         }
@@ -43,15 +42,12 @@ class AttemptRepository {
     }
   }
 
-  /// Submit test attempt
   Future<TestAttempt> submitAttempt({
     required int attemptId,
     required List<Map<String, dynamic>> answers,
     required int timeTaken,
   }) async {
     try {
-      print('🔄 Repository: Submitting attempt $attemptId with ${answers.length} answers');
-
       final response = await _attemptService.submitAttempt(
         attemptId: attemptId,
         answers: answers,
@@ -60,43 +56,33 @@ class AttemptRepository {
 
       if (response.success && response.data != null) {
         final data = response.data!;
-        print('📊 Submit response data keys: ${data.keys}');
-
-        // ✅ Parse the result data and add attemptId
         final resultData = data['result'] as Map<String, dynamic>;
 
-        // ✅ Add the attemptId to result data since API doesn't return it
         final enhancedResultData = Map<String, dynamic>.from(resultData);
         enhancedResultData['id'] = attemptId.toString();
         enhancedResultData['attempt_id'] = attemptId.toString();
 
-        // ✅ Add test info if available
         if (data['test'] != null) {
           final testData = data['test'] as Map<String, dynamic>;
           enhancedResultData['title'] = testData['title'];
           enhancedResultData['test_number'] = testData['test_number'];
         }
-
-        print('✅ Repository: Enhanced result data with attempt_id: $attemptId');
         return TestAttempt.fromJson(enhancedResultData);
       } else {
         throw Exception(response.message ?? 'Failed to submit test');
       }
     } catch (e) {
-      print('❌ Repository error in submitAttempt($attemptId): $e');
       rethrow;
     }
   }
 
-  /// ✅ ENHANCED: Get attempt history with dynamic multi-language support
   Future<Map<String, dynamic>> getAttemptHistory({
     int page = 1,
     int limit = 20,
     String? secondaryLanguage,
-    bool includeVietnamese = false, // Backward compatibility
+    bool includeVietnamese = false,
   }) async {
     try {
-      print('🔄 Repository: Loading attempt history page $page, limit $limit (Language: ${secondaryLanguage ?? 'none'})');
 
       final response = await _attemptService.getAttemptHistory(
         page: page,
@@ -104,12 +90,10 @@ class AttemptRepository {
         secondaryLanguage: secondaryLanguage,
         includeVietnamese: includeVietnamese,
       );
-
       if (response.success && response.data != null) {
         final data = response.data!;
         final items = (data['items'] as List).map((e) => TestAttempt.fromJson(e)).toList();
 
-        print('✅ Repository: Loaded ${items.length} attempts from history with language: ${secondaryLanguage ?? 'none'}');
         return {
           'items': items,
           'pagination': data['pagination'] ?? {},
@@ -119,20 +103,16 @@ class AttemptRepository {
         throw Exception(response.message ?? 'Failed to load test history');
       }
     } catch (e) {
-      print('❌ Repository error in getAttemptHistory: $e');
       rethrow;
     }
   }
 
-  /// ✅ COMPLETELY REWRITTEN: Get specific attempt details with dynamic multi-language support
   Future<TestAttempt> getAttemptDetail(
       int attemptId, {
         String? secondaryLanguage,
-        bool includeVietnamese = false, // Backward compatibility
+        bool includeVietnamese = false, 
       }) async {
     try {
-      print('🔄 Repository: Loading attempt detail for $attemptId (Language: ${secondaryLanguage ?? 'none'})');
-
       final response = await _attemptService.getAttemptDetail(
         attemptId,
         secondaryLanguage: secondaryLanguage,
@@ -141,14 +121,7 @@ class AttemptRepository {
 
       if (response.success && response.data != null) {
         final attempt = TestAttempt.fromJson(response.data!);
-
-        print('✅ Repository: Loaded attempt detail: ${attempt.id}');
-
-        // Enhanced logging for language support
         if (secondaryLanguage != null) {
-          print('🌍 Repository: Dynamic language support enabled: $secondaryLanguage');
-
-          // Count translated content for debugging
           final answers = attempt.answers ?? [];
           var translatedQuestions = 0;
           var translatedAnswers = 0;
@@ -165,23 +138,17 @@ class AttemptRepository {
             }
           }
 
-          print('📊 Repository: Translation coverage - Questions: $translatedQuestions/${answers.length}, Answers: $translatedAnswers');
         } else if (includeVietnamese) {
-          print('🇻🇳 Repository: Legacy Vietnamese support enabled for backward compatibility');
         }
 
         return attempt;
       } else {
-        print('❌ Repository: Failed to load attempt $attemptId - ${response.message}');
         throw Exception(response.message ?? 'Failed to load attempt details');
       }
     } catch (e) {
-      print('❌ Repository error in getAttemptDetail($attemptId): $e');
       rethrow;
     }
   }
-
-  /// Retake a test
   Future<int> retakeTest(int testId) async {
     try {
       print('🔄 Repository: Retaking test $testId');

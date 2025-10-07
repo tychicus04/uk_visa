@@ -32,23 +32,6 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // Profile Section
-          _buildSectionHeader(l10n.auth_profile, theme),
-          _buildSettingTile(
-            icon: Icons.person_outline,
-            title: l10n.profile_editProfile,
-            subtitle: authState.isAuthenticated
-                ? l10n.profile_accountInformation
-                : 'Sign in to manage your account',
-            onTap: () => _handleProfileAccess(context, ref, authState.isAuthenticated, l10n),
-            theme: theme,
-            trailing: authState.isAuthenticated
-                ? Icon(Icons.chevron_right, color: isDark ? AppColors.iconDark : AppColors.iconLight)
-                : Icon(Icons.lock_outline, color: AppColors.primary, size: 20),
-          ),
-
-          const SizedBox(height: 24),
-
           // Language & Localization Section
           _buildSectionHeader(l10n.settings_appearance, theme),
 
@@ -60,9 +43,7 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _showThemeDialog(context, ref, l10n),
             theme: theme,
           ),
-
           const SizedBox(height: 16),
-
           // Test Content Language Section
           _buildSectionHeader('Test Content Language', theme),
 
@@ -224,24 +205,24 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _showAboutDialog(context, l10n, theme),
             theme: theme,
           ),
-          _buildSettingTile(
-            icon: Icons.privacy_tip_outlined,
-            title: l10n.settings_privacy,
-            subtitle: l10n.settings_privacy,
-            onTap: () {
-              // TODO: Open privacy policy
-            },
-            theme: theme,
-          ),
-          _buildSettingTile(
-            icon: Icons.description_outlined,
-            title: l10n.settings_terms,
-            subtitle: l10n.settings_terms,
-            onTap: () {
-              // TODO: Open terms of service
-            },
-            theme: theme,
-          ),
+          // _buildSettingTile(
+          //   icon: Icons.privacy_tip_outlined,
+          //   title: l10n.settings_privacy,
+          //   subtitle: l10n.settings_privacy,
+          //   onTap: () {
+          //     // TODO: Open privacy policy
+          //   },
+          //   theme: theme,
+          // ),
+          // _buildSettingTile(
+          //   icon: Icons.description_outlined,
+          //   title: l10n.settings_terms,
+          //   subtitle: l10n.settings_terms,
+          //   onTap: () {
+          //     // TODO: Open terms of service
+          //   },
+          //   theme: theme,
+          // ),
 
           const SizedBox(height: 24),
 

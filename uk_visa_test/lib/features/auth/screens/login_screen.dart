@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/error/error_handler.dart';
-import '../../../data/states/AuthState.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -20,9 +19,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  final _usernameController = TextEditingController();
   String? _redirectPath;
 
   @override
@@ -38,8 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -176,57 +172,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 32),
                     CustomTextField(
-                      controller: _emailController,
-                      labelText: l10n.auth_email,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
+                      controller: _usernameController,
+                      labelText: 'Username',
+                      keyboardType: TextInputType.text,
+                      prefixIcon: Icons.person_outline,
                       enabled: !authState.isLoading,
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return l10n.validation_emailRequired;
+                          return 'Username is required';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
-                          return l10n.validation_emailInvalid;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _passwordController,
-                      labelText: l10n.auth_password,
-                      obscureText: !_isPasswordVisible,
-                      prefixIcon: Icons.lock_outlined,
-                      enabled: !authState.isLoading,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: authState.isLoading ? null : () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return l10n.validation_passwordRequired;
-                        }
-                        if (value!.length < 6) {
-                          return l10n.validation_passwordTooShort;
+                        if (value!.length < 3) {
+                          return 'Username must be at least 3 characters';
                         }
                         return null;
                       },
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: authState.isLoading ? null : () {
-                          context.go('/forgot-password');
-                        },
-                        child: Text(l10n.auth_forgotPassword),
-                      ),
                     ),
 
                     const SizedBox(height: 24),
@@ -300,8 +259,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       // Pass context and redirectPath to the updated auth provider
       await ref.read(authProvider.notifier).login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        username: _usernameController.text.trim(),
         context: context,
         redirectPath: _redirectPath,
       );

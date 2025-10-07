@@ -27,7 +27,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.read(authProvider).user;
     if (user != null) {
       _fullNameController.text = user.fullName ?? '';
-      _emailController.text = user.email;
+      _emailController.text = user.email ?? '';
     }
   }
 
@@ -152,7 +152,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     backgroundColor: AppColors.primary,
                     child: Text(
                       authState.user?.fullName?.substring(0, 1).toUpperCase() ??
-                          authState.user?.email.substring(0, 1).toUpperCase() ?? 'U',
+                          authState.user?.username.substring(0, 1).toUpperCase() ?? 'U',
                       style: theme.textTheme.headlineLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -424,11 +424,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       return;
     }
 
+    final user = ref.read(authProvider).user;
+    if (user == null) return;
+
     final l10n = AppLocalizations.of(context);
 
     try {
       await ref.read(authProvider.notifier).updateProfile(
-        fullName: _fullNameController.text.trim(),
+        userId: user.id.toString(),
         languageCode: _selectedLanguage,
       );
 

@@ -17,16 +17,14 @@ class AuthService {
   final Dio _dio;
 
   Future<ApiResponse<Map<String, dynamic>>> register({
-    required String email,
-    required String password,
+    required String username,
     String languageCode = 'en',
   }) async {
     try {
       final response = await _dio.post(
         ApiConstants.authRegister,
         data: {
-          'email': email,
-          'password': password,
+          'username': username,
           'language_code': languageCode,
         },
       );
@@ -41,15 +39,13 @@ class AuthService {
   }
 
   Future<ApiResponse<Map<String, dynamic>>> login({
-    required String email,
-    required String password,
+    required String username,
   }) async {
     try {
       final response = await _dio.post(
         ApiConstants.authLogin,
         data: {
-          'email': email,
-          'password': password,
+          'username': username,
         },
       );
 
@@ -62,9 +58,12 @@ class AuthService {
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> getProfile() async {
+  Future<ApiResponse<Map<String, dynamic>>> getProfile({required String userId}) async {
     try {
-      final response = await _dio.get(ApiConstants.authProfile);
+      final response = await _dio.get(
+        ApiConstants.authProfile,
+        data: {'user_id': userId},
+      );
 
       return ApiResponse.fromJson(
         response.data,
@@ -76,12 +75,11 @@ class AuthService {
   }
 
   Future<ApiResponse<Map<String, dynamic>>> updateProfile({
-    String? fullName,
+    required String userId,
     String? languageCode,
   }) async {
     try {
-      final data = <String, dynamic>{};
-      if (fullName != null) data['full_name'] = fullName;
+      final data = <String, dynamic>{'user_id': userId};
       if (languageCode != null) data['language_code'] = languageCode;
 
       final response = await _dio.put(
@@ -98,35 +96,15 @@ class AuthService {
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> changePassword({
-    required String currentPassword,
-    required String newPassword,
+  Future<ApiResponse<Map<String, dynamic>>> updateLanguagePreference({
+    required String userId,
+    required String languageCode,
   }) async {
-    try {
-      final response = await _dio.put(
-        ApiConstants.authChangePassword,
-        data: {
-          'current_password': currentPassword,
-          'new_password': newPassword,
-        },
-      );
-
-      return ApiResponse.fromJson(
-        response.data,
-            (json) => json! as Map<String, dynamic>,
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  Future<ApiResponse<Map<String, dynamic>>> updateLanguagePreference(
-      String languageCode,
-      ) async {
     try {
       final response = await _dio.post(
         ApiConstants.authLanguage,
         data: {
+          'user_id': userId,
           'language_code': languageCode,
         },
       );

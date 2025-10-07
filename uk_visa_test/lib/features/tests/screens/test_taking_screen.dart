@@ -813,7 +813,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
 
     if (shouldExit == true && context.mounted) {
-      context.go('/tests/${widget.testId}');
+      context.go('/tests/detail/${widget.testId}');
     }
   }
 }

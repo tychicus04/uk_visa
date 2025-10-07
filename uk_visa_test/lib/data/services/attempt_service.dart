@@ -2,12 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/api_constants.dart';
-import '../../core/network/dio_client.dart';
 import '../models/api_response.dart';
+import 'offline_attempt_service.dart';
 
-final attemptServiceProvider = Provider<AttemptService>((ref) {
-  final dio = ref.watch(dioProvider);
-  return AttemptService(dio);
+// Use offline attempt service for now
+final attemptServiceProvider = Provider<OfflineAttemptService>((ref) {
+  return ref.watch(offlineAttemptServiceProvider);
 });
 
 class AttemptService {

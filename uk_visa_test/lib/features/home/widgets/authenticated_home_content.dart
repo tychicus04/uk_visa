@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../features/auth/providers/auth_provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class AuthenticatedHomeContent extends ConsumerWidget {
@@ -14,16 +13,15 @@ class AuthenticatedHomeContent extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
-
-    if (user == null) return const SizedBox.shrink();
+    
+    // No authentication required - show content for anonymous user
+    const displayName = "Student"; // Generic name for anonymous user
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Welcome Back Card
-        _buildWelcomeBackCard(context, user.email, l10n, theme, isDark),
+        _buildWelcomeBackCard(context, displayName, l10n, theme, isDark),
 
         const SizedBox(height: 24),
 
@@ -38,9 +36,7 @@ class AuthenticatedHomeContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildWelcomeBackCard(BuildContext context, String email, AppLocalizations l10n, ThemeData theme, bool isDark) {
-    // Extract name from email (first part before @)
-    final displayName = email.split('@').first;
+  Widget _buildWelcomeBackCard(BuildContext context, String displayName, AppLocalizations l10n, ThemeData theme, bool isDark) {
 
     return Container(
       padding: const EdgeInsets.all(24),

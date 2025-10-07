@@ -5,7 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../data/states/AuthState.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../providers/auth_provider.dart';
-import 'change_password_screen.dart';
+// import 'change_password_screen.dart';  // Commented out since we removed password functionality
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -77,7 +77,9 @@ class ProfileScreen extends ConsumerWidget {
                             backgroundColor: isDark ? AppColors.primary : Colors.white,
                             child: Text(
                               authState.user!.fullName?.substring(0, 1).toUpperCase() ??
-                                  authState.user!.email.substring(0, 1).toUpperCase(),
+                                  (authState.user!.email != null && authState.user!.email!.isNotEmpty 
+                                      ? authState.user!.email!.substring(0, 1).toUpperCase() 
+                                      : authState.user!.username.substring(0, 1).toUpperCase()),
                               style: theme.textTheme.headlineLarge?.copyWith(
                                 color: isDark ? Colors.white : AppColors.primary,
                                 fontWeight: FontWeight.bold,
@@ -96,9 +98,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      // User Email
+                      // User Email/Username
                       Text(
-                        authState.user!.email,
+                        authState.user!.email ?? authState.user!.username,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: isDark
                               ? AppColors.textSecondaryDark
@@ -298,6 +300,7 @@ class ProfileScreen extends ConsumerWidget {
           isDark: isDark,
         ),
       ),
+      /* Commented out since we removed password functionality
       const SizedBox(width: 16),
       Expanded(
         child: _buildActionCard(
@@ -314,6 +317,7 @@ class ProfileScreen extends ConsumerWidget {
           isDark: isDark,
         ),
       ),
+      */
     ],
   );
 

@@ -147,7 +147,7 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
             test: test,
             showTestType: showTestType,
             onTap: () {
-              context.go('/tests/${test.id}');
+              context.go('/tests/detail/${test.id}');
             },
           ),
         );

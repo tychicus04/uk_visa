@@ -1,25 +1,22 @@
-// lib/data/models/user_model.dart - FIXED VERSION
-import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/equatable.dart';
 
-part 'user_model.g.dart';
-
-@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class User extends Equatable {
-  final String id; // ✅ Changed to String for consistency
-  final String email;
+  final String id; 
+  final String username;
+  final String? email;
   final String? fullName;
   final bool isPremium;
   final String? premiumExpiresAt;
   final String languageCode;
-  final String freeTestsUsed; // ✅ Changed to String
-  final String freeTestsLimit; // ✅ Changed to String
+  final String freeTestsUsed;
+  final String freeTestsLimit;
   final String createdAt;
   final String updatedAt;
 
   const User({
     required this.id,
-    required this.email,
+    required this.username,
+    this.email,
     this.fullName,
     required this.isPremium,
     this.premiumExpiresAt,
@@ -31,10 +28,10 @@ class User extends Equatable {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    // ✅ Add null safety and type conversion
     return User(
       id: json['id']?.toString() ?? '0',
-      email: json['email']?.toString() ?? '',
+      username: json['username']?.toString() ?? '',
+      email: json['email']?.toString(),
       fullName: json['full_name']?.toString(),
       isPremium: _parseBool(json['is_premium']),
       premiumExpiresAt: json['premium_expires_at']?.toString(),
@@ -46,9 +43,20 @@ class User extends Equatable {
     );
   }
 
-  Map<String, dynamic> toJson() => _$UserToJson(this);
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'username': username,
+    'email': email,
+    'full_name': fullName,
+    'is_premium': isPremium,
+    'premium_expires_at': premiumExpiresAt,
+    'language_code': languageCode,
+    'free_tests_used': freeTestsUsed,
+    'free_tests_limit': freeTestsLimit,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+  };
 
-  // ✅ Helper function to safely parse boolean
   static bool _parseBool(dynamic value) {
     if (value is bool) return value;
     if (value is int) return value == 1;
@@ -56,17 +64,16 @@ class User extends Equatable {
     return false;
   }
 
-  // ✅ Convenience getters for int values
   int get freeTestsUsedInt => int.tryParse(freeTestsUsed) ?? 0;
   int get freeTestsLimitInt => int.tryParse(freeTestsLimit) ?? 5;
   int get userIdInt => int.tryParse(id) ?? 0;
 
-  // ✅ Helper to check if user has remaining free tests
   bool get hasRemainingFreeTests => freeTestsUsedInt < freeTestsLimitInt;
 
   @override
   List<Object?> get props => [
     id,
+    username,
     email,
     fullName,
     isPremium,

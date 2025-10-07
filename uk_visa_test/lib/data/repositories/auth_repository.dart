@@ -13,13 +13,11 @@ class AuthRepository {
   final AuthService _authService;
 
   Future<Map<String, dynamic>> register({
-    required String email,
-    required String password,
+    required String username,
     String languageCode = 'en',
   }) async {
     final response = await _authService.register(
-      email: email,
-      password: password,
+      username: username,
       languageCode: languageCode,
     );
 
@@ -27,8 +25,6 @@ class AuthRepository {
       final userData = response.data!['user'] as Map<String, dynamic>;
       return {
         'user': User.fromJson(userData),
-        'token': response.data!['token'] as String,
-        'tokenType': response.data!['token_type'] as String,
       };
     } else {
       throw Exception(response.message ?? 'Registration failed');
@@ -36,29 +32,24 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
+    required String username,
   }) async {
     final response = await _authService.login(
-      email: email,
-      password: password,
+      username: username,
     );
 
     if (response.success && response.data != null) {
       final userData = response.data!['user'] as Map<String, dynamic>;
       return {
         'user': userData, // Pass raw data to be parsed by User.fromJson
-        'token': response.data!['token'] as String,
-        'tokenType': response.data!['token_type'] as String,
-        'expiresIn': response.data!['expires_in']?.toString(), // Convert to String safely
       };
     } else {
       throw Exception(response.message ?? 'Login failed');
     }
   }
 
-  Future<Map<String, dynamic>> getProfile() async {
-    final response = await _authService.getProfile();
+  Future<Map<String, dynamic>> getProfile(String userId) async {
+    final response = await _authService.getProfile(userId: userId);
 
     if (response.success && response.data != null) {
       final userData = response.data!['profile'] as Map<String, dynamic>;
@@ -73,11 +64,11 @@ class AuthRepository {
   }
 
   Future<User> updateProfile({
-    required String fullName,
+    required String userId,
     String? languageCode,
   }) async {
     final response = await _authService.updateProfile(
-      fullName: fullName,
+      userId: userId,
       languageCode: languageCode,
     );
 
@@ -89,24 +80,8 @@ class AuthRepository {
     }
   }
 
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    final response = await _authService.changePassword(
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-    );
-    if (response.data != null) {
-      // Handle any additional data if needed
-      print('Password change response: ${response.success}');
-    }
-    if (!response.success) {
-      throw Exception(response.message ?? 'Failed to change password');
-    }
-  }
-
   Future<void> logout() async {
-    await _authService.logout();
+    // For simplified auth, logout is just client-side cleanup
+    return;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/database/database_helper.dart';
 import '../../core/utils/debug_helper.dart';
 import '../models/test_model.dart';
 import '../services/test_service.dart';
@@ -13,57 +14,49 @@ class TestRepository {
   TestRepository(this._testService);
   final TestService _testService;
 
-  /// Get available tests for current user
+  /// Get available tests for current user (using offline database)
   Future<Map<String, List<Test>>> getAvailableTests({
     String? secondaryLanguage,
     @deprecated bool includeVietnamese = false,
   }) async {
     try {
-      print('🌍 Repository: Loading tests with secondary language: $secondaryLanguage');
+      print('🗄️ Repository: Loading tests from offline database');
+      print('🌍 Repository: Secondary language: $secondaryLanguage');
 
-      final response = await _testService.getAvailableTests(
-        secondaryLanguage: secondaryLanguage,
-        includeVietnamese: includeVietnamese, // Backward compatibility
-      );
+      // Get all tests from database
+      final allTests = await DatabaseHelper.instance.getAllTests();
 
-      if (response.success && response.data != null) {
-        final data = response.data!;
+      final result = <String, List<Test>>{
+        'chapter': <Test>[],
+        'comprehensive': <Test>[],
+        'exam': <Test>[],
+      };
 
-        Map<String, dynamic> testsData;
-        if (data.containsKey('tests')) {
-          testsData = data['tests'] as Map<String, dynamic>;
-        } else {
-          testsData = data;
-        }
-
-        final result = <String, List<Test>>{};
-
-        for (final testType in ['chapter', 'comprehensive', 'exam']) {
-          final testList = testsData[testType];
-          if (testList != null && testList is List) {
-            try {
-              final tests = testList.map((e) {
-                return Test.fromJson(e as Map<String, dynamic>);
-              }).toList();
-
-              result[testType] = tests;
-              print('✅ Repository: Parsed ${tests.length} $testType tests');
-            } catch (e) {
-              print('❌ Repository: Error parsing $testType tests: $e');
-              result[testType] = <Test>[];
-            }
-          } else {
-            result[testType] = <Test>[];
+      // Parse and categorize tests
+      for (final testData in allTests) {
+        try {
+          final test = Test.fromJson(testData);
+          final testType = test.testType.toLowerCase();
+          
+          if (result.containsKey(testType)) {
+            result[testType]!.add(test);
+            print('🔧 Parsing Test JSON: ${test.id} - ${test.testType} - ${test.testNumber}');
+            print('✅ Successfully parsed test: ${test.id} - ${test.displayTitle}');
           }
+        } catch (e) {
+          print('❌ Repository: Error parsing test: $e');
         }
-
-        final totalTests = result.values.fold<int>(0, (sum, list) => sum + list.length);
-        print('🎯 Repository: Loaded $totalTests total tests with language: ${secondaryLanguage ?? 'none'}');
-
-        return result;
-      } else {
-        throw Exception(response.message ?? 'Failed to load tests');
       }
+
+      // Log results
+      for (final entry in result.entries) {
+        print('✅ Repository: Parsed ${entry.value.length} ${entry.key} tests');
+      }
+
+      final totalTests = result.values.fold<int>(0, (sum, list) => sum + list.length);
+      print('🎯 Total: $totalTests tests across ${result.keys.length} categories with language: $secondaryLanguage');
+      
+      return result;
     } catch (e) {
       print('💥 Repository error in getAvailableTests: $e');
       rethrow;
@@ -94,7 +87,7 @@ class TestRepository {
     }
   }
 
-  /// Get specific test with questions
+  /// Get specific test with questions (using offline database)
   Future<Test> getTest(
       int testId, {
         String? secondaryLanguage,
@@ -102,45 +95,28 @@ class TestRepository {
         bool includeCorrectAnswers = false,
       }) async {
     try {
-      final response = await _testService.getTest(
-          testId,
-          secondaryLanguage: secondaryLanguage,
-          includeVietnamese: includeVietnamese,
-          includeCorrectAnswers: includeCorrectAnswers);
+      print('📄 Loading test detail for: $testId from database');
 
-      print('🔍 Repository received test response: ${response.success}');
-
-      if (response.success && response.data != null) {
-        final data = response.data!;
-        print('📊 Raw test data keys: ${data.keys}');
-
-        // ✅ Handle the correct API structure: data.test
-        Map<String, dynamic> testData;
-
-        if (data.containsKey('test')) {
-          // New API structure: { data: { test: {...} } }
-          testData = data['test'] as Map<String, dynamic>;
-          print('✅ Using new API structure with test wrapper');
-        } else {
-          // Fallback: Direct structure { data: {...} }
-          testData = data;
-          print('⚠️ Using fallback direct structure');
-        }
-
-        print('📋 Test data keys: ${testData.keys}');
-        print('📝 Test has ${(testData['questions'] as List?)?.length ?? 0} questions');
-
-        final test = Test.fromJson(testData);
-
-        // Debug the parsed test
-        DebugHelper.debugTestObject(test);
-
-        print('✅ Loaded test ${test.id}: ${test.displayTitle} with ${test.questions?.length ?? 0} questions');
-        return test;
-      } else {
-        print('❌ API response failed: ${response.message}');
-        throw Exception(response.message ?? 'Failed to load test');
+      // Get test data from local database
+      final testData = await DatabaseHelper.instance.getCompleteTestData(testId);
+      
+      if (testData == null) {
+        throw Exception('Test $testId not found in database');
       }
+
+      print('📊 Raw test data keys: ${testData.keys}');
+
+      // The database returns a structure like { test: {...}, questions: [...] }
+      final testJson = testData['test'] as Map<String, dynamic>;
+      final questionsJson = testData['questions'] as List<dynamic>;
+      
+      // Add questions to the test JSON so fromJson can parse them
+      testJson['questions'] = questionsJson;
+      
+      final test = Test.fromJson(testJson);
+
+      print('✅ Loaded test ${test.id}: ${test.displayTitle} with ${test.questions?.length ?? 0} questions from database');
+      return test;
     } catch (e) {
       print('💥 Repository error in getTest($testId): $e');
       rethrow;

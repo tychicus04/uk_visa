@@ -18,19 +18,11 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
+  final _usernameController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -88,72 +80,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 32),
 
                 CustomTextField(
-                  controller: _emailController,
-                  labelText: l10n.auth_email,
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: Icons.email_outlined,
+                  controller: _usernameController,
+                  labelText: 'Username',
+                  keyboardType: TextInputType.text,
+                  prefixIcon: Icons.person_outline,
                   validator: (value) {
                     if (value?.isEmpty ?? true) {
-                      return l10n.validation_emailRequired;
+                      return 'Username is required';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
-                      return l10n.validation_emailInvalid;
+                    if (value!.length < 3) {
+                      return 'Username must be at least 3 characters';
                     }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _passwordController,
-                  labelText: l10n.auth_password,
-                  obscureText: !_isPasswordVisible,
-                  prefixIcon: Icons.lock_outlined,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return l10n.validation_passwordRequired;
-                    }
-                    if (value!.length < 6) {
-                      return l10n.validation_passwordTooShort;
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _confirmPasswordController,
-                  labelText: l10n.auth_confirmPassword,
-                  obscureText: !_isConfirmPasswordVisible,
-                  prefixIcon: Icons.lock_outlined,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return l10n.validation_passwordRequired;
-                    }
-                    if (value != _passwordController.text) {
-                      return l10n.validation_passwordsDoNotMatch;
+                    if (!RegExp(r'^[a-zA-Z0-9_-]+$').hasMatch(value)) {
+                      return 'Username can only contain letters, numbers, underscore, and dash';
                     }
                     return null;
                   },
@@ -197,9 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     try {
       await ref.read(authProvider.notifier).register(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        fullName: _nameController.text.trim(),
+        username: _usernameController.text.trim(),
       );
     } catch (e) {
       if (mounted) {
