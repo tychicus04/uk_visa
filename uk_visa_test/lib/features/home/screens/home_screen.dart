@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../widgets/authenticated_home_content.dart';
 import '../widgets/home_header.dart';
+import '../widgets/new_home_content.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -17,20 +17,16 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: CustomScrollView(
         slivers: [
-          // Common Header for all users
+          // Simple Header with Language Selector
           HomeHeader(),
 
-          // Content - always show authenticated content (no auth required)
+          // New Home Content
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: 8),
-
-                // Always show main content without authentication check
-                AuthenticatedHomeContent(),
-
-                const SizedBox(height: 100), // Bottom padding for navigation
+                const NewHomeContent(),
+                const SizedBox(height: 40), // Bottom padding
               ]),
             ),
           ),

@@ -5,13 +5,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../data/states/BilingualState.dart';
 import '../../../shared/providers/bilingual_provider.dart';
-import '../../../core/constants/api_constants.dart';
+
+// 🆕 Enum for different answer states
+enum AnswerState {
+  normal,              // Default state
+  selected,           // User selected but not showing correct answers yet
+  correctSelected,    // User selected correct answer (green)
+  correctNotSelected, // Correct answer not selected by user (light green)
+  incorrectSelected,  // User selected incorrect answer (red)
+}
 
 class EnhancedQuestionWidget extends ConsumerWidget {
   final dynamic question;
   final int questionNumber;
   final int totalQuestions;
   final List<String> selectedAnswers;
+  final bool isAnswered;
+  final bool? isCorrect; // null = not answered, true = correct, false = incorrect
+  final List<String>? correctAnswers; // 🆕 Show correct answers
+  final bool showCorrectAnswers; // 🆕 Whether to highlight correct answers
   final Function(String answerId, bool isSelected) onAnswerSelected;
 
   const EnhancedQuestionWidget({
@@ -20,6 +32,10 @@ class EnhancedQuestionWidget extends ConsumerWidget {
     required this.questionNumber,
     required this.totalQuestions,
     required this.selectedAnswers,
+    required this.isAnswered,
+    required this.isCorrect,
+    this.correctAnswers,
+    this.showCorrectAnswers = false,
     required this.onAnswerSelected,
   });
 
@@ -37,12 +53,16 @@ class EnhancedQuestionWidget extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔥 QUESTION TEXT (MULTI-LANGUAGE)
             _buildQuestionText(question, bilingualState, theme, isDark),
+
+            // 🔄 UPDATED: Only show feedback when showCorrectAnswers is true (Practice mode)
+            if (isAnswered && isCorrect != null && showCorrectAnswers) ...[
+              const SizedBox(height: 16),
+              _buildAnswerFeedback(isCorrect!, theme, isDark),
+            ],
 
             const SizedBox(height: 20),
 
-            // 🔥 ANSWER OPTIONS
             Expanded(
               child: ListView.separated(
                 itemCount: question.answers.length,
@@ -50,13 +70,42 @@ class EnhancedQuestionWidget extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final answer = question.answers[index];
                   final isSelected = selectedAnswers.contains(answer.answerId);
+                  final isCorrectAnswer = correctAnswers?.contains(answer.answerId) ?? false;
+                  
+                  // Determine answer state for visual feedback
+                  AnswerState answerState = AnswerState.normal;
+                  if (isAnswered && showCorrectAnswers) {
+                    if (isCorrectAnswer && isSelected) {
+                      answerState = AnswerState.correctSelected; // Green - user selected correct answer
+                    } else if (isCorrectAnswer && !isSelected) {
+                      answerState = AnswerState.correctNotSelected; // Light green - correct answer not selected
+                    } else if (!isCorrectAnswer && isSelected) {
+                      answerState = AnswerState.incorrectSelected; // Red - user selected wrong answer
+                    } else {
+                      answerState = AnswerState.normal; // Normal - not selected, not correct
+                    }
+                  } else if (isSelected) {
+                    answerState = AnswerState.selected; // Blue - selected but not yet showing answers
+                  }
 
                   return _buildAnswerOption(
                     answer: answer,
                     isSelected: isSelected,
+                    answerState: answerState,
                     bilingualState: bilingualState,
                     isMultiSelect: isMultiSelect,
+                    isAnswered: isAnswered, // 🆕 Pass isAnswered to control interactivity
                     onTap: () {
+                      // 🔥 Prevent any changes once question has been answered
+                      if (isAnswered) {
+                        return; // Do nothing if question has already been answered
+                      }
+                      
+                      // For radio questions, don't allow deselecting if already selected
+                      if (!isMultiSelect && isSelected) {
+                        return; // Do nothing if radio button is already selected
+                      }
+                      
                       onAnswerSelected(answer.answerId, !isSelected);
                     },
                     theme: theme,
@@ -85,18 +134,17 @@ class EnhancedQuestionWidget extends ConsumerWidget {
         ),
       ),
 
-      // 🆕 ENHANCED: Secondary language translation (if enabled and available)
       if (bilingualState.isEnabled && _hasQuestionTranslation(question, bilingualState.secondaryLanguage)) ...[
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark
-                ? AppColors.primary.withOpacity(0.1)
-                : AppColors.primary.withOpacity(0.05),
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : AppColors.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.primary.withOpacity(isDark ? 0.3 : 0.2),
+              color: AppColors.primary.withValues(alpha: isDark ? 0.3 : 0.2),
               width: 1,
             ),
           ),
@@ -120,53 +168,133 @@ class EnhancedQuestionWidget extends ConsumerWidget {
     ],
   );
 
+  // 🆕 ANSWER FEEDBACK WIDGET (hiển thị đúng/sai ngay lập tức)
+  Widget _buildAnswerFeedback(bool isCorrect, ThemeData theme, bool isDark) {
+    final feedbackColor = isCorrect ? AppColors.success : AppColors.error;
+    final feedbackIcon = isCorrect ? Icons.check_circle : Icons.cancel;
+    final feedbackText = isCorrect ? 'Correct!' : 'Incorrect!';
+    
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: feedbackColor.withValues(alpha: isDark ? 0.15 : 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: feedbackColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            feedbackIcon,
+            color: feedbackColor,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              feedbackText,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: feedbackColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 🔥 ANSWER OPTION WITH LARGE TOUCH TARGET
   Widget _buildAnswerOption({
     required dynamic answer,
     required bool isSelected,
+    required AnswerState answerState, // 🆕 New parameter for answer state
     required BilingualState bilingualState,
     required bool isMultiSelect,
+    required bool isAnswered, // 🆕 New parameter to control interactivity
     required VoidCallback onTap,
     required ThemeData theme,
     required bool isDark,
   }) {
-    // Theme-aware colors
-    final backgroundColor = isSelected
-        ? AppColors.primary.withOpacity(isDark ? 0.15 : 0.1)
-        : (isDark ? AppColors.cardDark : AppColors.cardLight);
+    // 🆕 Enhanced theme-aware colors based on answer state
+    Color backgroundColor;
+    Color borderColor;
+    Color badgeBackgroundColor;
+    Color badgeBorderColor;
+    Color? badgeTextColor;
+    Color answerTextColor;
+    Color secondaryTextColor;
+    Color iconColor;
 
-    final borderColor = isSelected
-        ? AppColors.primary
-        : (isDark ? AppColors.borderDark : AppColors.borderLight);
-
-    final badgeBackgroundColor = isSelected
-        ? AppColors.primary
-        : (isDark ? AppColors.surfaceDark : Colors.white);
-
-    final badgeBorderColor = isSelected
-        ? AppColors.primary
-        : (isDark ? AppColors.borderDark : Colors.grey[400]!);
-
-    final badgeTextColor = isSelected
-        ? Colors.white
-        : (isDark ? AppColors.textPrimaryDark : Colors.grey[700]);
-
-    final answerTextColor = isSelected
-        ? AppColors.primary
-        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight);
-
-    final secondaryTextColor = isSelected
-        ? AppColors.primary.withOpacity(0.8)
-        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
-
-    final iconColor = isSelected
-        ? AppColors.primary
-        : (isDark ? AppColors.iconDark : AppColors.iconLight);
+    switch (answerState) {
+      case AnswerState.correctSelected:
+        // Green theme for correct answer selected by user
+        backgroundColor = AppColors.success.withValues(alpha: isDark ? 0.15 : 0.1);
+        borderColor = AppColors.success;
+        badgeBackgroundColor = AppColors.success;
+        badgeBorderColor = AppColors.success;
+        badgeTextColor = Colors.white;
+        answerTextColor = AppColors.success;
+        secondaryTextColor = AppColors.success.withValues(alpha: 0.8);
+        iconColor = AppColors.success;
+        break;
+        
+      case AnswerState.correctNotSelected:
+        // Light green theme for correct answer not selected
+        backgroundColor = AppColors.success.withValues(alpha: isDark ? 0.08 : 0.05);
+        borderColor = AppColors.success.withValues(alpha: 0.6);
+        badgeBackgroundColor = AppColors.success.withValues(alpha: 0.6);
+        badgeBorderColor = AppColors.success.withValues(alpha: 0.6);
+        badgeTextColor = Colors.white;
+        answerTextColor = AppColors.success.withValues(alpha: 0.8);
+        secondaryTextColor = AppColors.success.withValues(alpha: 0.6);
+        iconColor = AppColors.success.withValues(alpha: 0.6);
+        break;
+        
+      case AnswerState.incorrectSelected:
+        // Red theme for incorrect answer selected by user
+        backgroundColor = AppColors.error.withValues(alpha: isDark ? 0.15 : 0.1);
+        borderColor = AppColors.error;
+        badgeBackgroundColor = AppColors.error;
+        badgeBorderColor = AppColors.error;
+        badgeTextColor = Colors.white;
+        answerTextColor = AppColors.error;
+        secondaryTextColor = AppColors.error.withValues(alpha: 0.8);
+        iconColor = AppColors.error;
+        break;
+        
+      case AnswerState.selected:
+        // Blue theme for selected answer (before showing correct answers)
+        backgroundColor = AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1);
+        borderColor = AppColors.primary;
+        badgeBackgroundColor = AppColors.primary;
+        badgeBorderColor = AppColors.primary;
+        badgeTextColor = Colors.white;
+        answerTextColor = AppColors.primary;
+        secondaryTextColor = AppColors.primary.withValues(alpha: 0.8);
+        iconColor = AppColors.primary;
+        break;
+        
+      case AnswerState.normal:
+        // Default theme for unselected answers
+        backgroundColor = isDark ? AppColors.cardDark : AppColors.cardLight;
+        borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+        badgeBackgroundColor = isDark ? AppColors.surfaceDark : Colors.white;
+        badgeBorderColor = isDark ? AppColors.borderDark : Colors.grey[400]!;
+        badgeTextColor = isDark ? AppColors.textPrimaryDark : Colors.grey[700];
+        answerTextColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+        secondaryTextColor = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+        iconColor = isDark ? AppColors.iconDark : AppColors.iconLight;
+        break;
+    }
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: (isAnswered && showCorrectAnswers) ? null : onTap, // � UPDATED: Only disable in Practice mode after showing answers
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -176,17 +304,17 @@ class EnhancedQuestionWidget extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: borderColor,
-              width: isSelected ? 2 : 1,
+              width: (answerState != AnswerState.normal) ? 2 : 1,
             ),
-            boxShadow: isSelected && !isDark ? [
+            boxShadow: (answerState != AnswerState.normal) && !isDark ? [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.2),
+                color: borderColor.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ] : (isDark ? [] : [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -206,9 +334,9 @@ class EnhancedQuestionWidget extends ConsumerWidget {
                     color: badgeBorderColor,
                     width: 2,
                   ),
-                  boxShadow: isSelected ? [
+                  boxShadow: (answerState != AnswerState.normal) ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: borderColor.withValues(alpha: 0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

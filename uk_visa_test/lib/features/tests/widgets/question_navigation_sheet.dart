@@ -141,7 +141,7 @@ class QuestionNavigationSheet extends StatelessWidget {
                       side: BorderSide(
                           color: isDark
                               ? AppColors.borderDark
-                              : AppColors.primary.withOpacity(0.3)
+                              : AppColors.primary.withValues(alpha: 0.3)
                       ),
                       foregroundColor: isDark
                           ? AppColors.textPrimaryDark
@@ -225,7 +225,7 @@ class QuestionNavigationSheet extends StatelessWidget {
       textColor = Colors.white;
       icon = Icons.location_on;
     } else if (isAnswered) {
-      backgroundColor = AppColors.success.withOpacity(0.1);
+      backgroundColor = AppColors.success.withValues(alpha: 0.1);
       borderColor = AppColors.success;
       textColor = AppColors.success;
       icon = Icons.check;

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../data/models/question_model.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/ad_loading_dialog.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -32,6 +34,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   PageController? _pageController;
   int _currentQuestionIndex = 0;
   late Map<String, List<String>> _answers;
+  late Map<String, bool> _answeredQuestions; // Track which questions have been answered
+  late Map<String, bool> _correctAnswers; // Track correct/incorrect answers
   late DateTime _startTime;
 
   @override
@@ -39,6 +43,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     super.initState();
     _pageController = PageController();
     _answers = {};
+    _answeredQuestions = {};
+    _correctAnswers = {};
     _startTime = DateTime.now();
   }
 
@@ -48,9 +54,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     super.dispose();
   }
 
-  // Check if test type is timed (exam) or not (chapter/comprehensive)
+  // Check if test type is timed (exam) or not (chapter only)
   bool _isTimedTest(String testType) {
-    return testType.toLowerCase() == 'exam';
+    return testType.toLowerCase() == 'exam' || testType.toLowerCase() == 'comprehensive';
   }
 
   bool _areAllQuestionsAnswered(List<Question> questions) {
@@ -115,11 +121,24 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                   itemCount: test.questions!.length,
                   itemBuilder: (context, index) {
                     final question = test.questions![index];
+                    final isAnswered = _answeredQuestions[question.id] ?? false;
+                    final isCorrect = _correctAnswers[question.id];
+                    
+                    // 🆕 Get correct answers for this question
+                    final correctAnswers = question.answers
+                        .where((answer) => answer.isCorrect == true)
+                        .map((answer) => answer.answerId)
+                        .toList();
+                    
                     return EnhancedQuestionWidget(
                       question: question,
                       questionNumber: index + 1,
                       totalQuestions: test.questions!.length,
                       selectedAnswers: _answers[question.id] ?? [],
+                      isAnswered: isAnswered,
+                      isCorrect: isCorrect,
+                      correctAnswers: correctAnswers, // 🆕 Pass correct answers
+                      showCorrectAnswers: !isTimedTest && isAnswered, // 🔄 UPDATED: Only show in Practice mode after answering
                       onAnswerSelected: (answerId, isSelected) {
                         _handleAnswerSelection(question, answerId, isSelected);
                       },
@@ -158,7 +177,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final appBarForeground = isDark ? AppColors.textPrimaryDark : Colors.white;
     final progressBackground = isDark
         ? AppColors.borderDark
-        : Colors.white.withOpacity(0.3);
+        : Colors.white.withValues(alpha: 0.3);
     final progressValue = isDark ? AppColors.primary : Colors.white;
 
     return SliverAppBar(
@@ -186,7 +205,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             isTimedTest ? l10n.test_timedTest : l10n.test_practiceMode,
             style: TextStyle(
               fontSize: 12,
-              color: appBarForeground.withOpacity(0.8),
+              color: appBarForeground.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -215,8 +234,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
               colors: isDark
                   ? [AppColors.surfaceDark, AppColors.cardDark]
                   : isTimedTest
-                  ? [AppColors.warning, AppColors.warning.withOpacity(0.8)]
-                  : [AppColors.info, AppColors.info.withOpacity(0.8)],
+                  ? [AppColors.warning, AppColors.warning.withValues(alpha: 0.8)]
+                  : [AppColors.info, AppColors.info.withValues(alpha: 0.8)],
             ),
           ),
           child: SafeArea(
@@ -252,7 +271,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                         Text(
                           l10n.test_percentageComplete((progress * 100).round()),
                           style: TextStyle(
-                            color: appBarForeground.withOpacity(0.9),
+                            color: appBarForeground.withValues(alpha: 0.9),
                             fontSize: 12,
                           ),
                         ),
@@ -275,10 +294,10 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: appBarForeground.withOpacity(0.1),
+                        color: appBarForeground.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: appBarForeground.withOpacity(0.3),
+                          color: appBarForeground.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -307,7 +326,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final totalQuestions = test.questions?.length ?? 24;
     final isFirstQuestion = _currentQuestionIndex == 0;
     final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
-    final answeredCount = _answers.values.where((answers) => answers.isNotEmpty).length;
     final allAnswered = test.questions != null && _areAllQuestionsAnswered(test.questions!);
 
     return DecoratedBox(
@@ -317,7 +335,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           BoxShadow(
             offset: const Offset(0, -2),
             blurRadius: 8,
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
           ),
         ],
       ),
@@ -341,7 +359,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
                           side: BorderSide(
                               color: isDark
                                   ? AppColors.borderDark
-                                  : AppColors.primary.withOpacity(0.3)
+                                  : AppColors.primary.withValues(alpha: 0.3)
                           ),
                           foregroundColor: isDark
                               ? AppColors.textPrimaryDark
@@ -385,8 +403,15 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   void _handleAnswerSelection(Question question, String answerId, bool isSelected) {
     setState(() {
       if (question.questionType == 'radio') {
-        _answers[question.id] = isSelected ? [answerId] : [];
+        // 🔥 For radio questions: always set the new selection (replacing any previous selection)
+        if (isSelected) {
+          _answers[question.id] = [answerId]; // Replace with new selection
+          _answeredQuestions[question.id] = true;
+          _correctAnswers[question.id] = _isAnswerCorrect(question, _answers[question.id]!);
+        }
+        // Note: For radio buttons, we don't allow deselecting (isSelected will always be true when called)
       } else {
+        // Handle checkbox questions - allow multiple selections
         final currentAnswers = _answers[question.id] ?? [];
         if (isSelected) {
           if (!currentAnswers.contains(answerId)) {
@@ -395,8 +420,59 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         } else {
           _answers[question.id] = currentAnswers.where((id) => id != answerId).toList();
         }
+
+        // 🆕 Get the required number of answers from the question model
+        final requiredCount = question.requiredAnswers;
+        final selectedAnswers = _answers[question.id] ?? [];
+        
+        // If user has selected the required number of answers, check correctness immediately
+        if (selectedAnswers.length == requiredCount) {
+          final correctAnswers = question.answers
+              .where((answer) => answer.isCorrect == true)
+              .map((answer) => answer.answerId)
+              .toSet();
+          
+          final selectedAnswersSet = selectedAnswers.toSet();
+          
+          // Check if ANY selected answer is incorrect
+          final hasIncorrectAnswer = selectedAnswersSet.any((answerId) {
+            return !correctAnswers.contains(answerId);
+          });
+          
+          // Mark as answered when required count is reached
+          _answeredQuestions[question.id] = true;
+          
+          // If any answer is incorrect, mark the whole question as wrong
+          if (hasIncorrectAnswer) {
+            _correctAnswers[question.id] = false;
+          } else {
+            // All selected answers are correct, check if we have all correct answers
+            final hasAllCorrectAnswers = correctAnswers.length == selectedAnswersSet.length && 
+                                       correctAnswers.containsAll(selectedAnswersSet);
+            _correctAnswers[question.id] = hasAllCorrectAnswers;
+          }
+        } else {
+          // Not enough answers selected yet
+          _answeredQuestions[question.id] = false;
+          _correctAnswers.remove(question.id);
+        }
       }
     });
+  }
+
+  // Helper method to check if the selected answers are correct
+  bool _isAnswerCorrect(Question question, List<String> selectedAnswerIds) {
+    final correctAnswers = question.answers
+        .where((answer) => answer.isCorrect == true)
+        .map((answer) => answer.answerId)
+        .toSet();
+    
+    final selectedAnswers = selectedAnswerIds.toSet();
+    
+    // For both radio and checkbox questions, all correct answers must be selected
+    // and no incorrect answers should be selected
+    return correctAnswers.length == selectedAnswers.length && 
+           correctAnswers.containsAll(selectedAnswers);
   }
 
   void _previousQuestion() {
@@ -490,7 +566,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final questions = test!.questions!;
     final allAnswered = _areAllQuestionsAnswered(questions);
 
-    // Different validation for Practice vs Timed tests
+    // Different validation for Practice vs Exam tests
     if (!isTimedTest && !allAnswered) {
       // For practice tests, require all questions to be answered
       final unansweredQuestions = _getUnansweredQuestions(questions);
@@ -498,18 +574,21 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
       return;
     }
 
-    // For timed tests, allow submission even if not all answered (realistic exam scenario)
-    final unansweredCount = _getUnansweredQuestions(questions).length;
+    // NEW LOGIC: For Exam tests, require ALL questions to be answered before allowing result/review access
+    if (isTimedTest && !allAnswered) {
+      final unansweredQuestions = _getUnansweredQuestions(questions);
+      _showIncompleteExamAnswersDialog(context, l10n, unansweredQuestions, questions);
+      return;
+    }
+
+    // For exam tests (timed tests), all questions must be answered before allowing submission
     String confirmationMessage;
 
     if (!isTimedTest) {
       confirmationMessage = l10n.test_confirmSubmit;
-    } else if (allAnswered) {
-      confirmationMessage = l10n.test_confirmSubmit;
     } else {
-      // Create a localized message for incomplete exam submission
-      confirmationMessage = l10n.test_submitExam + '\n' +
-          l10n.test_incompleteAnswersMessage(unansweredCount);
+      // For exam mode, since we already validated all answers are provided
+      confirmationMessage = l10n.test_confirmSubmit;
     }
 
     final confirmed = await showDialog<bool>(
@@ -537,9 +616,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (allAnswered ? AppColors.success : AppColors.warning).withOpacity(0.1),
+                color: (allAnswered ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: (allAnswered ? AppColors.success : AppColors.warning).withOpacity(0.3)),
+                border: Border.all(color: (allAnswered ? AppColors.success : AppColors.warning).withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -583,6 +662,17 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
 
     if (confirmed == true) {
+      // 🚫 TEMPORARILY DISABLED: Video ad before submitting
+      // For Exam mode, show video ad before submitting
+      // if (isTimedTest) {
+      //   try {
+      //     await _showVideoAdBeforeSubmit(context, ref, l10n);
+      //   } catch (e) {
+      //     print('🎯 Error showing video ad: $e');
+      //     // Continue with submission even if ad fails
+      //   }
+      // }
+      
       try {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -618,7 +708,8 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          context.go('/tests/result/$attemptId');
+          // Instead of navigating to result screen, show summary dialog
+          _showTestSummaryDialog(context, ref, l10n, test, attemptId);
         }
       } catch (e) {
         if (context.mounted) {
@@ -627,6 +718,268 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         }
       }
     }
+  }
+
+  // � Show video ad before submitting exam
+  Future<void> _showVideoAdBeforeSubmit(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+    if (!context.mounted) return;
+    
+    // Show ad loading dialog and handle ad display
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AdLoadingDialog(
+        onAdCompleted: () {
+          // Ad completed successfully
+          print('🎯 Video ad completed successfully');
+        },
+        onAdSkipped: () {
+          // Ad was skipped (if allowed)
+          print('🎯 Video ad was skipped');
+        },
+        allowSkip: false, // Don't allow skipping in exam mode
+      ),
+    );
+  }
+
+  // �🆕 Show test summary dialog instead of navigating to result screen
+  void _showTestSummaryDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n, dynamic test, String attemptId) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isTimedTest = _isTimedTest(test.testType);
+    
+    // Calculate results
+    final totalQuestions = test.questions!.length;
+    final correctCount = _correctAnswers.values.where((isCorrect) => isCorrect).length;
+    final incorrectCount = _correctAnswers.values.where((isCorrect) => !isCorrect).length;
+    final unansweredCount = totalQuestions - _correctAnswers.length;
+    final percentage = totalQuestions > 0 ? (correctCount / totalQuestions * 100) : 0.0;
+    final timeTaken = DateTime.now().difference(_startTime);
+    final allAnswered = _areAllQuestionsAnswered(test.questions!);
+    
+    final isPassed = percentage >= 75.0; // UK citizenship test requires 75%
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(
+              isPassed ? Icons.celebration : Icons.info_outline,
+              color: isPassed ? AppColors.success : AppColors.warning,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                isPassed ? 'Test Completed!' : 'Test Completed',
+                style: TextStyle(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Overall result banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '${percentage.round()}%',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: isPassed ? AppColors.success : AppColors.warning,
+                    ),
+                  ),
+                  Text(
+                    isPassed ? 'PASSED' : 'NEEDS IMPROVEMENT',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isPassed ? AppColors.success : AppColors.warning,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Statistics
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.check_circle,
+                    label: 'Correct',
+                    value: correctCount.toString(),
+                    color: AppColors.success,
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.cancel,
+                    label: 'Incorrect',
+                    value: incorrectCount.toString(),
+                    color: AppColors.error,
+                    isDark: isDark,
+                  ),
+                ),
+                if (unansweredCount > 0) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.help_outline,
+                      label: 'Unanswered',
+                      value: unansweredCount.toString(),
+                      color: AppColors.warning,
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Time taken
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? AppColors.surfaceDark : Colors.grey[50]),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Time: ${_formatDuration(timeTaken)}',
+                    style: TextStyle(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/tests/detail/${widget.testId}');
+            },
+            child: Text(
+              'Back to Test',
+              style: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
+          ),
+          // NEW LOGIC: Only allow access to results/review if:
+          // - Practice mode (always allowed)
+          // - Exam mode AND all questions answered
+          if (!isTimedTest || (isTimedTest && allAnswered))
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.go('/tests/result/$attemptId');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Review Answers'),
+            )
+          else
+            // Show disabled button with explanation for incomplete exams
+            Tooltip(
+              message: 'Complete all questions to access results',
+              child: ElevatedButton(
+                onPressed: null, // Disabled
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                  foregroundColor: Colors.white60,
+                ),
+                child: const Text('Review Answers'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes}m ${seconds}s';
   }
 
   void _showIncompleteAnswersDialog(BuildContext context, AppLocalizations l10n, List<int> unansweredQuestions, List<Question> allQuestions) {
@@ -677,9 +1030,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,6 +1069,102 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
             label: Text(l10n.test_goToFirstUnanswered),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.warning,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // NEW: Show exam incomplete answers dialog (different from practice)
+  void _showIncompleteExamAnswersDialog(BuildContext context, AppLocalizations l10n, List<int> unansweredQuestions, List<Question> allQuestions) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: AppColors.error,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Complete All Questions Required',
+                style: TextStyle(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'For exam mode, you must answer ALL questions before you can view results or review answers.',
+              style: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Unanswered Questions (${unansweredQuestions.length})',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    unansweredQuestions.take(5).map((index) => 'Q${index + 1}').join(', ') +
+                        (unansweredQuestions.length > 5 ? ' and ${unansweredQuestions.length - 5} more...' : ''),
+                    style: TextStyle(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _jumpToFirstUnansweredQuestion(allQuestions);
+            },
+            icon: const Icon(Icons.arrow_forward, size: 16),
+            label: const Text('Continue Exam'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
             ),
           ),
@@ -769,9 +1218,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [

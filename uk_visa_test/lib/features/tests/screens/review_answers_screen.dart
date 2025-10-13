@@ -89,7 +89,6 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       answer: answer,
                       questionNumber: index + 1,
                       totalQuestions: answers.length,
-                      showVietnamese: false, // Deprecated - now handled by bilingualState
                     );
                   },
                 ),

@@ -1,7 +1,6 @@
 // lib/data/models/answer_model.dart - ENHANCED
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
-import '../../core/constants/api_constants.dart';
 
 part 'answer_model.g.dart';
 
@@ -20,6 +19,13 @@ class Answer extends Equatable {
     this.answerTextEs,      // 🆕 Spanish
     this.answerTextPt,      // 🆕 Portuguese
     this.answerTextAr,      // 🆕 Arabic
+    this.answerTextZh,      // 🆕 Chinese
+    this.answerTextFr,      // 🆕 French
+    this.answerTextIt,      // 🆕 Italian
+    this.answerTextRu,      // 🆕 Russian
+    this.answerTextTr,      // 🆕 Turkish
+    this.answerTextTa,      // 🆕 Tamil
+    this.answerTextSo,      // 🆕 Somali
     this.isCorrect,
     this.wasSelected,
     this.createdAt,
@@ -39,6 +45,13 @@ class Answer extends Equatable {
   final String? answerTextEs;
   final String? answerTextPt;
   final String? answerTextAr;
+  final String? answerTextZh;      // 🆕 Chinese
+  final String? answerTextFr;      // 🆕 French
+  final String? answerTextIt;      // 🆕 Italian
+  final String? answerTextRu;      // 🆕 Russian
+  final String? answerTextTr;      // 🆕 Turkish
+  final String? answerTextTa;      // 🆕 Tamil
+  final String? answerTextSo;      // 🆕 Somali
 
   final bool? isCorrect;
   final bool? wasSelected;
@@ -57,6 +70,13 @@ class Answer extends Equatable {
     answerTextEs: json['answer_text_es']?.toString(),
     answerTextPt: json['answer_text_pt']?.toString(),
     answerTextAr: json['answer_text_ar']?.toString(),
+    answerTextZh: json['answer_text_zh']?.toString(),   // 🆕 Chinese
+    answerTextFr: json['answer_text_fr']?.toString(),   // 🆕 French
+    answerTextIt: json['answer_text_it']?.toString(),   // 🆕 Italian
+    answerTextRu: json['answer_text_ru']?.toString(),   // 🆕 Russian
+    answerTextTr: json['answer_text_tr']?.toString(),   // 🆕 Turkish
+    answerTextTa: json['answer_text_ta']?.toString(),   // 🆕 Tamil
+    answerTextSo: json['answer_text_so']?.toString(),   // 🆕 Somali
     isCorrect: _parseBool(json['is_correct']),
     wasSelected: _parseBool(json['was_selected']),
     createdAt: json['created_at']?.toString(),
@@ -87,6 +107,13 @@ class Answer extends Equatable {
       case 'es': return answerTextEs?.isNotEmpty == true ? answerTextEs! : answerText;
       case 'pt': return answerTextPt?.isNotEmpty == true ? answerTextPt! : answerText;
       case 'ar': return answerTextAr?.isNotEmpty == true ? answerTextAr! : answerText;
+      case 'zh': return answerTextZh?.isNotEmpty == true ? answerTextZh! : answerText;
+      case 'fr': return answerTextFr?.isNotEmpty == true ? answerTextFr! : answerText;
+      case 'it': return answerTextIt?.isNotEmpty == true ? answerTextIt! : answerText;
+      case 'ru': return answerTextRu?.isNotEmpty == true ? answerTextRu! : answerText;
+      case 'tr': return answerTextTr?.isNotEmpty == true ? answerTextTr! : answerText;
+      case 'ta': return answerTextTa?.isNotEmpty == true ? answerTextTa! : answerText;
+      case 'so': return answerTextSo?.isNotEmpty == true ? answerTextSo! : answerText;
       default: return answerText;
     }
   }
@@ -103,6 +130,13 @@ class Answer extends Equatable {
       case 'es': return answerTextEs?.isNotEmpty == true;
       case 'pt': return answerTextPt?.isNotEmpty == true;
       case 'ar': return answerTextAr?.isNotEmpty == true;
+      case 'zh': return answerTextZh?.isNotEmpty == true;
+      case 'fr': return answerTextFr?.isNotEmpty == true;
+      case 'it': return answerTextIt?.isNotEmpty == true;
+      case 'ru': return answerTextRu?.isNotEmpty == true;
+      case 'tr': return answerTextTr?.isNotEmpty == true;
+      case 'ta': return answerTextTa?.isNotEmpty == true;
+      case 'so': return answerTextSo?.isNotEmpty == true;
       default: return false;
     }
   }

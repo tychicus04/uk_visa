@@ -17,7 +17,6 @@ class TestRepository {
   /// Get available tests for current user (using offline database)
   Future<Map<String, List<Test>>> getAvailableTests({
     String? secondaryLanguage,
-    @deprecated bool includeVietnamese = false,
   }) async {
     try {
       print('🗄️ Repository: Loading tests from offline database');
@@ -66,12 +65,10 @@ class TestRepository {
   /// Get free tests (no authentication required)
   Future<List<Test>> getFreeTests({
     String? secondaryLanguage,
-    @deprecated bool includeVietnamese = false,
   }) async {
     try {
       final response = await _testService.getFreeTests(
-          secondaryLanguage: secondaryLanguage,
-          includeVietnamese: includeVietnamese
+          secondaryLanguage: secondaryLanguage
       );
 
       if (response.success && response.data != null) {
@@ -91,7 +88,6 @@ class TestRepository {
   Future<Test> getTest(
       int testId, {
         String? secondaryLanguage,
-        @deprecated bool includeVietnamese = false,
         bool includeCorrectAnswers = false,
       }) async {
     try {
@@ -124,20 +120,18 @@ class TestRepository {
   }
 
   /// Search tests
-  Future<List<Test>> searchTests({
-    String? secondaryLanguage,
-    String? query,
-    String? type,
-    int? chapterId,
-    @deprecated bool includeVietnamese = false,
-  }) async {
+  Future<List<Test>> searchTests(
+      String query, {
+        String? secondaryLanguage,
+        String? type,
+        int? chapterId,
+      }) async {
     try {
       final response = await _testService.searchTests(
           secondaryLanguage: secondaryLanguage,
           query: query,
           type: type,
-          chapterId: chapterId,
-          includeVietnamese: includeVietnamese
+          chapterId: chapterId
       );
 
       if (response.success && response.data != null) {
@@ -155,16 +149,13 @@ class TestRepository {
 
   /// Get tests by type
   Future<List<Test>> getTestsByType(
-      String type,
-      {
+      String type, {
         String? secondaryLanguage,
-        @deprecated bool includeVietnamese = false,
       }) async {
     try {
       final response = await _testService.getTestsByType(
           type,
-          secondaryLanguage: secondaryLanguage,
-          includeVietnamese: includeVietnamese);
+          secondaryLanguage: secondaryLanguage);
 
       if (response.success && response.data != null) {
         final tests = (response.data!).map((e) => Test.fromJson(e)).toList();
@@ -183,13 +174,11 @@ class TestRepository {
   Future<List<Test>> getTestsByChapter(
       int chapterId, {
         String? secondaryLanguage,
-        @deprecated bool includeVietnamese = false,
       }) async {
     try {
       final response = await _testService.getTestsByChapter(
           chapterId,
-          secondaryLanguage: secondaryLanguage,
-          includeVietnamese: includeVietnamese);
+          secondaryLanguage: secondaryLanguage);
 
       if (response.success && response.data != null) {
         final tests = (response.data!).map((e) => Test.fromJson(e)).toList();

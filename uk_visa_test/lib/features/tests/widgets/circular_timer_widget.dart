@@ -69,7 +69,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
     if (widget.isDarkMode) {
       return AppColors.borderDark;
     } else {
-      return Colors.white.withOpacity(0.2);
+      return Colors.white.withValues(alpha: 0.2);
     }
   }
 
@@ -106,7 +106,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget>
               Text(
                 'LEFT',
                 style: TextStyle(
-                  color: _getTimerColor().withOpacity(0.8),
+                  color: _getTimerColor().withValues(alpha: 0.8),
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.5,

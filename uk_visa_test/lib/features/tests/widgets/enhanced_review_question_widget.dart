@@ -11,14 +11,12 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
   final AttemptAnswer answer;
   final int questionNumber;
   final int totalQuestions;
-  @deprecated final bool showVietnamese; // Keep for backward compatibility
 
   const EnhancedReviewQuestionWidget({
     super.key,
     required this.answer,
     required this.questionNumber,
     required this.totalQuestions,
-    this.showVietnamese = false, // Deprecated parameter
   });
 
   @override
@@ -48,7 +46,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
 
             // Answer Options Label
             Text(
-              l10n.answer_options ?? 'Answer Options',
+              l10n.answer_options,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -126,7 +124,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${l10n.question ?? 'Question'} $questionNumber',
+                  '${l10n.question} $questionNumber',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: answer.isCorrect ? AppColors.success : AppColors.error,
@@ -134,8 +132,8 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
                 ),
                 Text(
                   answer.isCorrect
-                      ? (l10n.correct_answer ?? 'Correct Answer!')
-                      : (l10n.incorrect_answer ?? 'Incorrect Answer'),
+                      ? l10n.correct_answer
+                      : l10n.incorrect_answer,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: answer.isCorrect ? AppColors.success : AppColors.error,
                     fontWeight: FontWeight.w500,
@@ -188,7 +186,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                l10n.question ?? 'Question',
+                l10n.question,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
@@ -265,13 +263,13 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
       borderColor = AppColors.success;
       textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
       statusIcon = Icons.check_circle;
-      statusLabel = l10n.correct ?? 'Correct';
+      statusLabel = l10n.correct;
     } else if (wasSelected) {
       backgroundColor = AppColors.error.withValues(alpha: 0.15);
       borderColor = AppColors.error;
       textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
       statusIcon = Icons.cancel;
-      statusLabel = l10n.your_answer ?? 'Your Answer';
+      statusLabel = l10n.your_answer;
     } else {
       backgroundColor = isDark ? AppColors.cardDark : AppColors.cardLight;
       borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
@@ -420,7 +418,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                l10n.explanation ?? 'Explanation',
+                l10n.explanation,
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: AppColors.info,
                   fontWeight: FontWeight.bold,

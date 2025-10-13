@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
@@ -8,8 +7,6 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
-import '../../../shared/widgets/custom_button.dart';
-import '../../auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -19,9 +16,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
-    final locale = ref.watch(localeProvider);
     final bilingualState = ref.watch(bilingualProvider);
-    final authState = ref.watch(authProvider);
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -59,7 +54,7 @@ class SettingsScreen extends ConsumerWidget {
             trailing: Switch.adaptive(
               value: bilingualState.isEnabled,
               onChanged: (value) => ref.read(bilingualProvider.notifier).setBilingualMode(value),
-              activeColor: AppColors.primary,
+                            activeTrackColor: AppColors.primary,
             ),
           ),
 
@@ -78,10 +73,10 @@ class SettingsScreen extends ConsumerWidget {
               margin: const EdgeInsets.only(top: 8, bottom: 8),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.info.withOpacity(0.1),
+                color: AppColors.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.info.withOpacity(0.3),
+                  color: AppColors.info.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -107,7 +102,7 @@ class SettingsScreen extends ConsumerWidget {
                         Text(
                           'Questions and answers will be shown in English with ${ApiConstants.getLanguageName(bilingualState.secondaryLanguage)} translations below.',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.info.withOpacity(0.8),
+                            color: AppColors.info.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -158,7 +153,7 @@ class SettingsScreen extends ConsumerWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
@@ -225,213 +220,6 @@ class SettingsScreen extends ConsumerWidget {
           // ),
 
           const SizedBox(height: 24),
-
-          // Logout Section - Only show when authenticated
-          if (authState.isAuthenticated) ...[
-            _buildSettingTile(
-              icon: Icons.logout,
-              title: l10n.auth_logout,
-              onTap: () => _showLogoutDialog(context, ref, l10n, theme),
-              theme: theme,
-              textColor: AppColors.error,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  void _handleProfileAccess(BuildContext context, WidgetRef ref, bool isAuthenticated, AppLocalizations l10n) {
-    if (isAuthenticated) {
-      // Direct access for authenticated users
-      context.go('/settings/profile');
-    } else {
-      // Show auth confirmation dialog for guests
-      _showProfileAuthDialog(context, l10n);
-    }
-  }
-
-  void _showProfileAuthDialog(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.person_outline,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Profile Access',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Sign in to access and manage your personal profile settings, account information, and preferences.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Profile features info
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.settings_outlined,
-                        color: AppColors.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Profile Features:',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...['Edit personal information', 'Change password', 'Account security settings', 'Notification preferences'].map((feature) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline,
-                          color: AppColors.success,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            feature,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                    side: BorderSide(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(l10n.common_cancel),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                    // Navigate to login with profile redirect
-                    context.go('/login?redirect=${Uri.encodeComponent('/settings/profile')}');
-                  },
-                  icon: const Icon(Icons.login, size: 18),
-                  label: Text('Sign In'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.go('/register?redirect=${Uri.encodeComponent('/settings/profile')}');
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                    ),
-                  ),
-                  Text(
-                    'Sign Up Free',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -672,7 +460,7 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : (isDark ? AppColors.cardDark : Colors.grey[50]),
           borderRadius: BorderRadius.circular(8),
           border: isSelected
@@ -781,41 +569,6 @@ class SettingsScreen extends ConsumerWidget {
             )
         )
       ],
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n, ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.auth_logout),
-        content: Text(
-          l10n.logout_confirmation,
-          style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
-        ),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CustomButton(
-                onPressed: () => Navigator.of(context).pop(),
-                text: l10n.common_cancel,
-              ),
-              CustomButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  ref.read(authProvider.notifier).logout();
-                },
-                text: l10n.auth_logout,
-                backgroundColor: AppColors.error,
-                textColor: Colors.white,
-              ),
-            ],
-          )
-        ],
-      ),
     );
   }
 }

@@ -129,9 +129,9 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: color.withOpacity(0.3)),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Icon(icon, size: 48, color: color),
             ),
@@ -208,13 +208,13 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: hasTimer
-                        ? AppColors.warning.withOpacity(0.1)
-                        : AppColors.info.withOpacity(0.1),
+                        ? AppColors.warning.withValues(alpha: 0.1)
+                        : AppColors.info.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: hasTimer
-                          ? AppColors.warning.withOpacity(0.3)
-                          : AppColors.info.withOpacity(0.3),
+                          ? AppColors.warning.withValues(alpha: 0.3)
+                          : AppColors.info.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
@@ -356,7 +356,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: AppColors.success,
@@ -405,13 +405,13 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: hasTimer
-            ? AppColors.warning.withOpacity(0.1)
-            : AppColors.info.withOpacity(0.1),
+            ? AppColors.warning.withValues(alpha: 0.1)
+            : AppColors.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: hasTimer
-              ? AppColors.warning.withOpacity(0.3)
-              : AppColors.info.withOpacity(0.3),
+              ? AppColors.warning.withValues(alpha: 0.3)
+              : AppColors.info.withValues(alpha: 0.3),
         ),
       ),
       child: Column(

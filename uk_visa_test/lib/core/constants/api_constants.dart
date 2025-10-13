@@ -140,7 +140,8 @@ class ApiConstants {
 
   // 🆕 NEW: Multi-language support
   static const List<String> supportedSecondaryLanguages = [
-    'vi', 'pl', 'pa', 'ur', 'ro', 'es', 'pt', 'ar'
+    'vi', 'pl', 'pa', 'ur', 'ro', 'es', 'pt', 'ar',
+    'zh', 'fr', 'it', 'ru', 'tr', 'ta', 'so'
   ];
 
   static const Map<String, String> languageNames = {
@@ -153,6 +154,13 @@ class ApiConstants {
     'es': 'Spanish',
     'pt': 'Portuguese',
     'ar': 'Arabic',
+    'zh': 'Chinese',
+    'fr': 'French',
+    'it': 'Italian',
+    'ru': 'Russian',
+    'tr': 'Turkish',
+    'ta': 'Tamil',
+    'so': 'Somali',
   };
 
   static const Map<String, String> languageFlags = {
@@ -165,6 +173,13 @@ class ApiConstants {
     'es': '🇪🇸',
     'pt': '🇵🇹',
     'ar': '🇸🇦',
+    'zh': '🇨🇳',
+    'fr': '🇫🇷',
+    'it': '🇮🇹',
+    'ru': '🇷🇺',
+    'tr': '🇹🇷',
+    'ta': '🇮🇳',
+    'so': '🇸🇴',
   };
 
   // 🆕 NEW: Replace old parameter names

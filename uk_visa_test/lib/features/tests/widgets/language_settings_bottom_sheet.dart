@@ -77,10 +77,10 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.05),
+                      color: AppColors.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -106,7 +106,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                             ),
                             Switch.adaptive(
                               value: bilingualState.isEnabled,
-                              activeColor: AppColors.primary,
+                              activeTrackColor: AppColors.primary,
                               onChanged: (value) {
                                 ref.read(bilingualProvider.notifier).setBilingualMode(value);
                               },
@@ -121,7 +121,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                               ? l10n.languageSettings_translationsEnabled
                               : l10n.languageSettings_translationsDisabled,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.primary.withOpacity(0.8),
+                            color: AppColors.primary.withValues(alpha: 0.8),
                             height: 1.3,
                           ),
                         ),
@@ -269,7 +269,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           border: !isLast ? Border(
             bottom: BorderSide(
@@ -370,10 +370,10 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
   }) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
-        color: color.withOpacity(0.3),
+        color: color.withValues(alpha: 0.3),
         width: 1,
       ),
     ),
@@ -403,7 +403,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
               Text(
                 description,
                 style: TextStyle(
-                  color: color.withOpacity(0.8),
+                  color: color.withValues(alpha: 0.8),
                   fontSize: 12,
                   height: 1.2,
                 ),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'language_selector.dart';
+import 'theme_selector.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
@@ -11,99 +13,37 @@ class HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 60,
       pinned: true,
       elevation: 0,
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       flexibleSpace: FlexibleSpaceBar(
-        background: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: AppColors.backgroundGradient,
-            ),
-          ),
+        background: Container(
+          color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(height: 30),
-                  Row(
-                    children: [
-                      // UK Flag Icon
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'assets/images/uk_flag.png',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                              Icons.flag,
-                              color: AppColors.ukBlue,
-                              size: 32,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
+                  // Title
+                  Text(
+                    l10n.appTitle,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    ),
+                  ),
 
-                      // Title and Subtitle
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.appTitle,
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.britishCitizenshipTest,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                fontWeight: FontWeight.w500,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    offset: const Offset(0, 1),
-                                    blurRadius: 2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  // Right side controls
+                  const Row(
+                    children: [
+                      ThemeSelector(),
+                      SizedBox(width: 8),
+                      LanguageSelector(),
                     ],
                   ),
                 ],

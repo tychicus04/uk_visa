@@ -80,7 +80,6 @@ class AttemptRepository {
     int page = 1,
     int limit = 20,
     String? secondaryLanguage,
-    bool includeVietnamese = false,
   }) async {
     try {
 
@@ -88,7 +87,6 @@ class AttemptRepository {
         page: page,
         limit: limit,
         secondaryLanguage: secondaryLanguage,
-        includeVietnamese: includeVietnamese,
       );
       if (response.success && response.data != null) {
         final data = response.data!;
@@ -110,13 +108,11 @@ class AttemptRepository {
   Future<TestAttempt> getAttemptDetail(
       int attemptId, {
         String? secondaryLanguage,
-        bool includeVietnamese = false, 
       }) async {
     try {
       final response = await _attemptService.getAttemptDetail(
         attemptId,
         secondaryLanguage: secondaryLanguage,
-        includeVietnamese: includeVietnamese,
       );
 
       if (response.success && response.data != null) {
@@ -138,7 +134,6 @@ class AttemptRepository {
             }
           }
 
-        } else if (includeVietnamese) {
         }
 
         return attempt;
@@ -175,14 +170,12 @@ class AttemptRepository {
   /// ✅ ENHANCED: Get leaderboard with dynamic multi-language support
   Future<List<Map<String, dynamic>>> getLeaderboard({
     String? secondaryLanguage,
-    bool includeVietnamese = false, // Backward compatibility
   }) async {
     try {
       print('🔄 Repository: Loading leaderboard (Language: ${secondaryLanguage ?? 'none'})');
 
       final response = await _attemptService.getLeaderboard(
         secondaryLanguage: secondaryLanguage,
-        includeVietnamese: includeVietnamese,
       );
 
       if (response.success && response.data != null) {
@@ -211,7 +204,6 @@ class AttemptRepository {
         page: 1,
         limit: 100, // Get more data for better statistics
         secondaryLanguage: secondaryLanguage,
-        includeVietnamese: includeVietnamese,
       );
 
       final attempts = historyData['items'] as List<TestAttempt>? ?? [];

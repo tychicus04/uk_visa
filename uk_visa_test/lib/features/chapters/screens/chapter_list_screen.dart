@@ -52,7 +52,7 @@ class ChapterListScreen extends ConsumerWidget {
                     Text(
                       l10n.chapter_studyBookDescription,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         height: 1.4,
                       ),
                     ),
@@ -63,10 +63,10 @@ class ChapterListScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
+                  color: AppColors.info.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.info.withOpacity(0.3),
+                    color: AppColors.info.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(

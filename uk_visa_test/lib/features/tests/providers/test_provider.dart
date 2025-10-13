@@ -22,13 +22,11 @@ final availableTestsProvider = FutureProvider<Map<String, List<Test>>>((ref) asy
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
 
     // 🔄 DEPRECATED: Keep for backward compatibility but use new system
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     print('🌍 Secondary language: $secondaryLanguage (enabled: ${bilingualState.isEnabled})');
 
     final result = await testRepository.getAvailableTests(
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     // ✅ Detailed logging
@@ -63,11 +61,9 @@ final freeTestsProvider = FutureProvider<List<Test>>((ref) async {
     // 🔄 IMPORTANT: Watch bilingual state to trigger refresh on language change
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     final result = await testRepository.getFreeTests(
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Free tests loaded: ${result.length} tests with language: ${secondaryLanguage ?? 'none'}');
@@ -99,7 +95,6 @@ final testDetailProvider = FutureProvider.family<Test, dynamic>((ref, testIdPara
     // 🔄 IMPORTANT: Watch bilingual state to trigger refresh on language change
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     // 🔄 Watch the language key to ensure refresh when language changes
     ref.watch(testDetailKeyProvider(testIdParam));
@@ -107,7 +102,6 @@ final testDetailProvider = FutureProvider.family<Test, dynamic>((ref, testIdPara
     final result = await testRepository.getTest(
       testId,
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Test detail loaded: ${result.id} - ${result.displayTitle} with language: ${secondaryLanguage ?? 'none'}');
@@ -127,12 +121,10 @@ final testsByTypeProvider = FutureProvider.family<List<Test>, String>((ref, type
     // 🔄 IMPORTANT: Watch bilingual state to trigger refresh on language change
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     final result = await testRepository.getTestsByType(
       type,
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Tests by type "$type" loaded: ${result.length} tests with language: ${secondaryLanguage ?? 'none'}');
@@ -153,12 +145,10 @@ final testsByChapterProvider = FutureProvider.family<List<Test>, dynamic>((ref, 
     // 🔄 IMPORTANT: Watch bilingual state to trigger refresh on language change
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     final result = await testRepository.getTestsByChapter(
       chapterId,
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Tests for chapter $chapterId loaded: ${result.length} tests with language: ${secondaryLanguage ?? 'none'}');
@@ -183,14 +173,12 @@ final searchTestsProvider = FutureProvider.family<List<Test>, Map<String, dynami
     // 🔄 IMPORTANT: Watch bilingual state to trigger refresh on language change
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     final result = await testRepository.searchTests(
+      params['query'] as String,
       secondaryLanguage: secondaryLanguage,
-      query: params['query'] as String?,
       type: params['type'] as String?,
       chapterId: chapterId,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Search completed: ${result.length} tests found with language: ${secondaryLanguage ?? 'none'}');
@@ -368,7 +356,6 @@ final attemptDetailProvider = FutureProvider.family<TestAttempt, dynamic>((ref, 
     ref.watch(attemptDetailKeyProvider(attemptIdParam));
 
     // 🔄 DEPRECATED: Keep for backward compatibility with API
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     print('🌍 Attempt detail language request: ${secondaryLanguageCode} (enabled: $shouldShowSecondaryLanguage)');
 
@@ -376,7 +363,6 @@ final attemptDetailProvider = FutureProvider.family<TestAttempt, dynamic>((ref, 
     final result = await attemptRepository.getAttemptDetail(
       attemptId,
       secondaryLanguage: shouldShowSecondaryLanguage ? secondaryLanguageCode : null,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility - API still uses this parameter
     );
 
     print('✅ Attempt detail loaded: ${result.id}');
@@ -410,13 +396,11 @@ final testHistoryProvider = FutureProvider.family<Map<String, dynamic>, Map<Stri
     // 🆕 NEW: Add dynamic language support to history
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     final result = await attemptRepository.getAttemptHistory(
       page: params['page'] ?? 1,
       limit: params['limit'] ?? 20,
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Test history loaded: ${result['items']?.length ?? 0} attempts with language: ${secondaryLanguage ?? 'none'}');
@@ -436,11 +420,9 @@ final leaderboardProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asy
     // 🆕 NEW: Add dynamic language support to leaderboard
     final bilingualState = ref.watch(bilingualProvider);
     final secondaryLanguage = bilingualState.isEnabled ? bilingualState.secondaryLanguage : null;
-    final shouldShowVietnamese = bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 
     final result = await attemptRepository.getLeaderboard(
       secondaryLanguage: secondaryLanguage,
-      includeVietnamese: shouldShowVietnamese, // Backward compatibility
     );
 
     print('✅ Leaderboard loaded: ${result.length} entries with language: ${secondaryLanguage ?? 'none'}');
