@@ -52,7 +52,10 @@ class TestAttempt extends Equatable {
   });
 
   factory TestAttempt.fromJson(Map<String, dynamic> json) {
-    return TestAttempt(
+    print('🔄 TestAttempt.fromJson: Parsing JSON data...');
+    print('   Raw JSON: $json');
+    
+    final attempt = TestAttempt(
       id: json['id']?.toString() ?? '0',
       userId: json['user_id']?.toString() ?? '0',
       testId: json['test_id']?.toString() ?? '0',
@@ -60,7 +63,7 @@ class TestAttempt extends Equatable {
       totalQuestions: json['total_questions']?.toString(),
       percentage: _parseDouble(json['percentage']),
       timeTaken: json['time_taken']?.toString(),
-      isPassed: _parseBool(json['is_passed']) ?? false,
+      isPassed: _parseBool(json['is_passed'] ?? json['passed']),
       startedAt: json['started_at']?.toString() ?? '',
       completedAt: json['completed_at']?.toString(),
       title: json['title']?.toString(),
@@ -74,6 +77,9 @@ class TestAttempt extends Equatable {
           : null,
       responseMetadata: json['response_metadata'] as Map<String, dynamic>?,
     );
+    
+    print('✅ TestAttempt parsed: id=${attempt.id}, score=${attempt.score}, total=${attempt.totalQuestions}, percentage=${attempt.percentage}%, passed=${attempt.isPassed}');
+    return attempt;
   }
 
   Map<String, dynamic> toJson() => _$TestAttemptToJson(this);

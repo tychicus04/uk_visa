@@ -100,18 +100,22 @@ class TestResultScreen extends ConsumerWidget {
                       l10n: l10n,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildScoreCard(
-                      icon: Icons.access_time,
-                      label: l10n.test_timeTakenLabel,
-                      value: _formatTime(result.timeTakenInt),
-                      total: '45 ${l10n.minutes}',
-                      color: AppColors.primary,
-                      theme: theme,
-                      l10n: l10n,
+                  // 🔥 FIX: Only show time card for timed tests (exam mode)
+                  if (result.testType?.toLowerCase() == 'exam' || 
+                      result.testType?.toLowerCase() == 'comprehensive') ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildScoreCard(
+                        icon: Icons.access_time,
+                        label: l10n.test_timeTakenLabel,
+                        value: _formatTime(result.timeTakenInt),
+                        total: '45 ${l10n.minutes}',
+                        color: AppColors.primary,
+                        theme: theme,
+                        l10n: l10n,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
 

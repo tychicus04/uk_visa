@@ -54,6 +54,7 @@ dependencies:
   
   # Ads
   google_mobile_ads: ^5.1.0
+  sqflite: ^2.4.2
 
 dev_dependencies:
   flutter_test:
@@ -89,21 +90,6 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
           weight: 700
-
-# flutter_native_splash:
-#   color: "#ffffff"
-#   image: assets/images/splash_screen.png
-#   branding_bottom_padding: 24
-#   color_dark: "#121212"
-#   image_dark: assets/images/splash_screen.png
-#
-#   android_12:
-#     image: assets/images/splash_screen.png
-#     icon_background_color: "#ffffff"
-#     image_dark: assets/images/splash_screen.png
-#     icon_background_color_dark: "#121212"
-#
-#   web: false
 
 flutter_launcher_icons:
   android: "launcher_icon"

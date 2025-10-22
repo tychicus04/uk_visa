@@ -742,7 +742,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
   }
 
-  // �🆕 Show test summary dialog instead of navigating to result screen
+  // 🆕 Show test summary dialog instead of navigating to result screen
   void _showTestSummaryDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n, dynamic test, String attemptId) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -753,11 +753,22 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final correctCount = _correctAnswers.values.where((isCorrect) => isCorrect).length;
     final incorrectCount = _correctAnswers.values.where((isCorrect) => !isCorrect).length;
     final unansweredCount = totalQuestions - _correctAnswers.length;
+    
+    // 🔥 FIX: Calculate percentage based on TOTAL questions, not just answered ones
+    // This matches the server-side calculation for consistency
     final percentage = totalQuestions > 0 ? (correctCount / totalQuestions * 100) : 0.0;
     final timeTaken = DateTime.now().difference(_startTime);
     final allAnswered = _areAllQuestionsAnswered(test.questions!);
     
     final isPassed = percentage >= 75.0; // UK citizenship test requires 75%
+    
+    print('📊 Test Summary Calculation:');
+    print('   Total Questions: $totalQuestions');
+    print('   Correct Answers: $correctCount');
+    print('   Incorrect Answers: $incorrectCount');
+    print('   Unanswered: $unansweredCount');
+    print('   Percentage: ${percentage.toStringAsFixed(1)}%');
+    print('   Passed: $isPassed');
     
     showDialog(
       context: context,
@@ -788,106 +799,43 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Overall result banner
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '${percentage.round()}%',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: isPassed ? AppColors.success : AppColors.warning,
-                    ),
-                  ),
-                  Text(
-                    isPassed ? 'PASSED' : 'NEEDS IMPROVEMENT',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isPassed ? AppColors.success : AppColors.warning,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Statistics
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.check_circle,
-                    label: 'Correct',
-                    value: correctCount.toString(),
-                    color: AppColors.success,
-                    isDark: isDark,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.cancel,
-                    label: 'Incorrect',
-                    value: incorrectCount.toString(),
-                    color: AppColors.error,
-                    isDark: isDark,
-                  ),
-                ),
-                if (unansweredCount > 0) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.help_outline,
-                      label: 'Unanswered',
-                      value: unansweredCount.toString(),
-                      color: AppColors.warning,
-                      isDark: isDark,
-                    ),
-                  ),
-                ],
-              ],
+            // Compact success icon
+            Icon(
+              isPassed ? Icons.check_circle : Icons.info_outline,
+              color: isPassed ? AppColors.success : AppColors.warning,
+              size: 64,
             ),
             
             const SizedBox(height: 16),
             
-            // Time taken
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: (isDark ? AppColors.surfaceDark : Colors.grey[50]),
-                borderRadius: BorderRadius.circular(8),
+            // Large score display
+            Text(
+              '$correctCount',
+              style: TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: isPassed ? AppColors.success : AppColors.warning,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 16,
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Time: ${_formatDuration(timeTaken)}',
-                    style: TextStyle(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+            ),
+            
+            // "of 24" text
+            Text(
+              'of $totalQuestions',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // "Correct" label
+            Text(
+              'Correct',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
             ),
           ],

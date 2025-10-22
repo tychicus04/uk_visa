@@ -48,6 +48,9 @@ class AttemptRepository {
     required int timeTaken,
   }) async {
     try {
+      print('🔄 Repository: Submitting attempt $attemptId with ${answers.length} answers');
+      print('🔄 Repository: First 3 answers: ${answers.take(3).toList()}');
+      
       final response = await _attemptService.submitAttempt(
         attemptId: attemptId,
         answers: answers,
@@ -56,7 +59,10 @@ class AttemptRepository {
 
       if (response.success && response.data != null) {
         final data = response.data!;
+        print('📦 Repository: Raw response data: $data');
+        
         final resultData = data['result'] as Map<String, dynamic>;
+        print('📊 Repository: Result data: $resultData');
 
         final enhancedResultData = Map<String, dynamic>.from(resultData);
         enhancedResultData['id'] = attemptId.toString();
@@ -67,6 +73,8 @@ class AttemptRepository {
           enhancedResultData['title'] = testData['title'];
           enhancedResultData['test_number'] = testData['test_number'];
         }
+        
+        print('✅ Repository: Enhanced result data: $enhancedResultData');
         return TestAttempt.fromJson(enhancedResultData);
       } else {
         throw Exception(response.message ?? 'Failed to submit test');
@@ -110,13 +118,18 @@ class AttemptRepository {
         String? secondaryLanguage,
       }) async {
     try {
+      print('🔄 Repository: Getting attempt detail $attemptId');
+      
       final response = await _attemptService.getAttemptDetail(
         attemptId,
         secondaryLanguage: secondaryLanguage,
       );
 
       if (response.success && response.data != null) {
+        print('📦 Repository: Raw attempt detail response: ${response.data}');
+        
         final attempt = TestAttempt.fromJson(response.data!);
+        
         if (secondaryLanguage != null) {
           final answers = attempt.answers ?? [];
           var translatedQuestions = 0;
@@ -133,9 +146,11 @@ class AttemptRepository {
               }
             }
           }
-
+          
+          print('📊 Translation stats: $translatedQuestions/${answers.length} questions, $translatedAnswers answers');
         }
-
+        
+        print('✅ Repository: Attempt detail loaded - score=${attempt.score}/${attempt.totalQuestions}, percentage=${attempt.percentage}%');
         return attempt;
       } else {
         throw Exception(response.message ?? 'Failed to load attempt details');
