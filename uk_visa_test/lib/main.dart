@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'app/app.dart';
-import 'core/services/ad_service.dart';
 import 'core/storage/secure_storage.dart';
 import 'core/storage/shared_prefs.dart';
 import 'core/database/database_helper.dart';
@@ -24,12 +24,12 @@ void main() async {
     print('Database initialization failed: $e');
   }
 
-  // Initialize AdService
+  // Initialize Mobile Ads SDK
   try {
-    await AdService.initialize();
-    print('🎯 AdService initialized successfully');
+    await MobileAds.instance.initialize();
+    print('🎯 Mobile Ads SDK initialized successfully');
   } catch (e) {
-    print('🎯 AdService initialization failed: $e');
+    print('🎯 Mobile Ads SDK initialization failed: $e');
   }
 
   SystemChrome.setSystemUIOverlayStyle(

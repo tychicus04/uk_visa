@@ -7,6 +7,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
+import '../../../shared/widgets/remove_ads_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -27,6 +28,10 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          // Remove Ads Purchase Card
+          const RemoveAdsCard(),
+          const SizedBox(height: 24),
+
           // Language & Localization Section
           _buildSectionHeader(l10n.settings_appearance, theme),
 

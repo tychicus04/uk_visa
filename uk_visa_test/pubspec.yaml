@@ -1,9 +1,9 @@
-name: uk_visa_test
+name: life_in_the_uk_2026_multi_lang
 description: UK Visa Test Preparation App with bilingual support
 
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

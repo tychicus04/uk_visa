@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/services/interstitial_ad_service.dart';
+import '../../../core/services/purchase_service.dart';
 import '../../../data/models/test_model.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
@@ -24,16 +26,36 @@ class TestDetailScreen extends ConsumerStatefulWidget {
 class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final InterstitialAdService _interstitialAdService = InterstitialAdService();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    
+    // Load interstitial ad for when starting test (will check purchase status)
+    _loadAdWithPurchaseCheck();
+  }
+
+  void _loadAdWithPurchaseCheck() {
+    // Check if user has purchased ad removal
+    final shouldShowAds = ref.read(shouldShowAdsProvider);
+    _interstitialAdService.setShouldShowAds(shouldShowAds);
+    
+    _interstitialAdService.loadAd(
+      onAdLoaded: () {
+        print('🎯 Interstitial ad ready for test start');
+      },
+      onAdFailedToLoad: (error) {
+        print('⚠️ Failed to load interstitial ad: $error');
+      },
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _interstitialAdService.dispose();
     super.dispose();
   }
 
@@ -518,6 +540,20 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
   Future<void> _startTest(BuildContext context, bool hasTimer) async {
     final l10n = AppLocalizations.of(context);
 
+    // Show interstitial ad before starting test
+    await _interstitialAdService.showAd(
+      onAdDismissed: () async {
+        // Ad was dismissed, proceed with starting test
+        await _startTestAfterAd(context, l10n);
+      },
+      onAdFailedToShow: () async {
+        // Ad failed to show, proceed with starting test anyway
+        await _startTestAfterAd(context, l10n);
+      },
+    );
+  }
+
+  Future<void> _startTestAfterAd(BuildContext context, AppLocalizations l10n) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -560,7 +596,14 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
             action: SnackBarAction(
               label: l10n.common_retry,
               textColor: Colors.white,
-              onPressed: () => _startTest(context, hasTimer),
+              onPressed: () {
+                // Reload ad for retry
+                _interstitialAdService.loadAd(
+                  onAdLoaded: () => print('🎯 Ad reloaded for retry'),
+                  onAdFailedToLoad: (error) => print('⚠️ Failed to reload ad: $error'),
+                );
+                _startTest(context, false);
+              },
             ),
           ),
         );

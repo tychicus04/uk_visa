@@ -141,7 +141,9 @@ class ApiConstants {
   // 🆕 NEW: Multi-language support
   static const List<String> supportedSecondaryLanguages = [
     'vi', 'pl', 'pa', 'ur', 'ro', 'es', 'pt', 'ar',
-    'zh', 'fr', 'it', 'ru', 'tr', 'ta', 'so'
+    'zh', 'fr', 'it', 'ru', 'tr', 'ta', 'so', 'uk',
+    'sq', 'bn', 'ml', 'te', 'am', 'yo', 'sw', 'ku',
+    'fa', 'ps'
   ];
 
   static const Map<String, String> languageNames = {
@@ -161,6 +163,17 @@ class ApiConstants {
     'tr': 'Turkish',
     'ta': 'Tamil',
     'so': 'Somali',
+    'uk': 'Ukrainian',
+    'sq': 'Albanian',
+    'bn': 'Bengali',
+    'ml': 'Malayalam',
+    'te': 'Telugu',
+    'am': 'Amharic',
+    'yo': 'Yoruba',
+    'sw': 'Swahili',
+    'ku': 'Kurdish',
+    'fa': 'Persian',
+    'ps': 'Pashto',
   };
 
   static const Map<String, String> languageFlags = {
@@ -180,6 +193,17 @@ class ApiConstants {
     'tr': '🇹🇷',
     'ta': '🇮🇳',
     'so': '🇸🇴',
+    'uk': '🇺🇦',
+    'sq': '🇦🇱',
+    'bn': '🇧🇩',
+    'ml': '🇮🇳',
+    'te': '🇮🇳',
+    'am': '🇪🇹',
+    'yo': '🇳🇬',
+    'sw': '🇰🇪',
+    'ku': '🇮🇶',
+    'fa': '🇮🇷',
+    'ps': '🇦🇫',
   };
 
   // 🆕 NEW: Replace old parameter names

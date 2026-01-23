@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../core/services/ad_service.dart';
+import '../../../core/services/interstitial_ad_service.dart';
+import '../../../core/services/purchase_service.dart';
 import '../../../data/models/question_model.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/ad_loading_dialog.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -37,6 +37,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   late Map<String, bool> _answeredQuestions; // Track which questions have been answered
   late Map<String, bool> _correctAnswers; // Track correct/incorrect answers
   late DateTime _startTime;
+  final InterstitialAdService _interstitialAdService = InterstitialAdService();
 
   @override
   void initState() {
@@ -46,11 +47,30 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     _answeredQuestions = {};
     _correctAnswers = {};
     _startTime = DateTime.now();
+    
+    // Load interstitial ad for when test is completed (will check purchase status)
+    _loadAdWithPurchaseCheck();
+  }
+
+  void _loadAdWithPurchaseCheck() {
+    // Check if user has purchased ad removal
+    final shouldShowAds = ref.read(shouldShowAdsProvider);
+    _interstitialAdService.setShouldShowAds(shouldShowAds);
+    
+    _interstitialAdService.loadAd(
+      onAdLoaded: () {
+        print('🎯 Interstitial ad ready for test completion');
+      },
+      onAdFailedToLoad: (error) {
+        print('⚠️ Failed to load interstitial ad: $error');
+      },
+    );
   }
 
   @override
   void dispose() {
     _pageController?.dispose();
+    _interstitialAdService.dispose();
     super.dispose();
   }
 
@@ -708,8 +728,22 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          // Instead of navigating to result screen, show summary dialog
-          _showTestSummaryDialog(context, ref, l10n, test, attemptId);
+          
+          // Show interstitial ad before navigating to result screen
+          _interstitialAdService.showAd(
+            onAdDismissed: () {
+              // Ad was dismissed, navigate to result screen
+              if (context.mounted) {
+                context.go('/tests/result/$attemptId');
+              }
+            },
+            onAdFailedToShow: () {
+              // Ad failed to show, navigate to result screen anyway
+              if (context.mounted) {
+                context.go('/tests/result/$attemptId');
+              }
+            },
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -718,28 +752,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         }
       }
     }
-  }
-
-  // � Show video ad before submitting exam
-  Future<void> _showVideoAdBeforeSubmit(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
-    if (!context.mounted) return;
-    
-    // Show ad loading dialog and handle ad display
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AdLoadingDialog(
-        onAdCompleted: () {
-          // Ad completed successfully
-          print('🎯 Video ad completed successfully');
-        },
-        onAdSkipped: () {
-          // Ad was skipped (if allowed)
-          print('🎯 Video ad was skipped');
-        },
-        allowSkip: false, // Don't allow skipping in exam mode
-      ),
-    );
   }
 
   // 🆕 Show test summary dialog instead of navigating to result screen
@@ -799,43 +811,106 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Compact success icon
-            Icon(
-              isPassed ? Icons.check_circle : Icons.info_outline,
-              color: isPassed ? AppColors.success : AppColors.warning,
-              size: 64,
+            // Overall result banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '${percentage.round()}%',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: isPassed ? AppColors.success : AppColors.warning,
+                    ),
+                  ),
+                  Text(
+                    isPassed ? 'PASSED' : 'NEEDS IMPROVEMENT',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isPassed ? AppColors.success : AppColors.warning,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Statistics - 3 cards
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.check_circle,
+                    label: 'Correct',
+                    value: correctCount.toString(),
+                    color: AppColors.success,
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.cancel,
+                    label: 'Incorrect',
+                    value: incorrectCount.toString(),
+                    color: AppColors.error,
+                    isDark: isDark,
+                  ),
+                ),
+                if (unansweredCount > 0) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      icon: Icons.help_outline,
+                      label: 'Unanswered',
+                      value: unansweredCount.toString(),
+                      color: AppColors.warning,
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
+              ],
             ),
             
             const SizedBox(height: 16),
             
-            // Large score display
-            Text(
-              '$correctCount',
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: isPassed ? AppColors.success : AppColors.warning,
+            // Time taken
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? AppColors.surfaceDark : Colors.grey[50]),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            
-            // "of 24" text
-            Text(
-              'of $totalQuestions',
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            // "Correct" label
-            Text(
-              'Correct',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Time: ${_formatDuration(timeTaken)}',
+                    style: TextStyle(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

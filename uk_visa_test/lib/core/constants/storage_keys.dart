@@ -35,4 +35,7 @@ class StorageKeys {
   // 🆕 NEW: Language preferences
   static const String lastUsedSecondaryLanguage = 'last_used_secondary_language';
   static const String availableLanguages = 'available_languages';
+
+  // In-App Purchase
+  static const String removeAdsPurchased = 'remove_ads_purchased';
 }

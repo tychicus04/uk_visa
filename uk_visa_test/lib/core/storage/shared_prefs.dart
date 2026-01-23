@@ -105,6 +105,15 @@ class SharedPrefsService {
     await _prefs.clear();
   }
 
+  // In-App Purchase - Remove Ads
+  Future<void> setRemoveAdsPurchased(bool purchased) async {
+    await _prefs.setBool(StorageKeys.removeAdsPurchased, purchased);
+  }
+
+  bool getRemoveAdsPurchased() {
+    return _prefs.getBool(StorageKeys.removeAdsPurchased) ?? false;
+  }
+
   // 🆕 NEW: Get last used secondary language
   String getLastUsedSecondaryLanguage() => _prefs.getString(StorageKeys.lastUsedSecondaryLanguage) ?? 'vi';
 

@@ -41,7 +41,7 @@ class UKVisaTestApp extends ConsumerWidget {
 
       builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.noScaling, // Prevent text scaling
+            textScaler: TextScaler.noScaling, 
           ),
           child: child!,
         ),

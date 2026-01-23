@@ -45,18 +45,10 @@ class BilingualNotifier extends StateNotifier<BilingualState> {
 
   // 🆕 NEW: Invalidate test-related providers when language changes
   void _invalidateTestProviders() {
-    try {
-      // Invalidate all test-related providers to trigger refresh
-      _ref.invalidate(availableTestsProvider);
-      _ref.invalidate(freeTestsProvider);
-
-      // Note: Can't directly invalidate family providers, but they will refresh
-      // when their dependencies (bilingual state) change
-
-      print('🔄 Test providers invalidated due to language change');
-    } catch (e) {
-      print('⚠️ Error invalidating providers: $e');
-    }
+    // Note: Test providers automatically refresh when bilingual state changes
+    // because they watch bilingualProvider in their implementations
+    // No manual invalidation needed
+    print('🔄 Language change detected - test providers will auto-refresh');
   }
 
   Future<void> toggleBilingual() async {
@@ -196,8 +188,3 @@ final isVietnameseEnabledProvider = Provider<bool>((ref) {
   final bilingualState = ref.watch(bilingualProvider);
   return bilingualState.isEnabled && bilingualState.secondaryLanguage == 'vi';
 });
-
-// Forward declarations to avoid circular imports
-// These will be imported from test_provider.dart
-external Provider<AsyncValue<Map<String, List<dynamic>>>> availableTestsProvider;
-external Provider<AsyncValue<List<dynamic>>> freeTestsProvider;
