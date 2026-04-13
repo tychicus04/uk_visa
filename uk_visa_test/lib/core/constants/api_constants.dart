@@ -1,228 +1,93 @@
 // lib/core/constants/api_constants.dart
+// Offline constants for language support
+
 class ApiConstants {
-  // App Info
-  static const String appName = 'Life in the UK';
-  static const String appVersion = '1.0.0';
-  static const String appDescription = 'British Citizenship Test Preparation';
-
-  // Test Configuration
-  static const int testTimeLimit = 45; // minutes
-  static const int testQuestionCount = 24;
-  static const double passingScore = 75.0; // percentage
-  static const int freeTestLimit = 5;
-
-  // Pagination
-  static const int defaultPageSize = 20;
-  static const int maxPageSize = 100;
-
-  // Cache
-  static const Duration cacheTimeout = Duration(hours: 1);
-  static const Duration tokenRefreshThreshold = Duration(minutes: 5);
-
-  // UI Constants
-  static const double defaultPadding = 16.0;
-  static const double defaultBorderRadius = 12.0;
-  static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
-
-  // Supported Languages
-  static const List<String> supportedLanguages = ['en', 'vi'];
-  static const String defaultLanguage = 'en';
-
-  // URLs
-  static const String privacyPolicyUrl = 'https://example.com/privacy';
-  static const String termsOfServiceUrl = 'https://example.com/terms';
-  static const String supportUrl = 'https://example.com/support';
-
-  // Test Types
-  static const String testTypeChapter = 'chapter';
-  static const String testTypeComprehensive = 'comprehensive';
-  static const String testTypeExam = 'exam';
-
-  // Question Types
-  static const String questionTypeRadio = 'radio';
-  static const String questionTypeCheckbox = 'checkbox';
-
-  // Base URLs
-  static const String baseUrl = 'http://localhost/uk_visa/backend';
-  static const String apiVersion = 'v1';
-
-  // Auth Endpoints
-  static const String authRegister = '/auth/register';
-  static const String authLogin = '/auth/login';
-  static const String authProfile = '/auth/profile';
-  static const String authRefresh = '/auth/refresh';
-  static const String authLogout = '/auth/logout';
-  static const String authChangePassword = '/auth/change-password';
-  static const String authLanguage = '/auth/language';
-
-  // 🆕 NEW: Password Reset Endpoints
-  static const String authForgotPassword = '/auth/forgot-password';
-  static const String authResetPassword = '/auth/reset-password';
-  static const String authVerifyResetToken = '/auth/verify-reset-token';
-
-  // Test Endpoints
-  static const String testsAvailable = '/tests/available';
-  static const String testsFree = '/tests/free';
-  static const String testsSearch = '/tests/search';
-  static const String testDetail = '/tests'; // + /{id}
-  static const String testByType = '/tests/type'; // + /{type}
-  static const String testByChapter = '/tests/chapter'; // + /{chapterId}
-
-  // Attempt Endpoints
-  static const String attemptsStart = '/attempts/start';
-  static const String attemptsSubmit = '/attempts/submit';
-  static const String attemptsHistory = '/attempts/history';
-  static const String attemptDetail = '/attempts'; // + /{id}
-
-  // Chapter Endpoints
-  static const String chapters = '/chapters';
-  static const String chapterDetail = '/chapters'; // + /{id}
-
-  // Subscription Endpoints
-  static const String subscriptionPlans = '/subscriptions/plans';
-  static const String subscriptionSubscribe = '/subscriptions/subscribe';
-  static const String subscriptionStatus = '/subscriptions/status';
-
-  // Question Endpoints
-  static const String questions = '/questions';
-  static const String questionsByTest = '/questions/test'; // + /{test_id}
-
-  // System Endpoints
-  static const String health = '/health';
-  static const String test = '/test';
-
-  // Headers
-  static const Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
-
-  static const String paramIncludeVietnamese = 'include_vietnamese';
-  static const String paramIncludeAnswers = 'include_answers';
-  static const String paramLanguageCode = 'language_code';
-  static const String paramBilingualMode = 'bilingual_mode';
-
-  // Timeout
-  static const Duration timeout = Duration(seconds: 30);
-
-  // NEW: Test filtering and grouping helpers
-  static Map<String, List<String>> get testGroupings => {
-    'practice': [testTypeChapter, testTypeComprehensive],
-    'exam': [testTypeExam],
-  };
-
-  // NEW: Test type display names
-  static Map<String, String> get testTypeDisplayNames => {
-    testTypeChapter: 'Chapter',
-    testTypeComprehensive: 'Mixed',
-    testTypeExam: 'Exam',
-  };
-
-  // NEW: Test type icons
-  static Map<String, String> get testTypeIcons => {
-    testTypeChapter: 'book',
-    testTypeComprehensive: 'quiz',
-    testTypeExam: 'assignment',
-  };
-
-  // NEW: Helper methods
-  static bool isPracticeTest(String testType) {
-    return testGroupings['practice']!.contains(testType);
-  }
-
-  static bool isExamTest(String testType) {
-    return testGroupings['exam']!.contains(testType);
-  }
-
-  static String getTestTypeDisplayName(String testType) {
-    return testTypeDisplayNames[testType] ?? testType;
-  }
-
-  // 🆕 NEW: Multi-language support
+  // Supported secondary languages for bilingual mode (offline)
   static const List<String> supportedSecondaryLanguages = [
-    'vi', 'pl', 'pa', 'ur', 'ro', 'es', 'pt', 'ar',
-    'zh', 'fr', 'it', 'ru', 'tr', 'ta', 'so', 'uk',
-    'sq', 'bn', 'ml', 'te', 'am', 'yo', 'sw', 'ku',
-    'fa', 'ps'
+    'vi', // Vietnamese
+    'zh', // Chinese
+    'ar', // Arabic
+    'fr', // French
+    'es', // Spanish
+    'de', // German
+    'it', // Italian
+    'pt', // Portuguese
+    'ru', // Russian
+    'ja', // Japanese
+    'ko', // Korean
+    'hi', // Hindi
+    'bn', // Bengali
+    'ur', // Urdu
+    'ta', // Tamil
+    'te', // Telugu
+    'pa', // Punjabi
+    'pl', // Polish
+    'ro', // Romanian
+    'tr', // Turkish
+    'th', // Thai
+    'uk', // Ukrainian
   ];
 
-  static const Map<String, String> languageNames = {
-    'en': 'English',
-    'vi': 'Vietnamese',
-    'pl': 'Polish',
-    'pa': 'Punjabi',
-    'ur': 'Urdu',
-    'ro': 'Romanian',
-    'es': 'Spanish',
-    'pt': 'Portuguese',
-    'ar': 'Arabic',
-    'zh': 'Chinese',
-    'fr': 'French',
-    'it': 'Italian',
-    'ru': 'Russian',
-    'tr': 'Turkish',
-    'ta': 'Tamil',
-    'so': 'Somali',
-    'uk': 'Ukrainian',
-    'sq': 'Albanian',
-    'bn': 'Bengali',
-    'ml': 'Malayalam',
-    'te': 'Telugu',
-    'am': 'Amharic',
-    'yo': 'Yoruba',
-    'sw': 'Swahili',
-    'ku': 'Kurdish',
-    'fa': 'Persian',
-    'ps': 'Pashto',
-  };
-
-  static const Map<String, String> languageFlags = {
-    'en': '🇬🇧',
-    'vi': '🇻🇳',
-    'pl': '🇵🇱',
-    'pa': '🇮🇳',
-    'ur': '🇵🇰',
-    'ro': '🇷🇴',
-    'es': '🇪🇸',
-    'pt': '🇵🇹',
-    'ar': '🇸🇦',
-    'zh': '🇨🇳',
-    'fr': '🇫🇷',
-    'it': '🇮🇹',
-    'ru': '🇷🇺',
-    'tr': '🇹🇷',
-    'ta': '🇮🇳',
-    'so': '🇸🇴',
-    'uk': '🇺🇦',
-    'sq': '🇦🇱',
-    'bn': '🇧🇩',
-    'ml': '🇮🇳',
-    'te': '🇮🇳',
-    'am': '🇪🇹',
-    'yo': '🇳🇬',
-    'sw': '🇰🇪',
-    'ku': '🇮🇶',
-    'fa': '🇮🇷',
-    'ps': '🇦🇫',
-  };
-
-  // 🆕 NEW: Replace old parameter names
-  static const String paramIncludeLanguage = 'include_language';
-  // Keep old param for backward compatibility
-  // static const String paramIncludeVietnamese = 'include_vietnamese'; // Deprecated
-
-  // 🆕 NEW: Helper methods
-  static bool isSupportedLanguage(String languageCode) {
-    return languageCode == 'en' || supportedSecondaryLanguages.contains(languageCode);
+  // Language flags
+  static String getLanguageFlag(String code) {
+    const flags = {
+      'vi': '🇻🇳',
+      'zh': '🇨🇳',
+      'ar': '🇸🇦',
+      'fr': '🇫🇷',
+      'es': '🇪🇸',
+      'de': '🇩🇪',
+      'it': '🇮🇹',
+      'pt': '🇵🇹',
+      'ru': '🇷🇺',
+      'ja': '🇯🇵',
+      'ko': '🇰🇷',
+      'hi': '🇮🇳',
+      'bn': '🇧🇩',
+      'ur': '🇵🇰',
+      'ta': '🇮🇳',
+      'te': '🇮🇳',
+      'pa': '🇮🇳',
+      'pl': '🇵🇱',
+      'ro': '🇷🇴',
+      'tr': '🇹🇷',
+      'th': '🇹🇭',
+      'uk': '🇺🇦',
+    };
+    return flags[code] ?? '🌐';
   }
 
-  static String getLanguageName(String languageCode) {
-    return languageNames[languageCode] ?? 'Unknown';
+  // Language names
+  static String getLanguageName(String code) {
+    const names = {
+      'vi': 'Tiếng Việt',
+      'zh': '中文',
+      'ar': 'العربية',
+      'fr': 'Français',
+      'es': 'Español',
+      'de': 'Deutsch',
+      'it': 'Italiano',
+      'pt': 'Português',
+      'ru': 'Русский',
+      'ja': '日本語',
+      'ko': '한국어',
+      'hi': 'हिन्दी',
+      'bn': 'বাংলা',
+      'ur': 'اردو',
+      'ta': 'தமிழ்',
+      'te': 'తెలుగు',
+      'pa': 'ਪੰਜਾਬੀ',
+      'pl': 'Polski',
+      'ro': 'Română',
+      'tr': 'Türkçe',
+      'th': 'ไทย',
+      'uk': 'Українська',
+    };
+    return names[code] ?? code.toUpperCase();
   }
 
-  static String getLanguageFlag(String languageCode) {
-    return languageFlags[languageCode] ?? '🌍';
+  // Check if language is supported
+  static bool isSupportedLanguage(String code) {
+    return supportedSecondaryLanguages.contains(code);
   }
 }
-
-

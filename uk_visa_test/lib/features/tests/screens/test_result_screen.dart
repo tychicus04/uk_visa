@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -17,19 +16,28 @@ class TestResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final resultState = ref.watch(attemptDetailProvider(attemptId));
 
     return resultState.when(
       data: (result) => Scaffold(
         appBar: AppBar(
-          title: Text(l10n.test_testResults),
+          title: const Text('Test Results'),
           automaticallyImplyLeading: false,
           actions: [
             IconButton(
               icon: const Icon(Icons.close),
-              onPressed: () => context.go('/'),
+              onPressed: () {
+                // Force refresh test data before closing
+                print('🏠 TestResultScreen: Force refreshing before going home');
+                final _ = ref.refresh(availableTestsProvider);
+                // Give a small delay for the refresh to start and then navigate
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (context.mounted) {
+                    context.go('/');
+                  }
+                });
+              },
             ),
           ],
         ),
@@ -60,7 +68,7 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      result.isPassed ? l10n.test_passed : l10n.test_failed,
+                      result.isPassed ? 'Test Passed!' : 'Test Failed',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -68,14 +76,14 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${l10n.score}: ${result.percentage?.toStringAsFixed(1) ?? '0'}%',
+                      'Score: ${result.percentage?.toStringAsFixed(1) ?? '0'}%',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.test_passingScore,
+                      'Passing score: 75%',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -92,12 +100,11 @@ class TestResultScreen extends ConsumerWidget {
                   Expanded(
                     child: _buildScoreCard(
                       icon: Icons.check_circle,
-                      label: l10n.test_correct,
+                      label: 'Correct',
                       value: '${result.score}',
                       total: '${result.totalQuestions}',
                       color: AppColors.success,
                       theme: theme,
-                      l10n: l10n,
                     ),
                   ),
                   // 🔥 FIX: Only show time card for timed tests (exam mode)
@@ -107,12 +114,11 @@ class TestResultScreen extends ConsumerWidget {
                     Expanded(
                       child: _buildScoreCard(
                         icon: Icons.access_time,
-                        label: l10n.test_timeTakenLabel,
+                        label: 'Time Taken',
                         value: _formatTime(result.timeTakenInt),
-                        total: '45 ${l10n.minutes}',
+                        total: '45 minutes',
                         color: AppColors.primary,
                         theme: theme,
-                        l10n: l10n,
                       ),
                     ),
                   ],
@@ -128,7 +134,7 @@ class TestResultScreen extends ConsumerWidget {
                   context.go('/review-answers/$attemptId');
                 },
                 icon: const Icon(Icons.reviews),
-                label: Text(l10n.test_reviewAnswers),
+                label: const Text('Review Answers'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: AppColors.primary,
@@ -147,7 +153,7 @@ class TestResultScreen extends ConsumerWidget {
                   }
                 },
                 icon: const Icon(Icons.refresh),
-                label: Text(l10n.test_retakeTest),
+                label: const Text('Retake Test'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: AppColors.primary),
@@ -158,9 +164,19 @@ class TestResultScreen extends ConsumerWidget {
               const SizedBox(height: 12),
 
               TextButton.icon(
-                onPressed: () => context.go('/'),
+                onPressed: () {
+                  // Force refresh test data before going to home
+                  print('🏠 TestResultScreen: Force refreshing before going home');
+                  final _ = ref.refresh(availableTestsProvider);
+                  // Give a small delay for the refresh to start and then navigate
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (context.mounted) {
+                      context.go('/');
+                    }
+                  });
+                },
                 icon: const Icon(Icons.home),
-                label: Text(l10n.test_backToHome),
+                label: const Text('Back to Home'),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   foregroundColor: theme.brightness == Brightness.dark
@@ -190,7 +206,7 @@ class TestResultScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.test_testInformation,
+                        'Test Information',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -198,36 +214,31 @@ class TestResultScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       _buildInfoRow(
                         context,
-                        l10n.test_test,
-                        result.title ?? l10n.common_unknown,
-                        l10n,
+                        'Test',
+                        result.title ?? 'Unknown',
                       ),
                       if (result.testNumber != null)
                         _buildInfoRow(
                           context,
-                          l10n.test_testNumber,
+                          'Test Number',
                           result.testNumber!,
-                          l10n,
                         ),
                       if (result.chapterName != null)
                         _buildInfoRow(
                           context,
-                          l10n.chapter,
+                          'Chapter',
                           result.chapterName!,
-                          l10n,
                         ),
                       _buildInfoRow(
                         context,
-                        l10n.test_completedAt,
-                        _formatDate(result.completedAt, l10n),
-                        l10n,
+                        'Completed At',
+                        _formatDate(result.completedAt),
                       ),
                       if (result.timeTakenInt > 0)
                         _buildInfoRow(
                           context,
-                          l10n.duration,
+                          'Duration',
                           _formatTime(result.timeTakenInt),
-                          l10n,
                         ),
                     ],
                   ),
@@ -256,7 +267,6 @@ class TestResultScreen extends ConsumerWidget {
     required String total,
     required Color color,
     required ThemeData theme,
-    required AppLocalizations l10n,
   }) {
     final isDark = theme.brightness == Brightness.dark;
 
@@ -281,7 +291,7 @@ class TestResultScreen extends ConsumerWidget {
             ),
           ),
           Text(
-            '${l10n.common_of} $total',
+            'of $total',
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondaryLight,
             ),
@@ -302,7 +312,6 @@ class TestResultScreen extends ConsumerWidget {
       BuildContext context,
       String label,
       String value,
-      AppLocalizations l10n,
       ) {
     final theme = Theme.of(context);
 
@@ -341,8 +350,8 @@ class TestResultScreen extends ConsumerWidget {
     return '${minutes}m ${remainingSeconds}s';
   }
 
-  String _formatDate(String? dateString, AppLocalizations l10n) {
-    if (dateString == null) return l10n.common_unknown;
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'Unknown';
 
     try {
       final date = DateTime.parse(dateString);

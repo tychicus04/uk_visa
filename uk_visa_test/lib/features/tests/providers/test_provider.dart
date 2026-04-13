@@ -266,7 +266,7 @@ class TestNotifier extends StateNotifier<TestState> {
         };
       }).toList();
 
-      final result = await attemptRepository.submitAttempt(
+      await attemptRepository.submitAttempt(
         attemptId: attemptId,
         answers: apiAnswers,
         timeTaken: timeTaken,
@@ -277,8 +277,13 @@ class TestNotifier extends StateNotifier<TestState> {
         currentAttemptId: null,
       );
 
-      // Refresh available tests to update attempt counts
-      ref.invalidate(availableTestsProvider);
+      // 🔄 Force refresh available tests to update attempt counts and progress
+      // Use refresh() instead of invalidate() to ensure immediate reload
+      final _ = ref.refresh(availableTestsProvider);
+      
+      // 🆕 Invalidate all test detail providers to refresh best scores and attempt counts
+      // This ensures the test cards show updated progress immediately
+      ref.invalidate(testDetailProvider);
 
       // ✅ Return the original attemptId instead of result.id
       final attemptIdString = attemptId.toString();
@@ -508,7 +513,7 @@ final userTestStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 final languageAwareAttemptProvider = Provider.family<AsyncValue<TestAttempt>, int>((ref, attemptId) {
   // Watch both the attempt detail and language changes
   final attemptDetail = ref.watch(attemptDetailProvider(attemptId));
-  final bilingualState = ref.watch(bilingualProvider);
+  ref.watch(bilingualProvider);
 
   // This provider will automatically refresh when language changes
   // because attemptDetailProvider watches bilingualProvider

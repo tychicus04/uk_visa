@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/attempt_model.dart';
-import '../services/attempt_service.dart';
 import '../services/offline_attempt_service.dart';
 
 final attemptRepositoryProvider = Provider<AttemptRepository>((ref) {
-  final attemptService = ref.watch(attemptServiceProvider);
+  final attemptService = ref.watch(offlineAttemptServiceProvider);
   return AttemptRepository(attemptService);
 });
 

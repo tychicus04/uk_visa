@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../data/models/test_model.dart';
-import '../../../l10n/generated/app_localizations.dart';
 
 class TestCard extends StatelessWidget {
 
@@ -10,15 +9,16 @@ class TestCard extends StatelessWidget {
     required this.test,
     required this.onTap,
     super.key,
+    this.displayNumber,
     this.showTestType = false,
   });
   final Test test;
   final VoidCallback onTap;
+  final int? displayNumber;
   final bool showTestType;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = Localizations.of(context, AppLocalizations);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -58,7 +58,9 @@ class TestCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          test.displayTitle,
+                          displayNumber != null 
+                            ? _getDisplayTitleWithNumber(test, displayNumber!)
+                            : test.displayTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -70,7 +72,7 @@ class TestCard extends StatelessWidget {
                         Row(
                           children: [
                             if (showTestType) ...[
-                              _buildTestTypeBadge(context, isDark, l10n),
+                              _buildTestTypeBadge(context, isDark),
                             ],
                             if (test.chapterName != null) ...[
                               const SizedBox(width: 8),
@@ -101,7 +103,7 @@ class TestCard extends StatelessWidget {
                   _buildStatChip(
                     context,
                     icon: Icons.quiz_outlined,
-                    label: '${test.questionCountInt} ${l10n.questions}',
+                    label: '${test.questionCountInt} Questions',
                     color: AppColors.info,
                     isDark: isDark,
                   ),
@@ -110,7 +112,7 @@ class TestCard extends StatelessWidget {
                     _buildStatChip(
                       context,
                       icon: Icons.history,
-                      label: '${test.attemptCountInt} ${l10n.attempts}',
+                      label: '${test.attemptCountInt} Attempts',
                       color: AppColors.secondary,
                       isDark: isDark,
                     ),
@@ -129,7 +131,7 @@ class TestCard extends StatelessWidget {
                   _buildStatChip(
                     context,
                     icon: Icons.free_breakfast,
-                    label: l10n.free,
+                    label: 'Free',
                     color: AppColors.success,
                     isDark: isDark,
                   )
@@ -148,18 +150,18 @@ class TestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTestTypeBadge(BuildContext context, bool isDark, AppLocalizations l10n) {
+  Widget _buildTestTypeBadge(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
     String label;
     switch (test.testType.toLowerCase()) {
       case 'chapter':
-        label = l10n.chapter;
+        label = 'Chapter';
         break;
       case 'comprehensive':
-        label = l10n.mixed;
+        label = 'Mixed';
         break;
       case 'exam':
-        label = l10n.exam;
+        label = 'Exam';
         break;
       default:
         label = test.testType;
@@ -357,5 +359,18 @@ class TestCard extends StatelessWidget {
       return AppColors.warning;
     }
     return AppColors.error;
+  }
+
+  String _getDisplayTitleWithNumber(Test test, int displayNumber) {
+    switch (test.testType.toLowerCase()) {
+      case 'chapter':
+        return 'Chapter Test $displayNumber';
+      case 'comprehensive':
+        return 'Comprehensive Test $displayNumber';
+      case 'exam':
+        return 'Practice Exam $displayNumber';
+      default:
+        return 'Test $displayNumber';
+    }
   }
 }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../data/models/attempt_model.dart';
 import '../../../data/states/BilingualState.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 
 class EnhancedReviewQuestionWidget extends ConsumerWidget {
@@ -25,7 +24,6 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
     final bilingualState = ref.watch(bilingualProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
 
     return Container(
       color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -35,18 +33,18 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Question Header Card
-            _buildQuestionHeaderCard(context, l10n, theme, isDark),
+            _buildQuestionHeaderCard(context, theme, isDark),
 
             const SizedBox(height: 24),
 
             // Question Text Card with Dynamic Multi-Language Support
-            _buildQuestionTextCard(context, bilingualState, theme, isDark, l10n),
+            _buildQuestionTextCard(context, bilingualState, theme, isDark),
 
             const SizedBox(height: 24),
 
             // Answer Options Label
             Text(
-              l10n.answer_options,
+              'Answer Options',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -65,7 +63,6 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
                 bilingualState,
                 theme,
                 isDark,
-                l10n,
               );
             }).toList()),
 
@@ -73,7 +70,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
 
             // Explanation Section with Dynamic Multi-Language Support
             if (answer.explanation != null && answer.explanation!.isNotEmpty)
-              _buildExplanationSection(context, bilingualState, theme, isDark, l10n),
+              _buildExplanationSection(context, bilingualState, theme, isDark),
 
             // Extra spacing at bottom
             const SizedBox(height: 100),
@@ -83,7 +80,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuestionHeaderCard(BuildContext context, AppLocalizations l10n, ThemeData theme, bool isDark) => Container(
+  Widget _buildQuestionHeaderCard(BuildContext context, ThemeData theme, bool isDark) => Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -124,7 +121,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${l10n.question} $questionNumber',
+                  'Question $questionNumber',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: answer.isCorrect ? AppColors.success : AppColors.error,
@@ -132,8 +129,8 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
                 ),
                 Text(
                   answer.isCorrect
-                      ? l10n.correct_answer
-                      : l10n.incorrect_answer,
+                      ? 'Correct Answer'
+                      : 'Incorrect Answer',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: answer.isCorrect ? AppColors.success : AppColors.error,
                     fontWeight: FontWeight.w500,
@@ -163,7 +160,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
     );
 
   // Question Text Card with Dynamic Multi-Language Support
-  Widget _buildQuestionTextCard(BuildContext context, BilingualState bilingualState, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildQuestionTextCard(BuildContext context, BilingualState bilingualState, ThemeData theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -186,7 +183,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                l10n.question,
+                'Question',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
@@ -247,7 +244,6 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
       BilingualState bilingualState,
       ThemeData theme,
       bool isDark,
-      AppLocalizations l10n,
       ) {
     final isCorrect = option.isCorrect;
     final wasSelected = option.wasSelected;
@@ -263,13 +259,13 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
       borderColor = AppColors.success;
       textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
       statusIcon = Icons.check_circle;
-      statusLabel = l10n.correct;
+      statusLabel = 'Correct';
     } else if (wasSelected) {
       backgroundColor = AppColors.error.withValues(alpha: 0.15);
       borderColor = AppColors.error;
       textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
       statusIcon = Icons.cancel;
-      statusLabel = l10n.your_answer;
+      statusLabel = 'Your Answer';
     } else {
       backgroundColor = isDark ? AppColors.cardDark : AppColors.cardLight;
       borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
@@ -387,7 +383,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
   }
 
   // Explanation Section with Dynamic Multi-Language Support
-  Widget _buildExplanationSection(BuildContext context, BilingualState bilingualState, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildExplanationSection(BuildContext context, BilingualState bilingualState, ThemeData theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -418,7 +414,7 @@ class EnhancedReviewQuestionWidget extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                l10n.explanation,
+                'Explanation',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: AppColors.info,
                   fontWeight: FontWeight.bold,

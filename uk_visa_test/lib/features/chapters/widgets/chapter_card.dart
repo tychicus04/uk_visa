@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 
 class ChapterCard extends StatelessWidget {
 
@@ -16,7 +15,6 @@ class ChapterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -64,7 +62,7 @@ class ChapterCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${l10n.chapter_capitalized} ${chapter.chapterNumber}',
+                        'Chapter ${chapter.chapterNumber}',
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -93,14 +91,14 @@ class ChapterCard extends StatelessWidget {
                 if (chapter.totalTests != null)
                   _buildStatChip(
                     icon: Icons.quiz,
-                    label: '${chapter.totalTests} ${l10n.tests}',
+                    label: '${chapter.totalTests} Tests',
                     theme: theme,
                   ),
                 if (chapter.freeTests != null) ...[
                   const SizedBox(width: 12),
                   _buildStatChip(
                     icon: Icons.free_breakfast,
-                    label: '${chapter.freeTests} ${l10n.free}',
+                    label: '${chapter.freeTests} Free',
                     theme: theme,
                   ),
                 ]
@@ -116,9 +114,9 @@ class ChapterCard extends StatelessWidget {
                       context.go('/chapters/${chapter.id}/read');
                     },
                     icon: const Icon(Icons.menu_book, size: 16),
-                    label: Text(
-                      l10n.read,
-                      style: const TextStyle(fontSize: 12),
+                    label: const Text(
+                      'Read',
+                      style: TextStyle(fontSize: 12),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -131,9 +129,9 @@ class ChapterCard extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onTap,
                     icon: const Icon(Icons.quiz, size: 16),
-                    label: Text(
-                      l10n.tests,
-                      style: const TextStyle(fontSize: 12),
+                    label: const Text(
+                      'Tests',
+                      style: TextStyle(fontSize: 12),
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),

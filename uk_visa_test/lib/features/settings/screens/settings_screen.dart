@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
-import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
 import '../../../shared/widgets/remove_ads_card.dart';
 
@@ -14,7 +12,6 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final bilingualState = ref.watch(bilingualProvider);
@@ -22,7 +19,7 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settings_settings),
+        title: Text('Settings'),
         elevation: 0,
       ),
       body: ListView(
@@ -33,14 +30,14 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Language & Localization Section
-          _buildSectionHeader(l10n.settings_appearance, theme),
+          _buildSectionHeader('Appearance', theme),
 
           // Theme Setting
           _buildSettingTile(
             icon: Icons.dark_mode_outlined,
-            title: l10n.settings_theme,
-            subtitle: _getThemeModeText(themeMode, l10n),
-            onTap: () => _showThemeDialog(context, ref, l10n),
+            title: 'Theme',
+            subtitle: _getThemeModeText(themeMode),
+            onTap: () => _showThemeDialog(context, ref),
             theme: theme,
           ),
           const SizedBox(height: 16),
@@ -69,7 +66,7 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.public,
               title: 'Secondary Language',
               subtitle: '${ApiConstants.getLanguageFlag(bilingualState.secondaryLanguage)} ${ApiConstants.getLanguageName(bilingualState.secondaryLanguage)}',
-              onTap: () => _showSecondaryLanguageDialog(context, ref, l10n),
+              onTap: () => _showSecondaryLanguageDialog(context, ref),
               theme: theme,
             ),
 
@@ -197,12 +194,12 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // About Section
-          _buildSectionHeader(l10n.settings_about, theme),
+          _buildSectionHeader('About', theme),
           _buildSettingTile(
             icon: Icons.info_outline,
-            title: l10n.settings_about,
-            subtitle: l10n.app_information,
-            onTap: () => _showAboutDialog(context, l10n, theme),
+            title: 'About',
+            subtitle: 'App information',
+            onTap: () => _showAboutDialog(context, theme),
             theme: theme,
           ),
           // _buildSettingTile(
@@ -308,74 +305,19 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _getThemeModeText(ThemeMode themeMode, AppLocalizations l10n) {
+  String _getThemeModeText(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.light:
-        return l10n.settings_lightTheme;
+        return 'Light Theme';
       case ThemeMode.dark:
-        return l10n.settings_darkTheme;
+        return 'Dark Theme';
       case ThemeMode.system:
-        return l10n.settings_systemTheme;
+        return 'System Theme';
     }
   }
 
-  // App Interface Language Dialog
-  void _showAppLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'App Language',
-          style: TextStyle(
-            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Choose the language for app interface and menus',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildLanguageOption(
-              context: context,
-              title: l10n.settings_english,
-              subtitle: 'English',
-              flag: '🇬🇧',
-              onTap: () {
-                ref.read(localeProvider.notifier).setLocale(const Locale('en'));
-                Navigator.of(context).pop();
-              },
-              theme: theme,
-            ),
-            const SizedBox(height: 8),
-            _buildLanguageOption(
-              context: context,
-              title: l10n.settings_vietnamese,
-              subtitle: 'Tiếng Việt',
-              flag: '🇻🇳',
-              onTap: () {
-                ref.read(localeProvider.notifier).setLocale(const Locale('vi'));
-                Navigator.of(context).pop();
-              },
-              theme: theme,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // Secondary Language Dialog (for test content)
-  void _showSecondaryLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+  void _showSecondaryLanguageDialog(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final availableLanguages = ref.read(availableSecondaryLanguagesProvider);
@@ -520,30 +462,30 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+  void _showThemeDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.settings_theme),
+        title: Text('Theme'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: Text(l10n.settings_lightTheme),
+              title: Text('Light Theme'),
               onTap: () {
                 ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light);
                 Navigator.of(context).pop();
               },
             ),
             ListTile(
-              title: Text(l10n.settings_darkTheme),
+              title: Text('Dark Theme'),
               onTap: () {
                 ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark);
                 Navigator.of(context).pop();
               },
             ),
             ListTile(
-              title: Text(l10n.settings_systemTheme),
+              title: Text('System Theme'),
               onTap: () {
                 ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.system);
                 Navigator.of(context).pop();
@@ -555,17 +497,17 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showAboutDialog(BuildContext context, AppLocalizations l10n, ThemeData theme) {
+  void _showAboutDialog(BuildContext context, ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
     showAboutDialog(
       context: context,
-      applicationName: l10n.appTitle,
-      applicationVersion: l10n.appVersion,
-      applicationLegalese: l10n.appCopyright,
+      applicationName: 'UK Visa Test',
+      applicationVersion: '1.0.0',
+      applicationLegalese: '© 2024 UK Visa Test',
       children: [
         const SizedBox(height: 16),
         Text(
-            l10n.appAbout,
+            'Prepare for your Life in the UK Test with comprehensive practice questions and mock exams.',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontStyle: FontStyle.italic,
               color: isDark

@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+import 'firebase_options.dart';
 import 'app/app.dart';
 import 'core/storage/secure_storage.dart';
 import 'core/storage/shared_prefs.dart';
@@ -11,6 +13,11 @@ import 'core/database/database_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   final sharedPrefs = await SharedPreferences.getInstance();
   SharedPrefsService.instance.setSharedPreferences(sharedPrefs);

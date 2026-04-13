@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import 'language_selector.dart';
 import 'theme_selector.dart';
 
@@ -11,7 +10,6 @@ class HomeHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -31,7 +29,7 @@ class HomeHeader extends ConsumerWidget {
                 children: [
                   // Title
                   Text(
-                    l10n.appTitle,
+                    'UK Visa Test',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,

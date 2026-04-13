@@ -24,6 +24,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
   final bool? isCorrect; // null = not answered, true = correct, false = incorrect
   final List<String>? correctAnswers; // 🆕 Show correct answers
   final bool showCorrectAnswers; // 🆕 Whether to highlight correct answers
+  final bool allowAnswerChange; // 🆕 Whether to allow changing answers after selection (true for Exam mode)
   final Function(String answerId, bool isSelected) onAnswerSelected;
 
   const EnhancedQuestionWidget({
@@ -36,6 +37,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
     required this.isCorrect,
     this.correctAnswers,
     this.showCorrectAnswers = false,
+    this.allowAnswerChange = false, // Default: không cho phép chọn lại (Practice mode)
     required this.onAnswerSelected,
   });
 
@@ -95,16 +97,17 @@ class EnhancedQuestionWidget extends ConsumerWidget {
                     bilingualState: bilingualState,
                     isMultiSelect: isMultiSelect,
                     isAnswered: isAnswered, // 🆕 Pass isAnswered to control interactivity
+                    allowAnswerChange: allowAnswerChange, // 🆕 Pass allowAnswerChange flag
                     onTap: () {
-                      // 🔥 Prevent any changes once question has been answered
-                      if (isAnswered) {
-                        return; // Do nothing if question has already been answered
+                      // 🔥 UPDATED: Only prevent changes in Practice mode after answering
+                      // In Exam mode, allow changing answers anytime
+                      if (isAnswered && !allowAnswerChange) {
+                        return; // Practice mode: Do nothing if question has already been answered
                       }
                       
-                      // For radio questions, don't allow deselecting if already selected
-                      if (!isMultiSelect && isSelected) {
-                        return; // Do nothing if radio button is already selected
-                      }
+                      // For radio questions in Exam mode, allow re-selecting (changing answer)
+                      // For radio questions in Practice mode with allowAnswerChange=false,
+                      // we already returned above if isAnswered=true
                       
                       onAnswerSelected(answer.answerId, !isSelected);
                     },
@@ -215,6 +218,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
     required BilingualState bilingualState,
     required bool isMultiSelect,
     required bool isAnswered, // 🆕 New parameter to control interactivity
+    required bool allowAnswerChange, // 🆕 New parameter to allow changing answers
     required VoidCallback onTap,
     required ThemeData theme,
     required bool isDark,
@@ -294,7 +298,7 @@ class EnhancedQuestionWidget extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: (isAnswered && showCorrectAnswers) ? null : onTap, // � UPDATED: Only disable in Practice mode after showing answers
+        onTap: (isAnswered && !allowAnswerChange) ? null : onTap, // 🔥 UPDATED: Disable only when answered AND not allowed to change (Practice mode)
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),

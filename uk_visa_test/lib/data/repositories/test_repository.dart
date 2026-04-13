@@ -1,18 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/database_helper.dart';
-import '../../core/utils/debug_helper.dart';
 import '../models/test_model.dart';
-import '../services/test_service.dart';
 
 final testRepositoryProvider = Provider<TestRepository>((ref) {
-  final testService = ref.watch(testServiceProvider);
-  return TestRepository(testService);
+  return TestRepository();
 });
 
 class TestRepository {
-  TestRepository(this._testService);
-  final TestService _testService;
+  TestRepository();
 
   /// Get available tests for current user (using offline database)
   Future<Map<String, List<Test>>> getAvailableTests({
@@ -62,22 +58,19 @@ class TestRepository {
     }
   }
 
-  /// Get free tests (no authentication required)
+  /// Get free tests (offline - returns all tests from database)
   Future<List<Test>> getFreeTests({
     String? secondaryLanguage,
   }) async {
     try {
-      final response = await _testService.getFreeTests(
-          secondaryLanguage: secondaryLanguage
-      );
-
-      if (response.success && response.data != null) {
-        final tests = (response.data!).map((e) => Test.fromJson(e)).toList();
-        print('✅ Loaded ${tests.length} free tests');
-        return tests;
-      } else {
-        throw Exception(response.message ?? 'Failed to load free tests');
-      }
+      print('🗄️ Repository: Loading free tests from offline database');
+      
+      // Get all tests from database (offline mode - all tests are free)
+      final allTests = await DatabaseHelper.instance.getAllTests();
+      final tests = allTests.map((testData) => Test.fromJson(testData)).toList();
+      
+      print('✅ Loaded ${tests.length} free tests from database');
+      return tests;
     } catch (e) {
       print('💥 Repository error in getFreeTests: $e');
       rethrow;
@@ -119,7 +112,7 @@ class TestRepository {
     }
   }
 
-  /// Search tests
+  /// Search tests (offline - search in local database)
   Future<List<Test>> searchTests(
       String query, {
         String? secondaryLanguage,
@@ -127,66 +120,79 @@ class TestRepository {
         int? chapterId,
       }) async {
     try {
-      final response = await _testService.searchTests(
-          secondaryLanguage: secondaryLanguage,
-          query: query,
-          type: type,
-          chapterId: chapterId
-      );
-
-      if (response.success && response.data != null) {
-        final tests = (response.data!).map((e) => Test.fromJson(e)).toList();
-        print('✅ Found ${tests.length} tests for query: "$query"');
-        return tests;
-      } else {
-        throw Exception(response.message ?? 'Failed to search tests');
+      print('🗄️ Repository: Searching tests in offline database');
+      
+      // Get all tests from database
+      final allTests = await DatabaseHelper.instance.getAllTests();
+      var tests = allTests.map((testData) => Test.fromJson(testData)).toList();
+      
+      // Filter by query (search in title)
+      if (query.isNotEmpty) {
+        tests = tests.where((test) {
+          final titleLower = (test.title ?? '').toLowerCase();
+          final queryLower = query.toLowerCase();
+          return titleLower.contains(queryLower);
+        }).toList();
       }
+      
+      // Filter by type if provided
+      if (type != null && type.isNotEmpty) {
+        tests = tests.where((test) => test.testType.toLowerCase() == type.toLowerCase()).toList();
+      }
+      
+      // Filter by chapter if provided
+      if (chapterId != null) {
+        tests = tests.where((test) => test.chapterIdInt == chapterId).toList();
+      }
+      
+      print('✅ Found ${tests.length} tests for query: "$query"');
+      return tests;
     } catch (e) {
       print('💥 Repository error in searchTests: $e');
       rethrow;
     }
   }
 
-  /// Get tests by type
+  /// Get tests by type (offline - filter from local database)
   Future<List<Test>> getTestsByType(
       String type, {
         String? secondaryLanguage,
       }) async {
     try {
-      final response = await _testService.getTestsByType(
-          type,
-          secondaryLanguage: secondaryLanguage);
-
-      if (response.success && response.data != null) {
-        final tests = (response.data!).map((e) => Test.fromJson(e)).toList();
-        print('✅ Loaded ${tests.length} tests of type: $type');
-        return tests;
-      } else {
-        throw Exception(response.message ?? 'Failed to load tests by type');
-      }
+      print('🗄️ Repository: Loading tests by type from offline database');
+      
+      // Get all tests from database
+      final allTests = await DatabaseHelper.instance.getAllTests();
+      final tests = allTests
+          .map((testData) => Test.fromJson(testData))
+          .where((test) => test.testType.toLowerCase() == type.toLowerCase())
+          .toList();
+      
+      print('✅ Loaded ${tests.length} tests of type: $type');
+      return tests;
     } catch (e) {
       print('💥 Repository error in getTestsByType($type): $e');
       rethrow;
     }
   }
 
-  /// Get tests by chapter
+  /// Get tests by chapter (offline - filter from local database)
   Future<List<Test>> getTestsByChapter(
       int chapterId, {
         String? secondaryLanguage,
       }) async {
     try {
-      final response = await _testService.getTestsByChapter(
-          chapterId,
-          secondaryLanguage: secondaryLanguage);
-
-      if (response.success && response.data != null) {
-        final tests = (response.data!).map((e) => Test.fromJson(e)).toList();
-        print('✅ Loaded ${tests.length} tests for chapter: $chapterId');
-        return tests;
-      } else {
-        throw Exception(response.message ?? 'Failed to load chapter tests');
-      }
+      print('🗄️ Repository: Loading tests by chapter from offline database');
+      
+      // Get all tests from database
+      final allTests = await DatabaseHelper.instance.getAllTests();
+      final tests = allTests
+          .map((testData) => Test.fromJson(testData))
+          .where((test) => test.chapterIdInt == chapterId)
+          .toList();
+      
+      print('✅ Loaded ${tests.length} tests for chapter: $chapterId');
+      return tests;
     } catch (e) {
       print('💥 Repository error in getTestsByChapter($chapterId): $e');
       rethrow;

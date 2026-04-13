@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../core/constants/api_constants.dart';
 
@@ -12,7 +11,6 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final bilingualState = ref.watch(bilingualProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -56,7 +54,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  l10n.languageSettings_title,
+                  'Language Settings',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -97,7 +95,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                l10n.languageSettings_bilingualMode ?? 'Bilingual Mode',
+                                'Bilingual Mode',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.primary,
@@ -118,8 +116,8 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
 
                         Text(
                           bilingualState.isEnabled
-                              ? l10n.languageSettings_translationsEnabled
-                              : l10n.languageSettings_translationsDisabled,
+                              ? 'Show translations alongside English text to help you learn'
+                              : 'Translations are currently disabled. Enable to see questions in your language',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: AppColors.primary.withValues(alpha: 0.8),
                             height: 1.3,
@@ -136,7 +134,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.languageSettings_selectSecondaryLanguage ?? 'Select Secondary Language',
+                          'Select Secondary Language',
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -186,8 +184,8 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                     // Translation Quality Info
                     _buildInfoCard(
                       icon: Icons.info_outline,
-                      title: l10n.languageSettings_professionalTranslation,
-                      description: l10n.languageSettings_qualityDescription,
+                      title: 'Professional Translation',
+                      description: 'All translations are professionally verified for accuracy and clarity',
                       color: AppColors.success,
                       isDark: isDark,
                     ),
@@ -220,7 +218,7 @@ class LanguageSettingsBottomSheet extends ConsumerWidget {
                       elevation: 2,
                     ),
                     child: Text(
-                      l10n.languageSettings_done,
+                      'Done',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,

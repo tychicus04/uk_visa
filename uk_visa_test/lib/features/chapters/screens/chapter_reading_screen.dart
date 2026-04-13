@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../data/chapter_content.dart';
 
@@ -48,7 +47,6 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final chapterContent = ChapterContent.getChapterContent(widget.chapterId);
@@ -76,7 +74,7 @@ class _ChapterReadingScreenState extends ConsumerState<ChapterReadingScreen> {
             backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                '${l10n.chapter_capitalized} ${widget.chapterId}',
+                'Chapter ${widget.chapterId}',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.primary,

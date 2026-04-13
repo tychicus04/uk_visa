@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../data/models/attempt_model.dart';
 
 class ReviewQuestionNavigationSheet extends ConsumerWidget {
@@ -22,7 +21,6 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -67,7 +65,7 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l10n.review_questions ?? 'Review Questions',
+                            'Review Questions',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -119,7 +117,7 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              attempt.isPassed ? (l10n.passed ?? 'Passed') : (l10n.failed ?? 'Failed'),
+                              attempt.isPassed ? 'Passed' : 'Failed',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: attempt.isPassed ? AppColors.success : AppColors.error,
                                 fontWeight: FontWeight.w500,
@@ -153,7 +151,7 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              l10n.correct ?? 'Correct',
+                              'Correct',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: AppColors.success,
                               ),
@@ -186,7 +184,7 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              l10n.incorrect ?? 'Incorrect',
+                              'Incorrect',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: AppColors.error,
                               ),
@@ -213,14 +211,14 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                     _buildLegendItem(
                       context,
                       color: AppColors.success,
-                      label: l10n.correct ?? 'Correct',
+                      label: 'Correct',
                       icon: Icons.check,
                     ),
                     const SizedBox(width: 12),
                     _buildLegendItem(
                       context,
                       color: AppColors.error,
-                      label: l10n.incorrect ?? 'Incorrect',
+                      label: 'Incorrect',
                       icon: Icons.close,
                     ),
                   ],
@@ -331,7 +329,7 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                         },
                         icon: Icon(Icons.error_outline, color: AppColors.error),
                         label: Text(
-                          l10n.view_incorrect ?? 'View Incorrect',
+                          'View Incorrect',
                           style: TextStyle(color: AppColors.error),
                         ),
                         style: OutlinedButton.styleFrom(
@@ -345,7 +343,7 @@ class ReviewQuestionNavigationSheet extends ConsumerWidget {
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close),
-                        label: Text(l10n.close ?? 'Close'),
+                        label: Text('Close'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,

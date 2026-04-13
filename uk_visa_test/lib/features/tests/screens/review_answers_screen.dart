@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../data/models/attempt_model.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
@@ -44,7 +43,6 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -59,10 +57,10 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
         if (answers.isEmpty) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(l10n.review_answers),
+              title: const Text('Review Answers'),
             ),
-            body: Center(
-              child: Text(l10n.no_answers_found),
+            body: const Center(
+              child: Text('No answers found'),
             ),
           );
         }
@@ -71,7 +69,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: CustomScrollView(
             slivers: [
-              _buildSliverAppBar(context, attempt, answers, bilingualState, theme, isDark, l10n),
+              _buildSliverAppBar(context, attempt, answers, bilingualState, theme, isDark),
 
               // 🔥 QUESTION CONTENT
               SliverFillRemaining(
@@ -97,7 +95,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
           ),
 
           // 🔥 FIXED BOTTOM ACTION BAR
-          bottomNavigationBar: _buildBottomActionBar(context, answers, theme, isDark, l10n),
+          bottomNavigationBar: _buildBottomActionBar(context, answers, theme, isDark),
         );
       },
       loading: () => Scaffold(
@@ -115,7 +113,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
   }
 
   // 🔥 ENHANCED: Sliver App Bar with Dynamic Language Support
-  Widget _buildSliverAppBar(BuildContext context, TestAttempt attempt, List<AttemptAnswer> answers, bilingualState, ThemeData theme, bool isDark, AppLocalizations l10n) {
+  Widget _buildSliverAppBar(BuildContext context, TestAttempt attempt, List<AttemptAnswer> answers, bilingualState, ThemeData theme, bool isDark) {
     final totalQuestions = answers.length;
     final progress = totalQuestions > 0 ? (_currentQuestionIndex + 1) / totalQuestions : 0.0;
     final correctCount = answers.where((a) => a.isCorrect).length;
@@ -135,8 +133,8 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
         onPressed: () => context.go('/tests/result/${widget.attemptId}'),
         icon: const Icon(Icons.arrow_back, color: appBarForeground),
       ),
-      title: Text(
-        l10n.review_answers,
+      title: const Text(
+        'Review Answers',
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -208,8 +206,8 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       Expanded(
                         child: Text(
                           attempt.isPassed
-                              ? (l10n.test_passed ?? 'Test Passed!')
-                              : (l10n.test_failed ?? 'Test Failed'),
+                              ? 'Test Passed!'
+                              : 'Test Failed',
                           style: const TextStyle(
                             color: appBarForeground,
                             fontSize: 18,
@@ -239,7 +237,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
 
                   // Progress Info
                   Text(
-                    '${l10n.question} ${_currentQuestionIndex + 1} ${l10n.of_} $totalQuestions',
+                    'Question ${_currentQuestionIndex + 1} of $totalQuestions',
                     style: const TextStyle(
                       color: appBarForeground,
                       fontSize: 16,
@@ -262,7 +260,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                   Row(
                     children: [
                       Text(
-                        '${l10n.correct}: $correctCount/$totalQuestions',
+                        'Correct: $correctCount/$totalQuestions',
                         style: TextStyle(
                           color: appBarForeground.withValues(alpha: 0.9),
                           fontSize: 14,
@@ -271,7 +269,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       const Spacer(),
                       if (attempt.timeTakenInt > 0)
                         Text(
-                          '${l10n.time}: ${_formatTime(attempt.timeTakenInt)}',
+                          'Time: ${_formatTime(attempt.timeTakenInt)}',
                           style: TextStyle(
                             color: appBarForeground.withValues(alpha: 0.9),
                             fontSize: 14,
@@ -289,7 +287,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
   }
 
   // 🔥 FIXED BOTTOM ACTION BAR
-  Widget _buildBottomActionBar(BuildContext context, List<AttemptAnswer> answers, ThemeData theme, bool isDark, AppLocalizations  l10n) {
+  Widget _buildBottomActionBar(BuildContext context, List<AttemptAnswer> answers, ThemeData theme, bool isDark) {
     final totalQuestions = answers.length;
     final isFirstQuestion = _currentQuestionIndex == 0;
     final isLastQuestion = _currentQuestionIndex >= totalQuestions - 1;
@@ -319,7 +317,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _previousQuestion,
                         icon: const Icon(Icons.arrow_back, size: 18),
-                        label: Text(l10n.previous ?? 'Previous'),
+                        label: const Text('Previous'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           side: BorderSide(
@@ -347,7 +345,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                         isLastQuestion ? Icons.close : Icons.arrow_forward,
                         size: 18,
                       ),
-                      label: Text(isLastQuestion ? (l10n.close ?? 'Close') : (l10n.next ?? 'Next')),
+                      label: Text(isLastQuestion ? 'Close' : 'Next'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,

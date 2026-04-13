@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -40,22 +39,21 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final testsState = ref.watch(availableTestsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.navigation_tests),
+        title: const Text('Tests'),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(
-              text: l10n.test_practice, // ✅ Localized
-              icon: const Icon(Icons.quiz_outlined),
+            const Tab(
+              text: 'Practice',
+              icon: Icon(Icons.quiz_outlined),
             ),
-            Tab(
-              text: l10n.test_exam, // ✅ Localized
-              icon: const Icon(Icons.assignment_outlined),
+            const Tab(
+              text: 'Exam',
+              icon: Icon(Icons.assignment_outlined),
             ),
           ],
         ),
@@ -75,14 +73,12 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
             controller: _tabController,
             children: [
               _buildPracticeTestsByChapter(
-                l10n,
                 practiceTests,
-                emptyMessage: l10n.test_noPracticeTests,
+                emptyMessage: 'No practice tests available',
               ),
               _buildTestList(
-                l10n,
                 examTests,
-                emptyMessage: l10n.test_noExamTests,
+                emptyMessage: 'No exam tests available',
                 showTestType: true, // Show type since we have both comprehensive and exam
               ),
             ],
@@ -99,7 +95,6 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
 
   // Group practice tests by chapter with expandable sections
   Widget _buildPracticeTestsByChapter(
-    AppLocalizations l10n,
     List<dynamic> tests, {
     required String emptyMessage,
   }) {
@@ -209,11 +204,14 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                 ),
-                children: chapterTests.map((test) {
+                children: chapterTests.asMap().entries.map((entry) {
+                  final testIndex = entry.key + 1; // Sequential numbering starting from 1
+                  final test = entry.value;
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     child: TestCard(
                       test: test,
+                      displayNumber: testIndex,
                       showTestType: false,
                       onTap: () {
                         context.go('/tests/detail/${test.id}');
@@ -230,7 +228,6 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
   }
 
   Widget _buildTestList(
-      AppLocalizations l10n,
       List<dynamic> tests, {
         required String emptyMessage,
         bool showTestType = false,
@@ -281,10 +278,12 @@ class _TestListScreenState extends ConsumerState<TestListScreen>
       itemCount: sortedTests.length,
       itemBuilder: (context, index) {
         final test = sortedTests[index];
+        final displayNumber = index + 1; // Sequential numbering starting from 1
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: TestCard(
             test: test,
+            displayNumber: displayNumber,
             showTestType: showTestType,
             onTap: () {
               context.go('/tests/detail/${test.id}');

@@ -6,7 +6,6 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/services/interstitial_ad_service.dart';
 import '../../../core/services/purchase_service.dart';
 import '../../../data/models/test_model.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -61,12 +60,11 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final testState = ref.watch(testDetailProvider(widget.testId));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.test_details),
+        title: const Text('Test Details'),
       ),
       body: testState.when(
         data: (test) {
@@ -96,7 +94,6 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
   }
 
   Widget _buildPracticeTab(BuildContext context, Test test) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -107,8 +104,8 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     if (!isPracticeTest) {
       return _buildWrongTabMessage(
         context,
-        l10n.test_wrongTabExamTitle,
-        l10n.test_wrongTabExamMessage,
+        'This is an exam test',
+        'This test is designed for timed exam mode. Please switch to the Exam tab.',
         Icons.timer,
         AppColors.warning,
       );
@@ -118,7 +115,6 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
   }
 
   Widget _buildExamTab(BuildContext context, Test test) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -128,8 +124,8 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     if (!isExamTest) {
       return _buildWrongTabMessage(
         context,
-        l10n.test_wrongTabPracticeTitle,
-        l10n.test_wrongTabPracticeMessage,
+        'This is a practice test',
+        'This test is designed for practice mode. Please switch to the Practice tab.',
         Icons.school,
         AppColors.info,
       );
@@ -181,7 +177,6 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
   }
 
   Widget _buildTestDetails(BuildContext context, Test test, bool hasTimer) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -217,7 +212,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        test.title ?? '${l10n.test_test} ${test.testNumber}',
+                        test.title ?? 'Test ${test.testNumber}',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -240,7 +235,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                     ),
                   ),
                   child: Text(
-                    hasTimer ? l10n.test_timedTest : l10n.test_practiceMode,
+                    hasTimer ? 'Timed Test' : 'Practice Mode',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: hasTimer ? AppColors.warning : AppColors.info,
                       fontWeight: FontWeight.w600,
@@ -249,7 +244,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  hasTimer ? l10n.test_examDescription : l10n.test_practiceDescription,
+                  hasTimer ? 'Complete this timed test under exam conditions' : 'Practice at your own pace without time pressure',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     fontStyle: FontStyle.italic,
@@ -285,7 +280,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.test_testInformation,
+                  'Test Information',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -295,23 +290,23 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                   children: [
                     _buildStatItem(
                       icon: Icons.quiz,
-                      label: l10n.questions,
+                      label: 'Questions',
                       value: '${test.questionCount ?? 24}',
                       theme: theme,
                     ),
                     const SizedBox(width: 24),
                     _buildStatItem(
                       icon: hasTimer ? Icons.timer : Icons.all_inclusive,
-                      label: l10n.duration,
+                      label: 'Duration',
                       value: hasTimer
-                          ? l10n.test_timeLimitMinutes(test.effectiveTimeLimit.inMinutes)
-                          : l10n.test_unlimited,
+                          ? '${test.effectiveTimeLimit.inMinutes} minutes'
+                          : 'Unlimited',
                       theme: theme,
                     ),
                     const SizedBox(width: 24),
                     _buildStatItem(
                       icon: Icons.trending_up,
-                      label: l10n.pass_rate,
+                      label: 'Pass Rate',
                       value: '75%',
                       theme: theme,
                     ),
@@ -343,7 +338,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.your_progress,
+                    'Your Progress',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -353,7 +348,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                     children: [
                       Expanded(
                         child: _buildProgressItem(
-                          label: l10n.attempts,
+                          label: 'Attempts',
                           value: '${test.attemptCount}',
                           theme: theme,
                         ),
@@ -361,7 +356,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                       if (test.bestScore != null)
                         Expanded(
                           child: _buildProgressItem(
-                            label: l10n.best_score,
+                            label: 'Best Score',
                             value: '${test.bestScore?.toInt()}%',
                             theme: theme,
                           ),
@@ -390,7 +385,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    l10n.you_can_access_this_test,
+                    'You can access this test',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.success,
                       fontWeight: FontWeight.w500,
@@ -408,7 +403,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
             onPressed: () => _startTest(context, hasTimer),
             icon: Icon(hasTimer ? Icons.timer : Icons.school),
             label: Text(
-                hasTimer ? l10n.test_startTimedTest : l10n.test_startPractice
+                hasTimer ? 'Start Timed Test' : 'Start Practice'
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: hasTimer ? AppColors.warning : AppColors.info,
@@ -421,8 +416,6 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
   }
 
   Widget _buildFeaturesInfo(BuildContext context, Test test, bool hasTimer, ThemeData theme, bool isDark) {
-    final l10n = AppLocalizations.of(context);
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -448,7 +441,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
               ),
               const SizedBox(width: 8),
               Text(
-                hasTimer ? l10n.test_timedTestFeatures : l10n.test_practiceTestFeatures,
+                hasTimer ? 'Timed Test Features' : 'Practice Test Features',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: hasTimer ? AppColors.warning : AppColors.info,
@@ -458,13 +451,13 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
           ),
           const SizedBox(height: 12),
           if (hasTimer) ...[
-            _buildFeatureItem(l10n.test_timeLimitMinutes(test.effectiveTimeLimit.inMinutes), Icons.timer),
-            _buildFeatureItem(l10n.test_autoSubmitWhenExpires, Icons.send),
-            _buildFeatureItem(l10n.test_realExamSimulation, Icons.assignment_turned_in),
+            _buildFeatureItem('${test.effectiveTimeLimit.inMinutes} minutes time limit', Icons.timer),
+            _buildFeatureItem('Auto-submit when time expires', Icons.send),
+            _buildFeatureItem('Real exam simulation', Icons.assignment_turned_in),
           ] else ...[
-            _buildFeatureItem(l10n.test_noTimePressure, Icons.schedule),
-            _buildFeatureItem(l10n.test_reviewAnswersImmediate, Icons.visibility),
-            _buildFeatureItem(l10n.test_focusLearning, Icons.lightbulb_outline),
+            _buildFeatureItem('No time pressure', Icons.schedule),
+            _buildFeatureItem('Review answers immediately', Icons.visibility),
+            _buildFeatureItem('Focus on learning', Icons.lightbulb_outline),
           ],
         ],
       ),
@@ -538,22 +531,20 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
   );
 
   Future<void> _startTest(BuildContext context, bool hasTimer) async {
-    final l10n = AppLocalizations.of(context);
-
     // Show interstitial ad before starting test
     await _interstitialAdService.showAd(
       onAdDismissed: () async {
         // Ad was dismissed, proceed with starting test
-        await _startTestAfterAd(context, l10n);
+        await _startTestAfterAd(context);
       },
       onAdFailedToShow: () async {
         // Ad failed to show, proceed with starting test anyway
-        await _startTestAfterAd(context, l10n);
+        await _startTestAfterAd(context);
       },
     );
   }
 
-  Future<void> _startTestAfterAd(BuildContext context, AppLocalizations l10n) async {
+  Future<void> _startTestAfterAd(BuildContext context) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -568,7 +559,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              Text(l10n.test_startingTest),
+              const Text('Starting test...'),
             ],
           ),
           backgroundColor: AppColors.primary,
@@ -589,12 +580,12 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.test_testStartError),
+            content: const Text('Failed to start test. Please try again.'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             action: SnackBarAction(
-              label: l10n.common_retry,
+              label: 'Retry',
               textColor: Colors.white,
               onPressed: () {
                 // Reload ad for retry

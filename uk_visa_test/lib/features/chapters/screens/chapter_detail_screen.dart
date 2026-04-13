@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../../tests/widgets/test_card.dart';
@@ -17,14 +16,13 @@ class ChapterDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final chapterState = ref.watch( chapterDetailProvider(chapterId));
 
     return chapterState.when(
       data: (chapter) => Scaffold(
         appBar: AppBar(
-          title: Text('${l10n.chapter} ${chapter.chapterNumber}'),
+          title: Text('Chapter \${chapter.chapterNumber}'),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -49,7 +47,7 @@ class ChapterDetailScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               if (chapter.tests != null && chapter.tests!.isNotEmpty) ...[
                 Text(
-                  l10n.chapter_tests,
+                  'Chapter Tests',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -75,7 +73,7 @@ class ChapterDetailScreen extends ConsumerWidget {
                         context.go('/chapters/${chapter.id}/read');
                       },
                       icon: const Icon(Icons.menu_book),
-                      label: Text(l10n.read_chapter),
+                      label: const Text('Read Chapter'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
@@ -89,7 +87,7 @@ class ChapterDetailScreen extends ConsumerWidget {
                           context.go('/tests?chapter=${chapter.id}');
                         },
                         icon: const Icon(Icons.quiz),
-                        label: Text(l10n.practice_tests),
+                        label: const Text('Practice Tests'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/chapter_provider.dart';
@@ -14,13 +13,12 @@ class ChapterListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final chaptersState = ref.watch(chaptersProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.navigation_book),
+        title: const Text('Book'),
       ),
       body: chaptersState.when(
         data: (chapters) => SingleChildScrollView(
@@ -42,7 +40,7 @@ class ChapterListScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.chapter_takingLifeInUKTest,
+                      'Taking Life In UK Test',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -50,7 +48,7 @@ class ChapterListScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      l10n.chapter_studyBookDescription,
+                      'Study the handbook to prepare for your Life in the UK test',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                         height: 1.4,
@@ -79,7 +77,7 @@ class ChapterListScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        l10n.chapter_lifeInUKQuestions,
+                        'All Life in the UK test questions are based on this book',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.info,
                         ),
@@ -90,7 +88,7 @@ class ChapterListScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                l10n.study_chapters,
+                'Study Chapters',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -129,7 +127,7 @@ class ChapterListScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.test_centres,
+                          'Test Centres',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -138,7 +136,7 @@ class ChapterListScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      l10n.chapter_testCentreInfo,
+                      'Find official Life in the UK test centres near you',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         height: 1.4,
                       ),

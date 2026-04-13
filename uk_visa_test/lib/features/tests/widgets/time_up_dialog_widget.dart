@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../l10n/generated/app_localizations.dart';
 
 class TimeUpDialog extends StatelessWidget {
   const TimeUpDialog({
@@ -12,7 +11,6 @@ class TimeUpDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -31,7 +29,7 @@ class TimeUpDialog extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                l10n.test_timeUpWarning,
+                'Time\'s Up!',
                 style: TextStyle(
                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   fontSize: 18,
@@ -51,7 +49,7 @@ class TimeUpDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.test_submittingTest,
+              'Your test will be submitted automatically.',
               style: TextStyle(
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 fontSize: 16,
@@ -68,7 +66,7 @@ class TimeUpDialog extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onSubmit,
             icon: const Icon(Icons.send),
-            label: Text(l10n.test_submitTest),
+            label: Text('Submit Test'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
