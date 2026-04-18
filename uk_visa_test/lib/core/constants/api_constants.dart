@@ -14,7 +14,6 @@ class ApiConstants {
     'pt', // Portuguese
     'ru', // Russian
     'ja', // Japanese
-    'ko', // Korean
     'hi', // Hindi
     'bn', // Bengali
     'ur', // Urdu
@@ -26,6 +25,13 @@ class ApiConstants {
     'tr', // Turkish
     'th', // Thai
     'uk', // Ukrainian
+    'ku', // Kurdish (Sorani)
+    'sq', // Albanian
+    'so', // Somali
+    'am', // Amharic
+    'tl', // Tagalog
+    'ne', // Nepali
+    'ti', // Tigrinya
   ];
 
   // Language flags
@@ -41,7 +47,6 @@ class ApiConstants {
       'pt': '🇵🇹',
       'ru': '🇷🇺',
       'ja': '🇯🇵',
-      'ko': '🇰🇷',
       'hi': '🇮🇳',
       'bn': '🇧🇩',
       'ur': '🇵🇰',
@@ -53,6 +58,13 @@ class ApiConstants {
       'tr': '🇹🇷',
       'th': '🇹🇭',
       'uk': '🇺🇦',
+      'ku': '🇮🇶',
+      'sq': '🇦🇱',
+      'so': '🇸🇴',
+      'am': '🇪🇹',
+      'tl': '🇵🇭',
+      'ne': '🇳🇵',
+      'ti': '🇪🇷',
     };
     return flags[code] ?? '🌐';
   }
@@ -70,7 +82,6 @@ class ApiConstants {
       'pt': 'Português',
       'ru': 'Русский',
       'ja': '日本語',
-      'ko': '한국어',
       'hi': 'हिन्दी',
       'bn': 'বাংলা',
       'ur': 'اردو',
@@ -82,6 +93,13 @@ class ApiConstants {
       'tr': 'Türkçe',
       'th': 'ไทย',
       'uk': 'Українська',
+      'ku': 'کوردی',
+      'sq': 'Shqip',
+      'so': 'Soomaali',
+      'am': 'አማርኛ',
+      'tl': 'Tagalog',
+      'ne': 'नेपाली',
+      'ti': 'ትግርኛ',
     };
     return names[code] ?? code.toUpperCase();
   }

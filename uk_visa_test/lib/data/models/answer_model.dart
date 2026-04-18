@@ -37,6 +37,9 @@ class Answer extends Equatable {
     this.answerTextKu, // 🆕 Kurdish
     this.answerTextFa, // 🆕 Persian
     this.answerTextPs, // 🆕 Pashto
+    this.answerTextTl, // 🆕 Tagalog
+    this.answerTextNe, // 🆕 Nepali
+    this.answerTextTi, // 🆕 Tigrinya
     this.isCorrect,
     this.wasSelected,
     this.createdAt,
@@ -74,6 +77,9 @@ class Answer extends Equatable {
   final String? answerTextKu; // 🆕 Kurdish
   final String? answerTextFa; // 🆕 Persian
   final String? answerTextPs; // 🆕 Pashto
+  final String? answerTextTl; // 🆕 Tagalog
+  final String? answerTextNe; // 🆕 Nepali
+  final String? answerTextTi; // 🆕 Tigrinya
 
   final bool? isCorrect;
   final bool? wasSelected;
@@ -110,6 +116,9 @@ class Answer extends Equatable {
         answerTextKu: json['answer_text_ku']?.toString(), // 🆕 Kurdish
         answerTextFa: json['answer_text_fa']?.toString(), // 🆕 Persian
         answerTextPs: json['answer_text_ps']?.toString(), // 🆕 Pashto
+        answerTextTl: json['answer_text_tl']?.toString(), // 🆕 Tagalog
+        answerTextNe: json['answer_text_ne']?.toString(), // 🆕 Nepali
+        answerTextTi: json['answer_text_ti']?.toString(), // 🆕 Tigrinya
         isCorrect: _parseBool(json['is_correct']),
         wasSelected: _parseBool(json['was_selected']),
         createdAt: json['created_at']?.toString(),
@@ -184,6 +193,12 @@ class Answer extends Equatable {
         return answerTextFa?.isNotEmpty == true ? answerTextFa! : answerText;
       case 'ps':
         return answerTextPs?.isNotEmpty == true ? answerTextPs! : answerText;
+      case 'tl':
+        return answerTextTl?.isNotEmpty == true ? answerTextTl! : answerText;
+      case 'ne':
+        return answerTextNe?.isNotEmpty == true ? answerTextNe! : answerText;
+      case 'ti':
+        return answerTextTi?.isNotEmpty == true ? answerTextTi! : answerText;
       default:
         return answerText;
     }
@@ -246,6 +261,12 @@ class Answer extends Equatable {
         return answerTextFa?.isNotEmpty == true;
       case 'ps':
         return answerTextPs?.isNotEmpty == true;
+      case 'tl':
+        return answerTextTl?.isNotEmpty == true;
+      case 'ne':
+        return answerTextNe?.isNotEmpty == true;
+      case 'ti':
+        return answerTextTi?.isNotEmpty == true;
       default:
         return false;
     }
@@ -294,6 +315,9 @@ class Answer extends Equatable {
         answerTextKu,
         answerTextFa,
         answerTextPs,
+        answerTextTl,
+        answerTextNe,
+        answerTextTi,
         isCorrect,
         wasSelected,
         createdAt,

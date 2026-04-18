@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/services/interstitial_ad_service.dart';
 import '../../../core/services/purchase_service.dart';
+import '../../../shared/widgets/banner_ad_widget.dart';
 import '../../../data/models/question_model.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
@@ -127,6 +128,9 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           body: CustomScrollView(
             slivers: [
               _buildSliverAppBar(context, test, theme, isDark, isTimedTest),
+              const SliverToBoxAdapter(
+                child: Center(child: BannerAdWidget()),
+              ),
               SliverFillRemaining(
                 child: test.questions != null
                     ? PageView.builder(

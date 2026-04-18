@@ -87,4 +87,14 @@ GoogleService-Info.plist
 
 android/key.properties
 android/app/upload-keystore.jks
-*/
+*/.venv/
+
+# Translation pipeline (contain hardcoded API keys + large CSV)
+translate_with_gemini.py
+translate_with_azure.py
+*_translations.csv
+*_input.csv
+*_output.csv
+sample.csv
+sample_out.csv
+assets/data/*.backup

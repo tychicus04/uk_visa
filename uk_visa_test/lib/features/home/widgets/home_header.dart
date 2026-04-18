@@ -12,41 +12,35 @@ class HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final bg = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
 
-    return SliverAppBar(
-      expandedHeight: 60,
-      pinned: true,
+    return Material(
+      color: bg,
       elevation: 0,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'UK Visa Test',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight,
+                ),
+              ),
+              const Row(
                 children: [
-                  // Title
-                  Text(
-                    'UK Visa Test',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                    ),
-                  ),
-
-                  // Right side controls
-                  const Row(
-                    children: [
-                      ThemeSelector(),
-                      SizedBox(width: 8),
-                      LanguageSelector(),
-                    ],
-                  ),
+                  ThemeSelector(),
+                  SizedBox(width: 8),
+                  LanguageSelector(),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),

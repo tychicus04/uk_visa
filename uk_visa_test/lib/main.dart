@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
@@ -31,14 +30,6 @@ void main() async {
     print('Database initialization failed: $e');
   }
 
-  // Initialize Mobile Ads SDK
-  try {
-    await MobileAds.instance.initialize();
-    print('🎯 Mobile Ads SDK initialized successfully');
-  } catch (e) {
-    print('🎯 Mobile Ads SDK initialization failed: $e');
-  }
-
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -52,6 +43,9 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  // Note: ATT prompt + MobileAds init are triggered from UKVisaTestApp.initState
+  // after the first frame is rendered — iOS requires the app UI be on-screen
+  // before requestTrackingAuthorization() will display the system prompt.
   runApp(
     const ProviderScope(
       child: UKVisaTestApp(),

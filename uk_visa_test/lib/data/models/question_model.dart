@@ -38,6 +38,9 @@ class Question extends Equatable {
     this.questionTextKu, // 🆕 Kurdish
     this.questionTextFa, // 🆕 Persian
     this.questionTextPs, // 🆕 Pashto
+    this.questionTextTl, // 🆕 Tagalog
+    this.questionTextNe, // 🆕 Nepali
+    this.questionTextTi, // 🆕 Tigrinya
     required this.questionType,
     this.requiredAnswers = 1, // 🆕 Number of required answers for this question
     this.explanation,
@@ -67,6 +70,9 @@ class Question extends Equatable {
     this.explanationKu, // 🆕 Kurdish
     this.explanationFa, // 🆕 Persian
     this.explanationPs, // 🆕 Pashto
+    this.explanationTl, // 🆕 Tagalog
+    this.explanationNe, // 🆕 Nepali
+    this.explanationTi, // 🆕 Tigrinya
     required this.answers,
     required this.createdAt,
   });
@@ -103,6 +109,9 @@ class Question extends Equatable {
   final String? questionTextKu; // 🆕 Kurdish
   final String? questionTextFa; // 🆕 Persian
   final String? questionTextPs; // 🆕 Pashto
+  final String? questionTextTl; // 🆕 Tagalog
+  final String? questionTextNe; // 🆕 Nepali
+  final String? questionTextTi; // 🆕 Tigrinya
 
   final String questionType;
   final int requiredAnswers; // 🆕 Number of required answers for this question
@@ -135,6 +144,9 @@ class Question extends Equatable {
   final String? explanationKu; // 🆕 Kurdish
   final String? explanationFa; // 🆕 Persian
   final String? explanationPs; // 🆕 Pashto
+  final String? explanationTl; // 🆕 Tagalog
+  final String? explanationNe; // 🆕 Nepali
+  final String? explanationTi; // 🆕 Tigrinya
 
   final List<Answer> answers;
   final String createdAt;
@@ -171,6 +183,9 @@ class Question extends Equatable {
       questionTextKu: json['question_text_ku']?.toString(), // 🆕 Kurdish
       questionTextFa: json['question_text_fa']?.toString(), // 🆕 Persian
       questionTextPs: json['question_text_ps']?.toString(), // 🆕 Pashto
+      questionTextTl: json['question_text_tl']?.toString(), // 🆕 Tagalog
+      questionTextNe: json['question_text_ne']?.toString(), // 🆕 Nepali
+      questionTextTi: json['question_text_ti']?.toString(), // 🆕 Tigrinya
       questionType: json['question_type']?.toString() ?? 'radio',
       requiredAnswers: json['required_answers'] != null
           ? int.tryParse(json['required_answers'].toString()) ?? 1
@@ -202,6 +217,9 @@ class Question extends Equatable {
       explanationKu: json['explanation_ku']?.toString(), // 🆕 Kurdish
       explanationFa: json['explanation_fa']?.toString(), // 🆕 Persian
       explanationPs: json['explanation_ps']?.toString(), // 🆕 Pashto
+      explanationTl: json['explanation_tl']?.toString(), // 🆕 Tagalog
+      explanationNe: json['explanation_ne']?.toString(), // 🆕 Nepali
+      explanationTi: json['explanation_ti']?.toString(), // 🆕 Tigrinya
       answers: json['answers'] != null
           ? (json['answers'] as List).map((e) => Answer.fromJson(e)).toList()
           : <Answer>[],
@@ -322,6 +340,18 @@ class Question extends Equatable {
         return questionTextPs?.isNotEmpty == true
             ? questionTextPs!
             : questionText;
+      case 'tl':
+        return questionTextTl?.isNotEmpty == true
+            ? questionTextTl!
+            : questionText;
+      case 'ne':
+        return questionTextNe?.isNotEmpty == true
+            ? questionTextNe!
+            : questionText;
+      case 'ti':
+        return questionTextTi?.isNotEmpty == true
+            ? questionTextTi!
+            : questionText;
       default:
         return questionText;
     }
@@ -437,6 +467,18 @@ class Question extends Equatable {
         return explanationPs?.isNotEmpty == true
             ? explanationPs!
             : (explanation ?? '');
+      case 'tl':
+        return explanationTl?.isNotEmpty == true
+            ? explanationTl!
+            : (explanation ?? '');
+      case 'ne':
+        return explanationNe?.isNotEmpty == true
+            ? explanationNe!
+            : (explanation ?? '');
+      case 'ti':
+        return explanationTi?.isNotEmpty == true
+            ? explanationTi!
+            : (explanation ?? '');
       default:
         return explanation ?? '';
     }
@@ -499,6 +541,12 @@ class Question extends Equatable {
         return questionTextFa?.isNotEmpty == true;
       case 'ps':
         return questionTextPs?.isNotEmpty == true;
+      case 'tl':
+        return questionTextTl?.isNotEmpty == true;
+      case 'ne':
+        return questionTextNe?.isNotEmpty == true;
+      case 'ti':
+        return questionTextTi?.isNotEmpty == true;
       default:
         return false;
     }
@@ -560,6 +608,12 @@ class Question extends Equatable {
         return explanationFa?.isNotEmpty == true;
       case 'ps':
         return explanationPs?.isNotEmpty == true;
+      case 'tl':
+        return explanationTl?.isNotEmpty == true;
+      case 'ne':
+        return explanationNe?.isNotEmpty == true;
+      case 'ti':
+        return explanationTi?.isNotEmpty == true;
       default:
         return false;
     }
@@ -616,6 +670,9 @@ class Question extends Equatable {
         questionTextKu,
         questionTextFa,
         questionTextPs,
+        questionTextTl,
+        questionTextNe,
+        questionTextTi,
         questionType,
         requiredAnswers,
         explanation,
@@ -645,6 +702,9 @@ class Question extends Equatable {
         explanationKu,
         explanationFa,
         explanationPs,
+        explanationTl,
+        explanationNe,
+        explanationTi,
         answers,
         createdAt,
       ];

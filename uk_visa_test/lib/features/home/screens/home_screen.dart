@@ -37,10 +37,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Column(
         children: [
+          const HomeHeader(),
           Expanded(
             child: CustomScrollView(
               slivers: [
-                const HomeHeader(),
                 SliverPadding(
                   padding: const EdgeInsets.all(20),
                   sliver: SliverList(
