@@ -708,4 +708,14 @@ class Question extends Equatable {
         answers,
         createdAt,
       ];
+
+  bool isAnswerCorrect(List<String> selectedAnswerIds) {
+    final correctAnswerIds = answers
+        .where((a) => a.isCorrect == true)
+        .map((a) => a.answerId)
+        .toSet();
+    final selectedSet = selectedAnswerIds.toSet();
+    return correctAnswerIds.length == selectedSet.length &&
+        correctAnswerIds.containsAll(selectedSet);
+  }
 }

@@ -436,7 +436,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           final isTimedTest = testState.value?.isTimed ?? false;
           if (!isTimedTest) {
             // Practice mode: check correctness immediately
-            _correctAnswers[question.id] = _isAnswerCorrect(question, _answers[question.id]!);
+            _correctAnswers[question.id] = question.isAnswerCorrect(_answers[question.id]!);
           }
         }
         // Note: For radio buttons, we don't allow deselecting (isSelected will always be true when called)
@@ -466,27 +466,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           
           // Only check correctness in Practice mode
           if (!isTimedTest) {
-            final correctAnswers = question.answers
-                .where((answer) => answer.isCorrect == true)
-                .map((answer) => answer.answerId)
-                .toSet();
-            
-            final selectedAnswersSet = selectedAnswers.toSet();
-            
-            // Check if ANY selected answer is incorrect
-            final hasIncorrectAnswer = selectedAnswersSet.any((answerId) {
-              return !correctAnswers.contains(answerId);
-            });
-            
-            // If any answer is incorrect, mark the whole question as wrong
-            if (hasIncorrectAnswer) {
-              _correctAnswers[question.id] = false;
-            } else {
-              // All selected answers are correct, check if we have all correct answers
-              final hasAllCorrectAnswers = correctAnswers.length == selectedAnswersSet.length && 
-                                         correctAnswers.containsAll(selectedAnswersSet);
-              _correctAnswers[question.id] = hasAllCorrectAnswers;
-            }
+            _correctAnswers[question.id] = question.isAnswerCorrect(selectedAnswers);
           }
         } else {
           // Not enough answers selected yet
@@ -495,21 +475,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         }
       }
     });
-  }
-
-  // Helper method to check if the selected answers are correct
-  bool _isAnswerCorrect(Question question, List<String> selectedAnswerIds) {
-    final correctAnswers = question.answers
-        .where((answer) => answer.isCorrect == true)
-        .map((answer) => answer.answerId)
-        .toSet();
-    
-    final selectedAnswers = selectedAnswerIds.toSet();
-    
-    // For both radio and checkbox questions, all correct answers must be selected
-    // and no incorrect answers should be selected
-    return correctAnswers.length == selectedAnswers.length && 
-           correctAnswers.containsAll(selectedAnswers);
   }
 
   void _previousQuestion() {
