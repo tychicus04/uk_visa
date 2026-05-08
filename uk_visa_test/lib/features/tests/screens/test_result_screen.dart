@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -83,7 +84,7 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Passing score: 75%',
+                      'Passing score: ${AppConstants.passingScorePercent.toInt()}%',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -108,7 +109,7 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                   ),
                   // 🔥 FIX: Only show time card for timed tests (exam mode)
-                  if (result.testType?.toLowerCase() == 'exam' || 
+                  if (result.testType?.toLowerCase() == 'exam' ||
                       result.testType?.toLowerCase() == 'comprehensive') ...[
                     const SizedBox(width: 16),
                     Expanded(
@@ -116,7 +117,7 @@ class TestResultScreen extends ConsumerWidget {
                         icon: Icons.access_time,
                         label: 'Time Taken',
                         value: _formatTime(result.timeTakenInt),
-                        total: '45 minutes',
+                        total: _defaultTotalTimeLabel(result.testType),
                         color: AppColors.primary,
                         theme: theme,
                       ),
@@ -348,6 +349,21 @@ class TestResultScreen extends ConsumerWidget {
     final minutes = seconds ~/ 60;
     final remainingSeconds = seconds % 60;
     return '${minutes}m ${remainingSeconds}s';
+  }
+
+  // Mirrors Test.defaultTimeLimit so the result screen shows the right cap
+  // per test type instead of always saying "45 minutes".
+  String _defaultTotalTimeLabel(String? testType) {
+    switch (testType?.toLowerCase()) {
+      case 'exam':
+        return '45 minutes';
+      case 'comprehensive':
+        return '30 minutes';
+      case 'chapter':
+        return '20 minutes';
+      default:
+        return '45 minutes';
+    }
   }
 
   String _formatDate(String? dateString) {

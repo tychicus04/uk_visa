@@ -14,6 +14,7 @@ class AppConstants {
   static const int freeTestLimit = 5;
   static const int questionsPerTest = 24;
   static const int passingScore = 18; // 75%
+  static const double passingScorePercent = 75;
 
   // Subscription - NEW
   static const String weeklyProductId = 'com.ukvisatest.weekly_premium';

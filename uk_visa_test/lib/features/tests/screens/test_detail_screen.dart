@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/interstitial_ad_service.dart';
 import '../../../core/services/purchase_service.dart';
 import '../../../data/models/test_model.dart';
@@ -26,12 +27,13 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final InterstitialAdService _interstitialAdService = InterstitialAdService();
+  bool _initialTabSelected = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Load interstitial ad for when starting test (will check purchase status)
     _loadAdWithPurchaseCheck();
   }
@@ -68,12 +70,19 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
       ),
       body: testState.when(
         data: (test) {
-          // Determine which tab should be selected based on test type
-          final isExamTest = test.testType.toLowerCase() == 'exam';
-          if (isExamTest && _tabController.index == 0) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _tabController.animateTo(1);
-            });
+          // One-time tab selection based on test type. Done once per session so
+          // the user can still switch tabs manually after the initial load.
+          if (!_initialTabSelected) {
+            _initialTabSelected = true;
+            final type = test.testType.toLowerCase();
+            final defaultTabIndex = (type == 'exam' || type == 'comprehensive') ? 1 : 0;
+            if (_tabController.index != defaultTabIndex) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _tabController.animateTo(defaultTabIndex);
+                }
+              });
+            }
           }
 
           return TabBarView(
@@ -97,14 +106,13 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Check if this test is suitable for practice mode
-    final isPracticeTest = test.testType.toLowerCase() == 'chapter' ||
-        test.testType.toLowerCase() == 'comprehensive';
+    // Practice mode is reserved for chapter tests only.
+    final isPracticeTest = test.testType.toLowerCase() == 'chapter';
 
     if (!isPracticeTest) {
       return _buildWrongTabMessage(
         context,
-        'This is an exam test',
+        'This is a timed test',
         'This test is designed for timed exam mode. Please switch to the Exam tab.',
         Icons.timer,
         AppColors.warning,
@@ -118,8 +126,9 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Check if this test is suitable for exam mode
-    final isExamTest = test.testType.toLowerCase() == 'exam';
+    // Exam tab covers both `exam` and `comprehensive` (both are timed in TestTakingScreen).
+    final type = test.testType.toLowerCase();
+    final isExamTest = type == 'exam' || type == 'comprehensive';
 
     if (!isExamTest) {
       return _buildWrongTabMessage(
@@ -307,7 +316,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
                     _buildStatItem(
                       icon: Icons.trending_up,
                       label: 'Pass Rate',
-                      value: '75%',
+                      value: '${AppConstants.passingScorePercent.toInt()}%',
                       theme: theme,
                     ),
                   ],
