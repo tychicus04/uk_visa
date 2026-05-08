@@ -79,10 +79,17 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     return testType.toLowerCase() == 'exam' || testType.toLowerCase() == 'comprehensive';
   }
 
+  bool _isQuestionFullyAnswered(Question question) {
+    final answers = _answers[question.id];
+    if (answers == null || answers.isEmpty) {
+      return false;
+    }
+    return answers.length >= question.requiredAnswers;
+  }
+
   bool _areAllQuestionsAnswered(List<Question> questions) {
     for (final question in questions) {
-      final answers = _answers[question.id];
-      if (answers == null || answers.isEmpty) {
+      if (!_isQuestionFullyAnswered(question)) {
         return false;
       }
     }
@@ -92,9 +99,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
   List<int> _getUnansweredQuestions(List<Question> questions) {
     final unanswered = <int>[];
     for (int i = 0; i < questions.length; i++) {
-      final question = questions[i];
-      final answers = _answers[question.id];
-      if (answers == null || answers.isEmpty) {
+      if (!_isQuestionFullyAnswered(questions[i])) {
         unanswered.add(i);
       }
     }
@@ -571,16 +576,21 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
   // Direct submit without validation (for time up)
   Future<void> _submitTestDirectly(BuildContext context, WidgetRef ref) async {
+    final attemptId = widget.attemptId;
+    if (attemptId == null) {
+      _showErrorSnackBar(context, 'No active attempt. Please restart the test.');
+      return;
+    }
     try {
       final timeTaken = DateTime.now().difference(_startTime).inSeconds;
-      final attemptId = await ref.read(testProvider.notifier).submitAttempt(
-        attemptIdParam: widget.attemptId!,
-        answers: _answers,
-        timeTaken: timeTaken,
-      );
+      final resultAttemptId = await ref.read(testProvider.notifier).submitAttempt(
+            attemptIdParam: attemptId,
+            answers: _answers,
+            timeTaken: timeTaken,
+          );
 
       if (context.mounted) {
-        context.go('/tests/result/$attemptId');
+        context.go('/tests/result/$resultAttemptId');
       }
     } catch (e) {
       if (context.mounted) {
@@ -593,6 +603,12 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final testState = ref.read(testDetailProvider(widget.testId));
+
+    final attemptId = widget.attemptId;
+    if (attemptId == null) {
+      _showErrorSnackBar(context, 'No active attempt. Please restart the test.');
+      return;
+    }
 
     final test = testState.value;
     if (test?.questions == null) {
@@ -699,17 +715,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     );
 
     if (confirmed == true) {
-      // 🚫 TEMPORARILY DISABLED: Video ad before submitting
-      // For Exam mode, show video ad before submitting
-      // if (isTimedTest) {
-      //   try {
-      //     await _showVideoAdBeforeSubmit(context, ref, l10n);
-      //   } catch (e) {
-      //     print('🎯 Error showing video ad: $e');
-      //     // Continue with submission even if ad fails
-      //   }
-      // }
-      
       try {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -737,27 +742,27 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         }
 
         final timeTaken = DateTime.now().difference(_startTime).inSeconds;
-        final attemptId = await ref.read(testProvider.notifier).submitAttempt(
-          attemptIdParam: widget.attemptId!,
-          answers: _answers,
-          timeTaken: timeTaken,
-        );
+        final resultAttemptId = await ref.read(testProvider.notifier).submitAttempt(
+              attemptIdParam: attemptId,
+              answers: _answers,
+              timeTaken: timeTaken,
+            );
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          
+
           // Show interstitial ad before navigating to result screen
           _interstitialAdService.showAd(
             onAdDismissed: () {
               // Ad was dismissed, navigate to result screen
               if (context.mounted) {
-                context.go('/tests/result/$attemptId');
+                context.go('/tests/result/$resultAttemptId');
               }
             },
             onAdFailedToShow: () {
               // Ad failed to show, navigate to result screen anyway
               if (context.mounted) {
-                context.go('/tests/result/$attemptId');
+                context.go('/tests/result/$resultAttemptId');
               }
             },
           );
@@ -769,257 +774,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         }
       }
     }
-  }
-
-  // 🆕 Show test summary dialog instead of navigating to result screen
-  void _showTestSummaryDialog(BuildContext context, WidgetRef ref, dynamic test, String attemptId) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isTimedTest = _isTimedTest(test.testType);
-    
-    // Calculate results
-    final totalQuestions = test.questions!.length;
-    final correctCount = _correctAnswers.values.where((isCorrect) => isCorrect).length;
-    final incorrectCount = _correctAnswers.values.where((isCorrect) => !isCorrect).length;
-    final unansweredCount = totalQuestions - _correctAnswers.length;
-    
-    // 🔥 FIX: Calculate percentage based on TOTAL questions, not just answered ones
-    // This matches the server-side calculation for consistency
-    final percentage = totalQuestions > 0 ? (correctCount / totalQuestions * 100) : 0.0;
-    final timeTaken = DateTime.now().difference(_startTime);
-    final allAnswered = _areAllQuestionsAnswered(test.questions!);
-    
-    final isPassed = percentage >= 75.0; // UK citizenship test requires 75%
-    
-    print('📊 Test Summary Calculation:');
-    print('   Total Questions: $totalQuestions');
-    print('   Correct Answers: $correctCount');
-    print('   Incorrect Answers: $incorrectCount');
-    print('   Unanswered: $unansweredCount');
-    print('   Percentage: ${percentage.toStringAsFixed(1)}%');
-    print('   Passed: $isPassed');
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              isPassed ? Icons.celebration : Icons.info_outline,
-              color: isPassed ? AppColors.success : AppColors.warning,
-              size: 28,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                isPassed ? 'Test Completed!' : 'Test Completed',
-                style: TextStyle(
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Overall result banner
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: (isPassed ? AppColors.success : AppColors.warning).withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '${percentage.round()}%',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: isPassed ? AppColors.success : AppColors.warning,
-                    ),
-                  ),
-                  Text(
-                    isPassed ? 'PASSED' : 'NEEDS IMPROVEMENT',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isPassed ? AppColors.success : AppColors.warning,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Statistics - 3 cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.check_circle,
-                    label: 'Correct',
-                    value: correctCount.toString(),
-                    color: AppColors.success,
-                    isDark: isDark,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.cancel,
-                    label: 'Incorrect',
-                    value: incorrectCount.toString(),
-                    color: AppColors.error,
-                    isDark: isDark,
-                  ),
-                ),
-                if (unansweredCount > 0) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.help_outline,
-                      label: 'Unanswered',
-                      value: unansweredCount.toString(),
-                      color: AppColors.warning,
-                      isDark: isDark,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Time taken
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: (isDark ? AppColors.surfaceDark : Colors.grey[50]),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 16,
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Time: ${_formatDuration(timeTaken)}',
-                    style: TextStyle(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.go('/tests/detail/${widget.testId}');
-            },
-            child: Text(
-              'Back to Test',
-              style: TextStyle(
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              ),
-            ),
-          ),
-          // NEW LOGIC: Only allow access to results/review if:
-          // - Practice mode (always allowed)
-          // - Exam mode AND all questions answered
-          if (!isTimedTest || (isTimedTest && allAnswered))
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.go('/tests/result/$attemptId');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Review Answers'),
-            )
-          else
-            // Show disabled button with explanation for incomplete exams
-            Tooltip(
-              message: 'Complete all questions to access results',
-              child: ElevatedButton(
-                onPressed: null, // Disabled
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
-                  foregroundColor: Colors.white60,
-                ),
-                child: const Text('Review Answers'),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes}m ${seconds}s';
   }
 
   void _showIncompleteAnswersDialog(BuildContext context, List<int> unansweredQuestions, List<Question> allQuestions) {
