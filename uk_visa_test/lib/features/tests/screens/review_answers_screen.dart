@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/utils/helpers.dart';
 import '../../../data/models/attempt_model.dart';
 import '../../../shared/providers/bilingual_provider.dart';
 import '../../../shared/widgets/error_widget.dart';
@@ -269,7 +270,7 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
                       const Spacer(),
                       if (attempt.timeTakenInt > 0)
                         Text(
-                          'Time: ${_formatTime(attempt.timeTakenInt)}',
+                          'Time: ${Helpers.formatTime(attempt.timeTakenInt)}',
                           style: TextStyle(
                             color: appBarForeground.withValues(alpha: 0.9),
                             fontSize: 14,
@@ -409,9 +410,4 @@ class _ReviewAnswersScreenState extends ConsumerState<ReviewAnswersScreen> {
     );
   }
 
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    return '${minutes}m ${remainingSeconds}s';
-  }
 }

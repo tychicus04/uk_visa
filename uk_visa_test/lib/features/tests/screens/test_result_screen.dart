@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/helpers.dart';
 import '../../../shared/widgets/error_widget.dart';
 import '../../../shared/widgets/loading_widget.dart';
 import '../providers/test_provider.dart';
@@ -116,7 +117,7 @@ class TestResultScreen extends ConsumerWidget {
                       child: _buildScoreCard(
                         icon: Icons.access_time,
                         label: 'Time Taken',
-                        value: _formatTime(result.timeTakenInt),
+                        value: Helpers.formatTime(result.timeTakenInt),
                         total: _defaultTotalTimeLabel(result.testType),
                         color: AppColors.primary,
                         theme: theme,
@@ -239,7 +240,7 @@ class TestResultScreen extends ConsumerWidget {
                         _buildInfoRow(
                           context,
                           'Duration',
-                          _formatTime(result.timeTakenInt),
+                          Helpers.formatTime(result.timeTakenInt),
                         ),
                     ],
                   ),
@@ -343,12 +344,6 @@ class TestResultScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    return '${minutes}m ${remainingSeconds}s';
   }
 
   // Mirrors Test.defaultTimeLimit so the result screen shows the right cap
