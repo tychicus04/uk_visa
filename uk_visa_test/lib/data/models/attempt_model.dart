@@ -114,6 +114,10 @@ class TestAttempt extends Equatable {
   // Helper properties
   bool get isCompleted => completedAt != null;
   bool get isInProgress => completedAt == null;
+  bool get isTimed {
+    final t = testType?.toLowerCase();
+    return t == 'exam' || t == 'comprehensive';
+  }
 
   String get formattedTimeTaken {
     final seconds = timeTakenInt;

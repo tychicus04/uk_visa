@@ -74,8 +74,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
           // the user can still switch tabs manually after the initial load.
           if (!_initialTabSelected) {
             _initialTabSelected = true;
-            final type = test.testType.toLowerCase();
-            final defaultTabIndex = (type == 'exam' || type == 'comprehensive') ? 1 : 0;
+            final defaultTabIndex = test.isTimed ? 1 : 0;
             if (_tabController.index != defaultTabIndex) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
@@ -127,10 +126,7 @@ class _TestDetailScreenState extends ConsumerState<TestDetailScreen>
     final isDark = theme.brightness == Brightness.dark;
 
     // Exam tab covers both `exam` and `comprehensive` (both are timed in TestTakingScreen).
-    final type = test.testType.toLowerCase();
-    final isExamTest = type == 'exam' || type == 'comprehensive';
-
-    if (!isExamTest) {
+    if (!test.isTimed) {
       return _buildWrongTabMessage(
         context,
         'This is a practice test',

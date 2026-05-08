@@ -153,6 +153,7 @@ class Test extends Equatable {
   bool get isChapterTest => testType.toLowerCase() == 'chapter';
   bool get isComprehensiveTest => testType.toLowerCase() == 'comprehensive';
   bool get isExamTest => testType.toLowerCase() == 'exam';
+  bool get isTimed => isExamTest || isComprehensiveTest;
   bool get isAccessible => canAccess == true;
   bool get hasAttempts => attemptCountInt > 0;
   bool get hasQuestions => questions != null && questions!.isNotEmpty;

@@ -110,8 +110,7 @@ class TestResultScreen extends ConsumerWidget {
                     ),
                   ),
                   // 🔥 FIX: Only show time card for timed tests (exam mode)
-                  if (result.testType?.toLowerCase() == 'exam' ||
-                      result.testType?.toLowerCase() == 'comprehensive') ...[
+                  if (result.isTimed) ...[
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildScoreCard(

@@ -74,11 +74,6 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
     super.dispose();
   }
 
-  // Check if test type is timed (exam) or not (chapter only)
-  bool _isTimedTest(String testType) {
-    return testType.toLowerCase() == 'exam' || testType.toLowerCase() == 'comprehensive';
-  }
-
   bool _isQuestionFullyAnswered(Question question) {
     final answers = _answers[question.id];
     if (answers == null || answers.isEmpty) {
@@ -125,7 +120,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
 
     return testState.when(
       data: (test) {
-        final isTimedTest = _isTimedTest(test.testType);
+        final isTimedTest = test.isTimed;
         print('Test taking started - Type: ${test.testType}, Timed: $isTimedTest');
 
         return Scaffold(
@@ -438,7 +433,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
           
           // 🆕 UPDATED: Only check correctness in Practice mode (when showCorrectAnswers is enabled)
           final testState = ref.read(testDetailProvider(widget.testId));
-          final isTimedTest = testState.value != null ? _isTimedTest(testState.value!.testType) : false;
+          final isTimedTest = testState.value?.isTimed ?? false;
           if (!isTimedTest) {
             // Practice mode: check correctness immediately
             _correctAnswers[question.id] = _isAnswerCorrect(question, _answers[question.id]!);
@@ -462,7 +457,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         
         // 🆕 UPDATED: Only check correctness in Practice mode
         final testState = ref.read(testDetailProvider(widget.testId));
-        final isTimedTest = testState.value != null ? _isTimedTest(testState.value!.testType) : false;
+        final isTimedTest = testState.value?.isTimed ?? false;
         
         // If user has selected the required number of answers, check correctness in Practice mode
         if (selectedAnswers.length == requiredCount) {
@@ -977,7 +972,7 @@ class _TestTakingScreenState extends ConsumerState<TestTakingScreen> {
         action: SnackBarAction(
           label: 'Retry',
           textColor: Colors.white,
-          onPressed: () => _submitTest(context, ref, _isTimedTest(ref.read(testDetailProvider(widget.testId)).value?.testType ?? 'chapter')),
+          onPressed: () => _submitTest(context, ref, ref.read(testDetailProvider(widget.testId)).value?.isTimed ?? false),
         ),
       ),
     );
